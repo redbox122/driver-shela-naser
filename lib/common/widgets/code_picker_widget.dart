@@ -161,7 +161,9 @@ class _CodePickerWidgetState extends State<CodePickerWidget> {
                 barrierColor: widget.barrierColor,
                 hideSearch: widget.hideSearch!,
                 closeIcon: widget.closeIcon,
-                flagDecoration: widget.flagDecoration,
+                flagDecoration: widget.flagDecoration, hideHeaderText: false, headerAlignment: MainAxisAlignment.center,
+                headerTextStyle: TextStyle(),
+                topBarPadding: EdgeInsets.all(10),
               ),
             ),
           ),
@@ -181,6 +183,10 @@ class _CodePickerWidgetState extends State<CodePickerWidget> {
         context: context,
         builder: (context) => Center(
           child: SelectionDialog(
+             hideHeaderText: false,
+            headerAlignment: MainAxisAlignment.center,
+            headerTextStyle: TextStyle(),
+            topBarPadding: EdgeInsets.all(10),
             elements!,
             favoriteElements!,
             showCountryOnly: widget.showCountryOnly,

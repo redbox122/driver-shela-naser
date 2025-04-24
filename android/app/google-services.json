@@ -1,124 +1,27 @@
 {
   "project_info": {
-    "project_number": "609386859120",
-    "firebase_url": "https://my-food-c1459-default-rtdb.firebaseio.com",
-    "project_id": "my-food-c1459",
-    "storage_bucket": "my-food-c1459.appspot.com"
+    "project_number": "659410143816",
+    "firebase_url": "https://shella1-default-rtdb.firebaseio.com",
+    "project_id": "shella1",
+    "storage_bucket": "shella1.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:609386859120:android:e422fceb9e4c439ff402b5",
+        "mobilesdk_app_id": "1:659410143816:android:3f534452f40ab22ef8267d",
         "android_client_info": {
-          "package_name": "com.captain.shala"
+          "package_name": "com.delivery.shala.sixam_mart_delivery"
         }
       },
-      "oauth_client": [
-        {
-          "client_id": "609386859120-tq8r84pr3rqdmpcoja6cqnmdp33thh5v.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
+      "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyABQ2Qp38hmEIF-9G7g1B7WZTtUgwULwdA"
+          "current_key": "AIzaSyDnnrJzlof502Ry1fSLmJCjLCkMXv-Ebg8"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "609386859120-tq8r84pr3rqdmpcoja6cqnmdp33thh5v.apps.googleusercontent.com",
-              "client_type": 3
-            },
-            {
-              "client_id": "609386859120-05jbn7m3jlurskd4n0vb7svpigav89je.apps.googleusercontent.com",
-              "client_type": 2,
-              "ios_info": {
-                "bundle_id": "com.shela.food"
-              }
-            }
-          ]
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:609386859120:android:4a598aa73287bbf7f402b5",
-        "android_client_info": {
-          "package_name": "com.delivery.shala"
-        }
-      },
-      "oauth_client": [
-        {
-          "client_id": "609386859120-tq8r84pr3rqdmpcoja6cqnmdp33thh5v.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
-      "api_key": [
-        {
-          "current_key": "AIzaSyABQ2Qp38hmEIF-9G7g1B7WZTtUgwULwdA"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "609386859120-tq8r84pr3rqdmpcoja6cqnmdp33thh5v.apps.googleusercontent.com",
-              "client_type": 3
-            },
-            {
-              "client_id": "609386859120-05jbn7m3jlurskd4n0vb7svpigav89je.apps.googleusercontent.com",
-              "client_type": 2,
-              "ios_info": {
-                "bundle_id": "com.shela.food"
-              }
-            }
-          ]
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:609386859120:android:cbf2ff8dfde410d8f402b5",
-        "android_client_info": {
-          "package_name": "com.zs.shela_food_user_web"
-        }
-      },
-      "oauth_client": [
-        {
-          "client_id": "609386859120-bl9me6p7tcocdnmn6csen2u184dqj1h3.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.zs.shela_food_user_web",
-            "certificate_hash": "f520e98d947e59bea929aefc83d67a9fa45d7ef6"
-          }
-        },
-        {
-          "client_id": "609386859120-tq8r84pr3rqdmpcoja6cqnmdp33thh5v.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
-      "api_key": [
-        {
-          "current_key": "AIzaSyABQ2Qp38hmEIF-9G7g1B7WZTtUgwULwdA"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "609386859120-tq8r84pr3rqdmpcoja6cqnmdp33thh5v.apps.googleusercontent.com",
-              "client_type": 3
-            },
-            {
-              "client_id": "609386859120-05jbn7m3jlurskd4n0vb7svpigav89je.apps.googleusercontent.com",
-              "client_type": 2,
-              "ios_info": {
-                "bundle_id": "com.shela.food"
-              }
-            }
-          ]
+          "other_platform_oauth_client": []
         }
       }
     }

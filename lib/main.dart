@@ -29,19 +29,20 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   if(GetPlatform.isAndroid) {
-    await Firebase.initializeApp(
-      options: const FirebaseOptions(
-          apiKey: "AIzaSyDiuBou-3RduJOBCFOZDqEuWYt0yJvgUXU",
-          authDomain: "my-food-c1459.firebaseapp.com",
-          projectId: "my-food-c1459",
-          storageBucket: "my-food-c1459.appspot.com",
-          messagingSenderId: "609386859120",
-          appId: "1:609386859120:web:47b61844e19b9ee1f402b5",
-          measurementId: "G-Q2BZYSDVMD"
-      ),
-    );
+    // await Firebase.initializeApp(
+    //   options: const FirebaseOptions(
+    //       apiKey: "AIzaSyDiuBou-3RduJOBCFOZDqEuWYt0yJvgUXU",
+    //       authDomain: "my-food-c1459.firebaseapp.com",
+    //       projectId: "my-food-c1459",
+    //       storageBucket: "my-food-c1459.appspot.com",
+    //       messagingSenderId: "609386859120",
+    //       appId: "1:609386859120:web:47b61844e19b9ee1f402b5",
+    //       measurementId: "G-Q2BZYSDVMD"
+    //   ),
+    // );
   }else {
-    await Firebase.initializeApp();
+    await Firebase.initializeApp(
+    );
   }
 
   Map<String, Map<String, String>> languages = await di.init();

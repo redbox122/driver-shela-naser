@@ -17,29 +17,17 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      throw UnsupportedError(
-        'DefaultFirebaseOptions have not been configured for web - '
-        'you can reconfigure this by running the FlutterFire CLI again.',
-      );
+      return web;
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
         return android;
       case TargetPlatform.iOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for ios - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return ios;
       case TargetPlatform.macOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for macos - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return macos;
       case TargetPlatform.windows:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for windows - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return windows;
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
@@ -52,12 +40,54 @@ class DefaultFirebaseOptions {
     }
   }
 
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'AIzaSyCK2yYFXWNeDhrjbqWinx8PpgkHi1r_hUE',
+    appId: '1:659410143816:web:0c3dfe6778c03109f8267d',
+    messagingSenderId: '659410143816',
+    projectId: 'shella1',
+    authDomain: 'shella1.firebaseapp.com',
+    databaseURL: 'https://shella1-default-rtdb.firebaseio.com',
+    storageBucket: 'shella1.firebasestorage.app',
+    measurementId: 'G-1NCSMFNKZZ',
+  );
+
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyABQ2Qp38hmEIF-9G7g1B7WZTtUgwULwdA',
-    appId: '1:609386859120:android:4a598aa73287bbf7f402b5',
-    messagingSenderId: '609386859120',
-    projectId: 'my-food-c1459',
-    databaseURL: 'https://my-food-c1459-default-rtdb.firebaseio.com',
-    storageBucket: 'my-food-c1459.appspot.com',
+    apiKey: 'AIzaSyDnnrJzlof502Ry1fSLmJCjLCkMXv-Ebg8',
+    appId: '1:659410143816:android:3f534452f40ab22ef8267d',
+    messagingSenderId: '659410143816',
+    projectId: 'shella1',
+    databaseURL: 'https://shella1-default-rtdb.firebaseio.com',
+    storageBucket: 'shella1.firebasestorage.app',
+  );
+
+  static const FirebaseOptions ios = FirebaseOptions(
+    apiKey: 'AIzaSyDioVSDEtk6UI7XXWIgIDrkwTXaJ6QQnHY',
+    appId: '1:659410143816:ios:0772ec5e4f4a692ef8267d',
+    messagingSenderId: '659410143816',
+    projectId: 'shella1',
+    databaseURL: 'https://shella1-default-rtdb.firebaseio.com',
+    storageBucket: 'shella1.firebasestorage.app',
+    iosBundleId: 'com.delivery.sixamMartDelivery',
+  );
+
+  static const FirebaseOptions macos = FirebaseOptions(
+    apiKey: 'AIzaSyDioVSDEtk6UI7XXWIgIDrkwTXaJ6QQnHY',
+    appId: '1:659410143816:ios:12bf95da7f468eb6f8267d',
+    messagingSenderId: '659410143816',
+    projectId: 'shella1',
+    databaseURL: 'https://shella1-default-rtdb.firebaseio.com',
+    storageBucket: 'shella1.firebasestorage.app',
+    iosBundleId: 'com.delivery.shala.sixamMartDelivery',
+  );
+
+  static const FirebaseOptions windows = FirebaseOptions(
+    apiKey: 'AIzaSyCK2yYFXWNeDhrjbqWinx8PpgkHi1r_hUE',
+    appId: '1:659410143816:web:474c7ab198be8fb9f8267d',
+    messagingSenderId: '659410143816',
+    projectId: 'shella1',
+    authDomain: 'shella1.firebaseapp.com',
+    databaseURL: 'https://shella1-default-rtdb.firebaseio.com',
+    storageBucket: 'shella1.firebasestorage.app',
+    measurementId: 'G-3CSMDB3KHD',
   );
 }
