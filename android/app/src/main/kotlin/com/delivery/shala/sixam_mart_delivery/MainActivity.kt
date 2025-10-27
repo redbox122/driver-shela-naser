@@ -1,4 +1,4 @@
-package com.delivery.shala.sixam_mart_delivery
+package com.delivery.shellafood_delivery
 
 import io.flutter.embedding.android.FlutterActivity
 

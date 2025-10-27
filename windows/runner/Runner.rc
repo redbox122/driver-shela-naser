@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.delivery" "\0"
-            VALUE "FileDescription", "sixam_mart_delivery" "\0"
+            VALUE "FileDescription", "shellafood_delivery" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "sixam_mart_delivery" "\0"
+            VALUE "InternalName", "shellafood_delivery" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2025 com.delivery. All rights reserved." "\0"
-            VALUE "OriginalFilename", "sixam_mart_delivery.exe" "\0"
-            VALUE "ProductName", "sixam_mart_delivery" "\0"
+            VALUE "OriginalFilename", "shellafood_delivery.exe" "\0"
+            VALUE "ProductName", "shellafood_delivery" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

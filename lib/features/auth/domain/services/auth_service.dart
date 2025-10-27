@@ -1,11 +1,11 @@
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:sixam_mart_delivery/api/api_client.dart';
-import 'package:sixam_mart_delivery/common/widgets/custom_snackbar_widget.dart';
-import 'package:sixam_mart_delivery/features/auth/domain/models/delivery_man_body_model.dart';
-import 'package:sixam_mart_delivery/features/auth/domain/models/vehicle_model.dart';
-import 'package:sixam_mart_delivery/features/auth/domain/repositories/auth_repository_interface.dart';
-import 'package:sixam_mart_delivery/features/auth/domain/services/auth_service_interface.dart';
+import 'package:shellafood_delivery/api/api_client.dart';
+import 'package:shellafood_delivery/common/widgets/custom_snackbar_widget.dart';
+import 'package:shellafood_delivery/features/auth/domain/models/delivery_man_body_model.dart';
+import 'package:shellafood_delivery/features/auth/domain/models/vehicle_model.dart';
+import 'package:shellafood_delivery/features/auth/domain/repositories/auth_repository_interface.dart';
+import 'package:shellafood_delivery/features/auth/domain/services/auth_service_interface.dart';
 
 class AuthService implements AuthServiceInterface {
   final AuthRepositoryInterface authRepositoryInterface;
@@ -17,8 +17,10 @@ class AuthService implements AuthServiceInterface {
   }
 
   @override
-  Future<bool> registerDeliveryMan(DeliveryManBodyModel deliveryManBody, List<MultipartBody> multiParts) async {
-    return await authRepositoryInterface.registerDeliveryMan(deliveryManBody, multiParts);
+  Future<bool> registerDeliveryMan(DeliveryManBodyModel deliveryManBody,
+      List<MultipartBody> multiParts) async {
+    return await authRepositoryInterface.registerDeliveryMan(
+        deliveryManBody, multiParts);
   }
 
   @override
@@ -52,8 +54,10 @@ class AuthService implements AuthServiceInterface {
   }
 
   @override
-  Future<void> saveUserNumberAndPassword(String number, String password, String countryCode) async {
-    await authRepositoryInterface.saveUserNumberAndPassword(number, password, countryCode);
+  Future<void> saveUserNumberAndPassword(
+      String number, String password, String countryCode) async {
+    await authRepositoryInterface.saveUserNumberAndPassword(
+        number, password, countryCode);
   }
 
   @override
@@ -87,28 +91,31 @@ class AuthService implements AuthServiceInterface {
   }
 
   @override
-  List<MultipartBody> prepareMultiPartsBody(XFile? pickedImage, List<XFile> pickedIdentities) {
+  List<MultipartBody> prepareMultiPartsBody(
+      XFile? pickedImage, List<XFile> pickedIdentities) {
     List<MultipartBody> multiParts = [];
     multiParts.add(MultipartBody('image', pickedImage));
-    for(XFile file in pickedIdentities) {
+    for (XFile file in pickedIdentities) {
       multiParts.add(MultipartBody('identity_image[]', file));
     }
     return multiParts;
   }
+
   @override
-  List<int?> vehicleIds (List<VehicleModel>? vehicles) {
+  List<int?> vehicleIds(List<VehicleModel>? vehicles) {
     List<int?>? vehicleIds = [];
     vehicleIds.add(0);
-    for(VehicleModel vehicle in vehicles!) {
+    for (VehicleModel vehicle in vehicles!) {
       vehicleIds.add(vehicle.id);
     }
     return vehicleIds;
   }
 
   @override
-  Future<XFile?> pickImageFromGallery() async{
-    XFile? pickImage = await ImagePicker().pickImage(source: ImageSource.gallery);
-    if(pickImage != null) {
+  Future<XFile?> pickImageFromGallery() async {
+    XFile? pickImage =
+        await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (pickImage != null) {
       pickImage.length().then((value) {
         if (value > 2000000) {
           showCustomSnackBar('please_upload_lower_size_file'.tr);
@@ -119,5 +126,4 @@ class AuthService implements AuthServiceInterface {
     }
     return pickImage;
   }
-
 }

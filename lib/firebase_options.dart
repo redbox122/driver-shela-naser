@@ -67,7 +67,7 @@ class DefaultFirebaseOptions {
     projectId: 'shella1',
     databaseURL: 'https://shella1-default-rtdb.firebaseio.com',
     storageBucket: 'shella1.firebasestorage.app',
-    iosBundleId: 'com.delivery.sixamMartDelivery',
+    iosBundleId: 'com.delivery.shellafoodDelivery',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
@@ -77,7 +77,7 @@ class DefaultFirebaseOptions {
     projectId: 'shella1',
     databaseURL: 'https://shella1-default-rtdb.firebaseio.com',
     storageBucket: 'shella1.firebasestorage.app',
-    iosBundleId: 'com.delivery.shala.sixamMartDelivery',
+    iosBundleId: 'com.delivery.shellafood_delivery.shellafoodDelivery',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(

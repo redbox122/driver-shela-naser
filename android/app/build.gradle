@@ -29,26 +29,31 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace "com.delivery.shala"
-    compileSdk 34
+    namespace "com.delivery.shellafood_delivery"
+    compileSdk 36
     ndkVersion flutter.ndkVersion
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+        coreLibraryDesugaringEnabled true
     }
     kotlinOptions {
-        jvmTarget = '1.8'
+        jvmTarget = '17'
     }
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
     }
 
+    buildFeatures {
+        buildConfig = true
+    }
+
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId "com.delivery.shala"
-        minSdkVersion 21
-        targetSdkVersion 34
+        applicationId "com.delivery.shellafood_delivery"
+        minSdkVersion flutter.minSdkVersion
+        targetSdkVersion 36
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
         multiDexEnabled true
@@ -78,4 +83,5 @@ flutter {
 
 dependencies {
     implementation "com.google.firebase:firebase-messaging:23.4.1"
+    coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.1.4"
 }

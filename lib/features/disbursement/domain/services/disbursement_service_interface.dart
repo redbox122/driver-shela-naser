@@ -1,6 +1,8 @@
-import 'package:sixam_mart_delivery/features/cash_in_hand/domain/models/withdraw_method_model.dart';
-import 'package:sixam_mart_delivery/features/disbursement/domain/models/disbursement_method_model.dart' as disburse;
-import 'package:sixam_mart_delivery/features/disbursement/domain/models/disbursement_report_model.dart' as report;
+import 'package:shellafood_delivery/features/cash_in_hand/domain/models/withdraw_method_model.dart';
+import 'package:shellafood_delivery/features/disbursement/domain/models/disbursement_method_model.dart'
+    as disburse;
+import 'package:shellafood_delivery/features/disbursement/domain/models/disbursement_report_model.dart'
+    as report;
 
 abstract class DisbursementServiceInterface {
   Future<bool> addWithdraw(Map<String?, String> data);

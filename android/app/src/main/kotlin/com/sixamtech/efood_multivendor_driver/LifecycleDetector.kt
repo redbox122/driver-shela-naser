@@ -1,4 +1,4 @@
-package com.delivery.shala
+package com.delivery.shellafood_delivery
 
 import android.app.Activity
 import android.app.Application

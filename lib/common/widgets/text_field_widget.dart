@@ -1,5 +1,5 @@
-import 'package:sixam_mart_delivery/util/dimensions.dart';
-import 'package:sixam_mart_delivery/util/styles.dart';
+import 'package:shellafood_delivery/util/dimensions.dart';
+import 'package:shellafood_delivery/util/styles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -54,25 +54,40 @@ class TextFieldWidgetState extends State<TextFieldWidget> {
   @override
   Widget build(BuildContext context) {
     return Column(children: [
-
-      widget.title ? Row(children: [
-        Text(
-          widget.titleName ?? widget.hintText!,
-          style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeLarge),
-        ),
-        const SizedBox(width: Dimensions.paddingSizeExtraSmall),
-        widget.isEnabled ? const SizedBox() : Text('(${'non_changeable'.tr})', style: robotoRegular.copyWith(
-          fontSize: Dimensions.fontSizeExtraSmall, color: Theme.of(context).colorScheme.error,
-        )),
-
-        widget.isRequired ? Text('*', style: robotoBold.copyWith(color: Theme.of(context).primaryColor)) : const SizedBox(),
-
-      ]) : const SizedBox(),
+      widget.title
+          ? Row(children: [
+              Text(
+                widget.titleName ?? widget.hintText!,
+                style:
+                    robotoMedium.copyWith(fontSize: Dimensions.fontSizeLarge),
+              ),
+              const SizedBox(width: Dimensions.paddingSizeExtraSmall),
+              widget.isEnabled
+                  ? const SizedBox()
+                  : Text('(${'non_changeable'.tr})',
+                      style: robotoRegular.copyWith(
+                        fontSize: Dimensions.fontSizeExtraSmall,
+                        color: Theme.of(context).colorScheme.error,
+                      )),
+              widget.isRequired
+                  ? Text('*',
+                      style: robotoBold.copyWith(
+                          color: Theme.of(context).primaryColor))
+                  : const SizedBox(),
+            ])
+          : const SizedBox(),
       SizedBox(height: widget.title ? Dimensions.paddingSizeSmall : 0),
-
       Container(
         decoration: BoxDecoration(
-          boxShadow: Get.isDarkMode ? null : [BoxShadow(color: Colors.grey[200]!, spreadRadius: 2, blurRadius: 5, offset: const Offset(0, 5))],
+          boxShadow: Get.isDarkMode
+              ? null
+              : [
+                  BoxShadow(
+                      color: Colors.grey[200]!,
+                      spreadRadius: 2,
+                      blurRadius: 5,
+                      offset: const Offset(0, 5))
+                ],
         ),
         child: TextField(
           maxLines: widget.maxLines,
@@ -86,26 +101,39 @@ class TextFieldWidgetState extends State<TextFieldWidget> {
           enabled: widget.isEnabled,
           autofocus: false,
           obscureText: widget.isPassword ? _obscureText : false,
-          inputFormatters: widget.inputType == TextInputType.phone ? <TextInputFormatter>[FilteringTextInputFormatter.allow(RegExp('[0-9+]'))] : null,
+          inputFormatters: widget.inputType == TextInputType.phone
+              ? <TextInputFormatter>[
+                  FilteringTextInputFormatter.allow(RegExp('[0-9+]'))
+                ]
+              : null,
           decoration: InputDecoration(
             hintText: widget.hintText,
             isDense: true,
             filled: true,
             fillColor: widget.fillColor ?? Theme.of(context).cardColor,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(Dimensions.radiusSmall), borderSide: BorderSide.none),
-            hintStyle: robotoRegular.copyWith(color: Theme.of(context).hintColor),
-            suffixIcon: widget.isPassword ? IconButton(
-              icon: Icon(_obscureText ? Icons.visibility_off : Icons.visibility, color: Theme.of(context).hintColor.withOpacity(0.3)),
-              onPressed: _toggle,
-            ) : null,
+            border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
+                borderSide: BorderSide.none),
+            hintStyle:
+                robotoRegular.copyWith(color: Theme.of(context).hintColor),
+            suffixIcon: widget.isPassword
+                ? IconButton(
+                    icon: Icon(
+                        _obscureText ? Icons.visibility_off : Icons.visibility,
+                        color: Theme.of(context).hintColor.withOpacity(0.3)),
+                    onPressed: _toggle,
+                  )
+                : null,
           ),
           onTap: widget.onTap as void Function()?,
-          onSubmitted: (text) => widget.nextFocus != null ? FocusScope.of(context).requestFocus(widget.nextFocus)
-              : widget.onSubmit != null ? widget.onSubmit!(text) : null,
+          onSubmitted: (text) => widget.nextFocus != null
+              ? FocusScope.of(context).requestFocus(widget.nextFocus)
+              : widget.onSubmit != null
+                  ? widget.onSubmit!(text)
+                  : null,
           onChanged: widget.onChanged as void Function(String)?,
         ),
       ),
-
     ]);
   }
 

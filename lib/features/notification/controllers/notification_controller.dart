@@ -1,7 +1,7 @@
-import 'package:sixam_mart_delivery/features/notification/domain/models/notification_model.dart';
-import 'package:sixam_mart_delivery/helper/date_converter_helper.dart';
+import 'package:shellafood_delivery/features/notification/domain/models/notification_model.dart';
+import 'package:shellafood_delivery/helper/date_converter_helper.dart';
 import 'package:get/get.dart';
-import 'package:sixam_mart_delivery/features/notification/domain/services/notification_service_interface.dart';
+import 'package:shellafood_delivery/features/notification/domain/services/notification_service_interface.dart';
 
 class NotificationController extends GetxController implements GetxService {
   final NotificationServiceInterface notificationServiceInterface;
@@ -17,16 +17,19 @@ class NotificationController extends GetxController implements GetxService {
   bool get hideNotificationButton => _hideNotificationButton;
 
   Future<void> getNotificationList() async {
-    List<NotificationModel>? notificationList = await notificationServiceInterface.getNotificationList();
+    List<NotificationModel>? notificationList =
+        await notificationServiceInterface.getNotificationList();
     if (notificationList != null) {
       _notificationList = [];
       _notificationList!.addAll(notificationList);
       _notificationList!.sort((a, b) {
-        return DateConverterHelper.isoStringToLocalDate(a.updatedAt!).compareTo(DateConverterHelper.isoStringToLocalDate(b.updatedAt!));
+        return DateConverterHelper.isoStringToLocalDate(a.updatedAt!)
+            .compareTo(DateConverterHelper.isoStringToLocalDate(b.updatedAt!));
       });
       Iterable iterable = _notificationList!.reversed;
       _notificationList = iterable.toList() as List<NotificationModel>?;
-      _hasNotification = _notificationList!.length != getSeenNotificationCount();
+      _hasNotification =
+          _notificationList!.length != getSeenNotificationCount();
     }
     update();
   }
@@ -34,7 +37,8 @@ class NotificationController extends GetxController implements GetxService {
   Future<bool> sendDeliveredNotification(int? orderID) async {
     _hideNotificationButton = true;
     update();
-    bool isSuccess = await notificationServiceInterface.sendDeliveredNotification(orderID);
+    bool isSuccess =
+        await notificationServiceInterface.sendDeliveredNotification(orderID);
     bool success;
     isSuccess ? success = true : success = false;
     _hideNotificationButton = false;
@@ -49,5 +53,4 @@ class NotificationController extends GetxController implements GetxService {
   int? getSeenNotificationCount() {
     return notificationServiceInterface.getSeenNotificationCount();
   }
-
 }

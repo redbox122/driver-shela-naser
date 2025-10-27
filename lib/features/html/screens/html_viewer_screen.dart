@@ -1,8 +1,8 @@
 import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter/material.dart';
-import 'package:sixam_mart_delivery/features/html/controllers/html_controller.dart';
-import 'package:sixam_mart_delivery/util/dimensions.dart';
-import 'package:sixam_mart_delivery/common/widgets/custom_app_bar_widget.dart';
+import 'package:shellafood_delivery/features/html/controllers/html_controller.dart';
+import 'package:shellafood_delivery/util/dimensions.dart';
+import 'package:shellafood_delivery/common/widgets/custom_app_bar_widget.dart';
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
@@ -15,7 +15,6 @@ class HtmlViewerScreen extends StatefulWidget {
 }
 
 class _HtmlViewerScreenState extends State<HtmlViewerScreen> {
-
   @override
   void initState() {
     super.initState();
@@ -26,28 +25,34 @@ class _HtmlViewerScreenState extends State<HtmlViewerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-
-      appBar: CustomAppBarWidget(title: widget.isPrivacyPolicy ? 'privacy_policy'.tr : 'terms_condition'.tr),
-
+      appBar: CustomAppBarWidget(
+          title: widget.isPrivacyPolicy
+              ? 'privacy_policy'.tr
+              : 'terms_condition'.tr),
       body: GetBuilder<HtmlController>(builder: (htmlController) {
         return Container(
           height: MediaQuery.of(context).size.height,
           width: MediaQuery.of(context).size.width,
           color: Theme.of(context).cardColor,
-          child: htmlController.htmlText != null ? SingleChildScrollView(
-            padding: const EdgeInsets.all(Dimensions.paddingSizeSmall),
-            physics: const BouncingScrollPhysics(),
-            child: Html(
-              data: htmlController.htmlText ?? '',
-              key: Key(widget.isPrivacyPolicy ? 'privacy_policy' : 'terms_condition'),
-              onLinkTap: (url, attributes, element){
-                if(url!.startsWith('www.')) {
-                  url = 'https://$url';
-                }
-                launchUrlString(url, mode: LaunchMode.externalApplication);
-              },
-            ),
-          ) : const Center(child: CircularProgressIndicator()),
+          child: htmlController.htmlText != null
+              ? SingleChildScrollView(
+                  padding: const EdgeInsets.all(Dimensions.paddingSizeSmall),
+                  physics: const BouncingScrollPhysics(),
+                  child: Html(
+                    data: htmlController.htmlText ?? '',
+                    key: Key(widget.isPrivacyPolicy
+                        ? 'privacy_policy'
+                        : 'terms_condition'),
+                    onLinkTap: (url, attributes, element) {
+                      if (url!.startsWith('www.')) {
+                        url = 'https://$url';
+                      }
+                      launchUrlString(url,
+                          mode: LaunchMode.externalApplication);
+                    },
+                  ),
+                )
+              : const Center(child: CircularProgressIndicator()),
         );
       }),
     );

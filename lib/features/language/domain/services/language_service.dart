@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:sixam_mart_delivery/features/language/domain/models/language_model.dart';
-import 'package:sixam_mart_delivery/features/language/domain/repositories/language_repository_interface.dart';
-import 'package:sixam_mart_delivery/features/language/domain/services/language_service_interface.dart';
+import 'package:shellafood_delivery/features/language/domain/models/language_model.dart';
+import 'package:shellafood_delivery/features/language/domain/repositories/language_repository_interface.dart';
+import 'package:shellafood_delivery/features/language/domain/services/language_service_interface.dart';
 
 class LanguageService implements LanguageServiceInterface {
   final LanguageRepositoryInterface languageRepositoryInterface;
@@ -10,9 +10,9 @@ class LanguageService implements LanguageServiceInterface {
   @override
   bool setLTR(Locale locale) {
     bool isLtr = true;
-    if(locale.languageCode == 'ar') {
+    if (locale.languageCode == 'ar') {
       isLtr = false;
-    }else {
+    } else {
       isLtr = true;
     }
     return isLtr;
@@ -31,8 +31,8 @@ class LanguageService implements LanguageServiceInterface {
   @override
   int setSelectedLanguageIndex(List<LanguageModel> languages, Locale locale) {
     int selectedLanguageIndex = 0;
-    for(int index = 0; index<languages.length; index++) {
-      if(languages[index].languageCode == locale.languageCode) {
+    for (int index = 0; index < languages.length; index++) {
+      if (languages[index].languageCode == locale.languageCode) {
         selectedLanguageIndex = index;
         break;
       }
@@ -44,5 +44,4 @@ class LanguageService implements LanguageServiceInterface {
   void saveLanguage(Locale locale) async {
     languageRepositoryInterface.saveLanguage(locale);
   }
-
 }

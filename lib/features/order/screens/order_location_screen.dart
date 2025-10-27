@@ -6,20 +6,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:sixam_mart_delivery/features/order/controllers/order_controller.dart';
-import 'package:sixam_mart_delivery/features/order/domain/models/order_model.dart';
-import 'package:sixam_mart_delivery/features/profile/controllers/profile_controller.dart';
-import 'package:sixam_mart_delivery/util/dimensions.dart';
-import 'package:sixam_mart_delivery/util/images.dart';
-import 'package:sixam_mart_delivery/common/widgets/custom_app_bar_widget.dart';
-import 'package:sixam_mart_delivery/features/order/widgets/location_card_widget.dart';
+import 'package:shellafood_delivery/features/order/controllers/order_controller.dart';
+import 'package:shellafood_delivery/features/order/domain/models/order_model.dart';
+import 'package:shellafood_delivery/features/profile/controllers/profile_controller.dart';
+import 'package:shellafood_delivery/util/dimensions.dart';
+import 'package:shellafood_delivery/util/images.dart';
+import 'package:shellafood_delivery/common/widgets/custom_app_bar_widget.dart';
+import 'package:shellafood_delivery/features/order/widgets/location_card_widget.dart';
 
 class OrderLocationScreen extends StatefulWidget {
   final OrderModel orderModel;
   final OrderController orderController;
   final int index;
   final Function onTap;
-  const OrderLocationScreen({super.key, required this.orderModel, required this.orderController, required this.index, required this.onTap});
+  const OrderLocationScreen(
+      {super.key,
+      required this.orderModel,
+      required this.orderController,
+      required this.index,
+      required this.onTap});
 
   @override
   State<OrderLocationScreen> createState() => _OrderLocationScreenState();
@@ -31,20 +36,22 @@ class _OrderLocationScreenState extends State<OrderLocationScreen> {
 
   @override
   Widget build(BuildContext context) {
-print(widget.orderModel.groupOrderLocation);
-print("${widget.orderModel.storeLat},${widget.orderModel.storeLng}");
-print(_markers.length);
+    print(widget.orderModel.groupOrderLocation);
+    print("${widget.orderModel.storeLat},${widget.orderModel.storeLng}");
+    print(_markers.length);
     bool parcel = widget.orderModel.orderType == 'parcel';
     return Scaffold(
-
       appBar: CustomAppBarWidget(title: 'order_location'.tr),
-
       body: Stack(children: [
-
         GoogleMap(
-          initialCameraPosition: CameraPosition(target: LatLng(
-            double.parse(widget.orderModel.deliveryAddress?.latitude ?? '0'), double.parse(widget.orderModel.deliveryAddress?.longitude ?? '0'),
-          ), zoom: 16),
+          initialCameraPosition: CameraPosition(
+              target: LatLng(
+                double.parse(
+                    widget.orderModel.deliveryAddress?.latitude ?? '0'),
+                double.parse(
+                    widget.orderModel.deliveryAddress?.longitude ?? '0'),
+              ),
+              zoom: 16),
           minMaxZoomPreference: const MinMaxZoomPreference(0, 16),
           zoomControlsEnabled: false,
           markers: _markers,
@@ -53,36 +60,47 @@ print(_markers.length);
             setMarker(widget.orderModel, parcel);
           },
         ),
-
         Positioned(
-          bottom: Dimensions.paddingSizeSmall, left: Dimensions.paddingSizeSmall, right: Dimensions.paddingSizeSmall,
+          bottom: Dimensions.paddingSizeSmall,
+          left: Dimensions.paddingSizeSmall,
+          right: Dimensions.paddingSizeSmall,
           child: LocationCardWidget(
-            orderModel: widget.orderModel, orderController: widget.orderController,
-            onTap: widget.onTap, index: widget.index,
+            orderModel: widget.orderModel,
+            orderController: widget.orderController,
+            onTap: widget.onTap,
+            index: widget.index,
           ),
         ),
-
       ]),
-
     );
   }
 
   void setMarker(OrderModel orderModel, bool parcel) async {
     try {
-      Uint8List destinationImageData = await convertAssetToUnit8List(Images.customerMarker, width: 100);
-      Uint8List restaurantImageData = await convertAssetToUnit8List(parcel ? Images.userMarker : Images.restaurantMarker, width: parcel ? 70 : 100);
-      Uint8List deliveryBoyImageData = await convertAssetToUnit8List(Images.yourMarker, width: 100);
+      Uint8List destinationImageData =
+          await convertAssetToUnit8List(Images.customerMarker, width: 100);
+      Uint8List restaurantImageData = await convertAssetToUnit8List(
+          parcel ? Images.userMarker : Images.restaurantMarker,
+          width: parcel ? 70 : 100);
+      Uint8List deliveryBoyImageData =
+          await convertAssetToUnit8List(Images.yourMarker, width: 100);
 
       LatLngBounds? bounds;
       if (_controller != null) {
-        double deliveryLat = double.parse(orderModel.deliveryAddress?.latitude ?? '0');
-        double deliveryLng = double.parse(orderModel.deliveryAddress?.longitude ?? '0');
+        double deliveryLat =
+            double.parse(orderModel.deliveryAddress?.latitude ?? '0');
+        double deliveryLng =
+            double.parse(orderModel.deliveryAddress?.longitude ?? '0');
         double storeLat = double.parse(orderModel.storeLat ?? '0');
         double storeLng = double.parse(orderModel.storeLng ?? '0');
-        double receiverLat = double.parse(orderModel.receiverDetails?.latitude ?? '0');
-        double receiverLng = double.parse(orderModel.receiverDetails?.longitude ?? '0');
-        double deliveryManLat = Get.find<ProfileController>().recordLocationBody?.latitude ?? 0;
-        double deliveryManLng = Get.find<ProfileController>().recordLocationBody?.longitude ?? 0;
+        double receiverLat =
+            double.parse(orderModel.receiverDetails?.latitude ?? '0');
+        double receiverLng =
+            double.parse(orderModel.receiverDetails?.longitude ?? '0');
+        double deliveryManLat =
+            Get.find<ProfileController>().recordLocationBody?.latitude ?? 0;
+        double deliveryManLng =
+            Get.find<ProfileController>().recordLocationBody?.longitude ?? 0;
 
         // Determine bounds based on locations
         if (parcel) {
@@ -151,7 +169,9 @@ print(_markers.length);
         }
 
         // Add store marker for normal order
-        if (!parcel && orderModel.storeLat != null && orderModel.storeLng != null) {
+        if (!parcel &&
+            orderModel.storeLat != null &&
+            orderModel.storeLng != null) {
           _markers.add(Marker(
             markerId: const MarkerId('store'),
             position: LatLng(storeLat, storeLng),
@@ -170,23 +190,24 @@ print(_markers.length);
             position: LatLng(deliveryManLat, deliveryManLng),
             infoWindow: InfoWindow(
               title: 'delivery_man'.tr,
-              snippet: Get.find<ProfileController>().recordLocationBody?.location,
+              snippet:
+                  Get.find<ProfileController>().recordLocationBody?.location,
             ),
             icon: BitmapDescriptor.fromBytes(deliveryBoyImageData),
           ));
         }
-        if(orderModel.collectionOrder==true){
-          for(int i =0; i<(orderModel.groupOrderLocation?.length??0);i++){
-            if(orderModel.groupOrderLocation![i]!= LatLng(storeLat, storeLng)){
+        if (orderModel.collectionOrder == true) {
+          for (int i = 0;
+              i < (orderModel.groupOrderLocation?.length ?? 0);
+              i++) {
+            if (orderModel.groupOrderLocation![i] !=
+                LatLng(storeLat, storeLng)) {
               _markers.add(Marker(
-                markerId:  MarkerId(orderModel.groupOrder![i].toString()),
+                markerId: MarkerId(orderModel.groupOrder![i].toString()),
                 position: orderModel.groupOrderLocation![i],
-
                 icon: BitmapDescriptor.fromBytes(restaurantImageData),
               ));
             }
-
-
           }
         }
       }
@@ -198,19 +219,25 @@ print(_markers.length);
     setState(() {});
   }
 
-  Future<Uint8List> convertAssetToUnit8List(String imagePath, {int width = 50}) async {
+  Future<Uint8List> convertAssetToUnit8List(String imagePath,
+      {int width = 50}) async {
     ByteData data = await rootBundle.load(imagePath);
-    Codec codec = await instantiateImageCodec(data.buffer.asUint8List(), targetWidth: width);
+    Codec codec = await instantiateImageCodec(data.buffer.asUint8List(),
+        targetWidth: width);
     FrameInfo fi = await codec.getNextFrame();
-    return (await fi.image.toByteData(format: ImageByteFormat.png))!.buffer.asUint8List();
+    return (await fi.image.toByteData(format: ImageByteFormat.png))!
+        .buffer
+        .asUint8List();
   }
 
-  Future<void> zoomToFit(GoogleMapController? controller, LatLngBounds? bounds, LatLng centerBounds, {double padding = 0.5}) async {
+  Future<void> zoomToFit(GoogleMapController? controller, LatLngBounds? bounds,
+      LatLng centerBounds,
+      {double padding = 0.5}) async {
     bool keepZoomingOut = true;
 
-    while(keepZoomingOut) {
+    while (keepZoomingOut) {
       final LatLngBounds screenBounds = await controller!.getVisibleRegion();
-      if(fits(bounds!, screenBounds)){
+      if (fits(bounds!, screenBounds)) {
         keepZoomingOut = false;
         final double zoomLevel = await controller.getZoomLevel() - padding;
         controller.moveCamera(CameraUpdate.newCameraPosition(CameraPosition(
@@ -218,8 +245,7 @@ print(_markers.length);
           zoom: zoomLevel,
         )));
         break;
-      }
-      else {
+      } else {
         // Zooming out by 0.1 zoom level per iteration
         final double zoomLevel = await controller.getZoomLevel() - 0.1;
         controller.moveCamera(CameraUpdate.newCameraPosition(CameraPosition(
@@ -231,12 +257,19 @@ print(_markers.length);
   }
 
   bool fits(LatLngBounds fitBounds, LatLngBounds screenBounds) {
-    final bool northEastLatitudeCheck = screenBounds.northeast.latitude >= fitBounds.northeast.latitude;
-    final bool northEastLongitudeCheck = screenBounds.northeast.longitude >= fitBounds.northeast.longitude;
+    final bool northEastLatitudeCheck =
+        screenBounds.northeast.latitude >= fitBounds.northeast.latitude;
+    final bool northEastLongitudeCheck =
+        screenBounds.northeast.longitude >= fitBounds.northeast.longitude;
 
-    final bool southWestLatitudeCheck = screenBounds.southwest.latitude <= fitBounds.southwest.latitude;
-    final bool southWestLongitudeCheck = screenBounds.southwest.longitude <= fitBounds.southwest.longitude;
+    final bool southWestLatitudeCheck =
+        screenBounds.southwest.latitude <= fitBounds.southwest.latitude;
+    final bool southWestLongitudeCheck =
+        screenBounds.southwest.longitude <= fitBounds.southwest.longitude;
 
-    return northEastLatitudeCheck && northEastLongitudeCheck && southWestLatitudeCheck && southWestLongitudeCheck;
+    return northEastLatitudeCheck &&
+        northEastLongitudeCheck &&
+        southWestLatitudeCheck &&
+        southWestLongitudeCheck;
   }
 }

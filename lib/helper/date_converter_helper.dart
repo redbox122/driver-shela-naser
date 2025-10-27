@@ -1,4 +1,4 @@
-import 'package:sixam_mart_delivery/features/splash/controllers/splash_controller.dart';
+import 'package:shellafood_delivery/features/splash/controllers/splash_controller.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
@@ -12,11 +12,13 @@ class DateConverterHelper {
   }
 
   static String dateTimeStringToDateTime(String dateTime) {
-    return DateFormat('dd MMM yyyy  ${_timeFormatter()}').format(DateFormat('yyyy-MM-dd HH:mm:ss').parse(dateTime));
+    return DateFormat('dd MMM yyyy  ${_timeFormatter()}')
+        .format(DateFormat('yyyy-MM-dd HH:mm:ss').parse(dateTime));
   }
 
   static String dateTimeStringToDateOnly(String dateTime) {
-    return DateFormat('dd MMM yyyy').format(DateFormat('yyyy-MM-dd HH:mm:ss').parse(dateTime));
+    return DateFormat('dd MMM yyyy')
+        .format(DateFormat('yyyy-MM-dd HH:mm:ss').parse(dateTime));
   }
 
   static DateTime dateTimeStringToDate(String dateTime) {
@@ -44,7 +46,8 @@ class DateConverterHelper {
   }
 
   static String isoStringToLocalDateAnTime(String dateTime) {
-    return DateFormat('dd/MMM/yyyy ${_timeFormatter()}').format(isoStringToLocalDate(dateTime));
+    return DateFormat('dd/MMM/yyyy ${_timeFormatter()}')
+        .format(isoStringToLocalDate(dateTime));
   }
 
   static String localDateToIsoString(DateTime dateTime) {
@@ -52,7 +55,8 @@ class DateConverterHelper {
   }
 
   static String convertTimeToTime(String time) {
-    return DateFormat(_timeFormatter()).format(DateFormat('hh:mm:ss').parse(time));
+    return DateFormat(_timeFormatter())
+        .format(DateFormat('hh:mm:ss').parse(time));
   }
 
   static int timeDistanceInMin(String time) {
@@ -62,20 +66,23 @@ class DateConverterHelper {
   }
 
   static String _timeFormatter() {
-    return Get.find<SplashController>().configModel!.timeformat == '24' ? 'HH:mm' : 'hh:mm a';
+    return Get.find<SplashController>().configModel!.timeformat == '24'
+        ? 'HH:mm'
+        : 'hh:mm a';
   }
 
   static String localDateToIsoStringAMPM(DateTime dateTime) {
-    return DateFormat('${_timeFormatter()} | d-MMM-yyyy ').format(dateTime.toLocal());
+    return DateFormat('${_timeFormatter()} | d-MMM-yyyy ')
+        .format(dateTime.toLocal());
   }
 
   static String dateTimeStringForDisbursement(String time) {
-    var newTime = '${time.substring(0,10)} ${time.substring(11,23)}';
-    return DateFormat('dd MMM, yyyy').format(DateFormat('yyyy-MM-dd HH:mm:ss').parse(newTime));
+    var newTime = '${time.substring(0, 10)} ${time.substring(11, 23)}';
+    return DateFormat('dd MMM, yyyy')
+        .format(DateFormat('yyyy-MM-dd HH:mm:ss').parse(newTime));
   }
 
   static String dateTimeForCoupon(DateTime dateTime) {
     return DateFormat('yyyy-MM-dd').format(dateTime);
   }
-
 }

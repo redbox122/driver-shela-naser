@@ -1,17 +1,17 @@
 import 'dart:async';
-import 'package:sixam_mart_delivery/common/models/response_model.dart';
-import 'package:sixam_mart_delivery/features/auth/controllers/auth_controller.dart';
-import 'package:sixam_mart_delivery/features/splash/controllers/splash_controller.dart';
-import 'package:sixam_mart_delivery/features/address/domain/models/record_location_body_model.dart';
-import 'package:sixam_mart_delivery/features/profile/domain/models/profile_model.dart';
-import 'package:sixam_mart_delivery/helper/route_helper.dart';
-import 'package:sixam_mart_delivery/util/images.dart';
-import 'package:sixam_mart_delivery/common/widgets/confirmation_dialog_widget.dart';
-import 'package:sixam_mart_delivery/common/widgets/custom_snackbar_widget.dart';
+import 'package:shellafood_delivery/common/models/response_model.dart';
+import 'package:shellafood_delivery/features/auth/controllers/auth_controller.dart';
+import 'package:shellafood_delivery/features/splash/controllers/splash_controller.dart';
+import 'package:shellafood_delivery/features/address/domain/models/record_location_body_model.dart';
+import 'package:shellafood_delivery/features/profile/domain/models/profile_model.dart';
+import 'package:shellafood_delivery/helper/route_helper.dart';
+import 'package:shellafood_delivery/util/images.dart';
+import 'package:shellafood_delivery/common/widgets/confirmation_dialog_widget.dart';
+import 'package:shellafood_delivery/common/widgets/custom_snackbar_widget.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:sixam_mart_delivery/features/profile/domain/services/profile_service_interface.dart';
+import 'package:shellafood_delivery/features/profile/domain/services/profile_service_interface.dart';
 
 class ProfileController extends GetxController implements GetxService {
   final ProfileServiceInterface profileServiceInterface;
@@ -37,17 +37,23 @@ class ProfileController extends GetxController implements GetxService {
       _profileModel = profileModel;
       if (_profileModel!.active == 1) {
         LocationPermission permission = await Geolocator.checkPermission();
-        if(permission == LocationPermission.denied || permission == LocationPermission.deniedForever
-            || (GetPlatform.isIOS ? false : true)) {
-          Get.dialog(ConfirmationDialogWidget(
-            icon: Images.locationPermission, iconSize: 200, hasCancel: false,
-            description: 'this_app_collects_location_data'.tr,
-            onYesPressed: () {
-              Get.back();
-              profileServiceInterface.checkPermission(() => startLocationRecord());
-            },
-          ), barrierDismissible: false);
-        }else {
+        if (permission == LocationPermission.denied ||
+            permission == LocationPermission.deniedForever ||
+            (GetPlatform.isIOS ? false : true)) {
+          Get.dialog(
+              ConfirmationDialogWidget(
+                icon: Images.locationPermission,
+                iconSize: 200,
+                hasCancel: false,
+                description: 'this_app_collects_location_data'.tr,
+                onYesPressed: () {
+                  Get.back();
+                  profileServiceInterface
+                      .checkPermission(() => startLocationRecord());
+                },
+              ),
+              barrierDismissible: false);
+        } else {
           startLocationRecord();
         }
       } else {
@@ -57,10 +63,12 @@ class ProfileController extends GetxController implements GetxService {
     update();
   }
 
-  Future<bool> updateUserInfo(ProfileModel updateUserModel, String token) async {
+  Future<bool> updateUserInfo(
+      ProfileModel updateUserModel, String token) async {
     _isLoading = true;
     update();
-    ResponseModel responseModel = await profileServiceInterface.updateProfile(updateUserModel, _pickedFile, token);
+    ResponseModel responseModel = await profileServiceInterface.updateProfile(
+        updateUserModel, _pickedFile, token);
     _isLoading = false;
     if (responseModel.isSuccess) {
       _profileModel = updateUserModel;
@@ -83,23 +91,30 @@ class ProfileController extends GetxController implements GetxService {
   }
 
   Future<bool> updateActiveStatus() async {
-    ResponseModel responseModel = await profileServiceInterface.updateActiveStatus();
+    ResponseModel responseModel =
+        await profileServiceInterface.updateActiveStatus();
     if (responseModel.isSuccess) {
       _profileModel!.active = _profileModel!.active == 0 ? 1 : 0;
       showCustomSnackBar(responseModel.message, isError: false);
       if (_profileModel!.active == 1) {
         LocationPermission permission = await Geolocator.checkPermission();
-        if(permission == LocationPermission.denied || permission == LocationPermission.deniedForever
-            || (GetPlatform.isIOS ? false : true)) {
-          Get.dialog(ConfirmationDialogWidget(
-            icon: Images.locationPermission, iconSize: 200, hasCancel: false,
-            description: 'this_app_collects_location_data'.tr,
-            onYesPressed: () {
-              Get.back();
-              profileServiceInterface.checkPermission(() => startLocationRecord());
-            },
-          ), barrierDismissible: false);
-        }else {
+        if (permission == LocationPermission.denied ||
+            permission == LocationPermission.deniedForever ||
+            (GetPlatform.isIOS ? false : true)) {
+          Get.dialog(
+              ConfirmationDialogWidget(
+                icon: Images.locationPermission,
+                iconSize: 200,
+                hasCancel: false,
+                description: 'this_app_collects_location_data'.tr,
+                onYesPressed: () {
+                  Get.back();
+                  profileServiceInterface
+                      .checkPermission(() => startLocationRecord());
+                },
+              ),
+              barrierDismissible: false);
+        } else {
           startLocationRecord();
         }
       } else {
@@ -122,7 +137,7 @@ class ProfileController extends GetxController implements GetxService {
       Get.find<AuthController>().clearSharedData();
       stopLocationRecord();
       Get.offAllNamed(RouteHelper.getSignInRoute());
-    }else{
+    } else {
       Get.back();
       showCustomSnackBar(responseModel.message, isError: true);
     }
@@ -141,19 +156,21 @@ class ProfileController extends GetxController implements GetxService {
 
   Future<void> recordLocation() async {
     final Position locationResult = await Geolocator.getCurrentPosition();
-    String address = await profileServiceInterface.addressPlaceMark(locationResult);
+    String address =
+        await profileServiceInterface.addressPlaceMark(locationResult);
 
 /*    _recordLocation = RecordLocationBodyModel(
       location: address, latitude: locationResult.latitude, longitude: locationResult.longitude,
     );*/
     _recordLocation = RecordLocationBodyModel(
-      location: address, latitude: 24.700531572620886, longitude: 46.7287762170735,
+      location: address,
+      latitude: 24.700531572620886,
+      longitude: 46.7287762170735,
     );
-    if(Get.find<SplashController>().configModel!.webSocketStatus!) {
+    if (Get.find<SplashController>().configModel!.webSocketStatus!) {
       await profileServiceInterface.recordWebSocketLocation(_recordLocation!);
     } else {
       await profileServiceInterface.recordLocation(_recordLocation!);
     }
   }
-
 }

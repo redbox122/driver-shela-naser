@@ -5,10 +5,10 @@
 // 'flutter create' template.
 
 // The application's name. By default this is also the title of the Flutter window.
-PRODUCT_NAME = sixam_mart_delivery
+PRODUCT_NAME = shellafood_delivery
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.delivery.shala.sixamMartDelivery
+PRODUCT_BUNDLE_IDENTIFIER = com.delivery.shellafood_delivery.shellafoodDelivery
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2025 com.delivery.shala. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2025 com.delivery.shellafood_delivery. All rights reserved.

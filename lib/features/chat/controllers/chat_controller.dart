@@ -1,11 +1,11 @@
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:sixam_mart_delivery/api/api_client.dart';
-import 'package:sixam_mart_delivery/features/notification/domain/models/notification_body_model.dart';
-import 'package:sixam_mart_delivery/features/chat/domain/models/conversation_model.dart';
-import 'package:sixam_mart_delivery/features/chat/domain/models/message_model.dart';
-import 'package:sixam_mart_delivery/features/chat/domain/services/chat_service_interface.dart';
-import 'package:sixam_mart_delivery/features/profile/controllers/profile_controller.dart';
+import 'package:shellafood_delivery/api/api_client.dart';
+import 'package:shellafood_delivery/features/notification/domain/models/notification_body_model.dart';
+import 'package:shellafood_delivery/features/chat/domain/models/conversation_model.dart';
+import 'package:shellafood_delivery/features/chat/domain/models/message_model.dart';
+import 'package:shellafood_delivery/features/chat/domain/services/chat_service_interface.dart';
+import 'package:shellafood_delivery/features/profile/controllers/profile_controller.dart';
 
 class ChatController extends GetxController implements GetxService {
   final ChatServiceInterface chatServiceInterface;
@@ -29,10 +29,10 @@ class ChatController extends GetxController implements GetxService {
   final bool _isMe = false;
   bool get isMe => _isMe;
 
-  bool _isLoading= false;
+  bool _isLoading = false;
   bool get isLoading => _isLoading;
 
-  List <XFile>?_chatImage = [];
+  List<XFile>? _chatImage = [];
   List<XFile>? get chatImage => _chatImage;
 
   int? _pageSize;
@@ -41,7 +41,7 @@ class ChatController extends GetxController implements GetxService {
   int? _offset;
   int? get offset => _offset;
 
-  ConversationsModel? _conversationModel ;
+  ConversationsModel? _conversationModel;
   ConversationsModel? get conversationModel => _conversationModel;
 
   ConversationsModel? _searchConversationModel;
@@ -50,17 +50,19 @@ class ChatController extends GetxController implements GetxService {
   MessageModel? _messageModel;
   MessageModel? get messageModel => _messageModel;
 
-  Future<void> getConversationList(int offset) async{
+  Future<void> getConversationList(int offset) async {
     _searchConversationModel = null;
     _conversationModel = null;
-    ConversationsModel? conversationModel = await chatServiceInterface.getConversationList(offset);
-    if(conversationModel != null) {
-      if(offset == 1) {
+    ConversationsModel? conversationModel =
+        await chatServiceInterface.getConversationList(offset);
+    if (conversationModel != null) {
+      if (offset == 1) {
         _conversationModel = conversationModel;
-      }else {
+      } else {
         _conversationModel!.totalSize = conversationModel.totalSize;
         _conversationModel!.offset = conversationModel.offset;
-        _conversationModel!.conversations!.addAll(conversationModel.conversations!);
+        _conversationModel!.conversations!
+            .addAll(conversationModel.conversations!);
       }
     }
     update();
@@ -69,8 +71,9 @@ class ChatController extends GetxController implements GetxService {
   Future<void> searchConversation(String name) async {
     _searchConversationModel = ConversationsModel();
     update();
-    ConversationsModel? searchConversationModel = await chatServiceInterface.searchConversationList(name);
-    if(searchConversationModel != null) {
+    ConversationsModel? searchConversationModel =
+        await chatServiceInterface.searchConversationList(name);
+    if (searchConversationModel != null) {
       _searchConversationModel = searchConversationModel;
     }
     update();
@@ -81,30 +84,40 @@ class ChatController extends GetxController implements GetxService {
     update();
   }
 
-  Future<void> getMessages(int offset, NotificationBodyModel notificationBody, User? user, int? conversationID, {bool firstLoad = false}) async {
-    if(firstLoad) {
+  Future<void> getMessages(int offset, NotificationBodyModel notificationBody,
+      User? user, int? conversationID,
+      {bool firstLoad = false}) async {
+    if (firstLoad) {
       _messageModel = null;
     }
 
-    MessageModel? messageModel = await chatServiceInterface.processGetMessage(offset, notificationBody, conversationID);
+    MessageModel? messageModel = await chatServiceInterface.processGetMessage(
+        offset, notificationBody, conversationID);
 
     if (messageModel != null) {
       if (offset == 1) {
-        if(Get.find<ProfileController>().profileModel == null) {
+        if (Get.find<ProfileController>().profileModel == null) {
           await Get.find<ProfileController>().getProfile();
         }
         _messageModel = messageModel;
-        if(_messageModel!.conversation == null && user != null) {
-          _messageModel!.conversation = Conversation(sender: User(
-            id: Get.find<ProfileController>().profileModel!.id, imageFullUrl: Get.find<ProfileController>().profileModel!.imageFullUrl,
-            fName: Get.find<ProfileController>().profileModel!.fName, lName: Get.find<ProfileController>().profileModel!.lName,
-          ), receiver: user);
-        }else if(_messageModel!.conversation != null && _messageModel!.conversation!.receiverType == 'delivery_man') {
+        if (_messageModel!.conversation == null && user != null) {
+          _messageModel!.conversation = Conversation(
+              sender: User(
+                id: Get.find<ProfileController>().profileModel!.id,
+                imageFullUrl:
+                    Get.find<ProfileController>().profileModel!.imageFullUrl,
+                fName: Get.find<ProfileController>().profileModel!.fName,
+                lName: Get.find<ProfileController>().profileModel!.lName,
+              ),
+              receiver: user);
+        } else if (_messageModel!.conversation != null &&
+            _messageModel!.conversation!.receiverType == 'delivery_man') {
           User? receiver = _messageModel!.conversation!.receiver;
-          _messageModel!.conversation!.receiver = _messageModel!.conversation!.sender;
+          _messageModel!.conversation!.receiver =
+              _messageModel!.conversation!.sender;
           _messageModel!.conversation!.sender = receiver;
         }
-      }else {
+      } else {
         _messageModel!.totalSize = messageModel.totalSize;
         _messageModel!.offset = messageModel.offset;
         _messageModel!.messages!.addAll(messageModel.messages!);
@@ -112,16 +125,20 @@ class ChatController extends GetxController implements GetxService {
     }
     _isLoading = false;
     update();
-
   }
 
-  Future<bool> sendMessage({required String message, required NotificationBodyModel? notificationBody, required int? conversationId}) async {
+  Future<bool> sendMessage(
+      {required String message,
+      required NotificationBodyModel? notificationBody,
+      required int? conversationId}) async {
     bool isSuccess = false;
     _isLoading = true;
     update();
 
-    List<MultipartBody> chatImage = chatServiceInterface.processMultipartBody(_chatImage!);
-    MessageModel? messageModel = await chatServiceInterface.processSendMessage(notificationBody, chatImage, message, conversationId);
+    List<MultipartBody> chatImage =
+        chatServiceInterface.processMultipartBody(_chatImage!);
+    MessageModel? messageModel = await chatServiceInterface.processSendMessage(
+        notificationBody, chatImage, message, conversationId);
 
     if (messageModel != null) {
       _imageFiles = [];
@@ -129,9 +146,11 @@ class ChatController extends GetxController implements GetxService {
       _isSendButtonActive = false;
       _isLoading = false;
       _messageModel = messageModel;
-      if(_messageModel!.conversation != null && _messageModel!.conversation!.receiverType == 'delivery_man') {
+      if (_messageModel!.conversation != null &&
+          _messageModel!.conversation!.receiverType == 'delivery_man') {
         User? receiver = _messageModel!.conversation!.receiver;
-        _messageModel!.conversation!.receiver = _messageModel!.conversation!.sender;
+        _messageModel!.conversation!.receiver =
+            _messageModel!.conversation!.sender;
         _messageModel!.conversation!.sender = receiver;
       }
       isSuccess = true;
@@ -142,10 +161,10 @@ class ChatController extends GetxController implements GetxService {
 
   void pickImage(bool isRemove) async {
     final ImagePicker picker = ImagePicker();
-    if(isRemove) {
+    if (isRemove) {
       _imageFiles = [];
       _chatImage = [];
-    }else {
+    } else {
       _imageFiles = await picker.pickMultiImage(imageQuality: 30);
       if (_imageFiles != null) {
         _chatImage = imageFiles;
@@ -154,7 +173,8 @@ class ChatController extends GetxController implements GetxService {
     }
     update();
   }
-  void removeImage(int index){
+
+  void removeImage(int index) {
     chatImage!.removeAt(index);
     update();
   }
@@ -163,5 +183,4 @@ class ChatController extends GetxController implements GetxService {
     _isSendButtonActive = !_isSendButtonActive;
     update();
   }
-
 }

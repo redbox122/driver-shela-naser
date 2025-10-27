@@ -1,6 +1,6 @@
-import 'package:sixam_mart_delivery/common/models/config_model.dart';
+import 'package:shellafood_delivery/common/models/config_model.dart';
 import 'package:get/get.dart';
-import 'package:sixam_mart_delivery/features/splash/domain/services/splash_service_interface.dart';
+import 'package:shellafood_delivery/features/splash/domain/services/splash_service_interface.dart';
 
 class SplashController extends GetxController implements GetxService {
   final SplashServiceInterface splashServiceInterface;
@@ -24,25 +24,28 @@ class SplashController extends GetxController implements GetxService {
 
   Module getModuleConfig(String? moduleType) {
     Module module = Module.fromJson(_data!['module_config'][moduleType]);
-    moduleType == 'food' ? module.newVariation = true : module.newVariation = false;
+    moduleType == 'food'
+        ? module.newVariation = true
+        : module.newVariation = false;
     return module;
   }
 
   Future<bool> getConfigData() async {
     Response response = await splashServiceInterface.getConfigData();
     bool isSuccess = false;
-    if(response.statusCode == 200) {
+    if (response.statusCode == 200) {
       _data = response.body;
       _configModel = ConfigModel.fromJson(response.body);
       isSuccess = true;
-    }else {
+    } else {
       isSuccess = false;
     }
     update();
     return isSuccess;
   }
 
-  Module getModule(String? moduleType) => Module.fromJson(_data!['module_config'][moduleType]);
+  Module getModule(String? moduleType) =>
+      Module.fromJson(_data!['module_config'][moduleType]);
 
   Future<bool> initSharedData() {
     return splashServiceInterface.initSharedData();
@@ -55,5 +58,4 @@ class SplashController extends GetxController implements GetxService {
   void setFirstTimeConnectionCheck(bool isChecked) {
     _firstTimeConnectionCheck = isChecked;
   }
-
 }

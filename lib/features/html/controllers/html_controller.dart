@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import 'package:sixam_mart_delivery/features/html/domain/services/html_service_interface.dart';
+import 'package:shellafood_delivery/features/html/domain/services/html_service_interface.dart';
 
 class HtmlController extends GetxController implements GetxService {
   final HtmlServiceInterface htmlServiceInterface;
@@ -12,13 +12,14 @@ class HtmlController extends GetxController implements GetxService {
     _htmlText = null;
     Response response = await htmlServiceInterface.getHtmlText(isPrivacyPolicy);
     if (response.statusCode == 200) {
-      if(response.body != null && response.body.isNotEmpty && response.body is String) {
+      if (response.body != null &&
+          response.body.isNotEmpty &&
+          response.body is String) {
         _htmlText = response.body.replaceAll('href=', 'target="_blank" href=');
-      }else {
+      } else {
         _htmlText = '';
       }
     }
     update();
   }
-
 }

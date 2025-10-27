@@ -1,14 +1,14 @@
 import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:sixam_mart_delivery/features/auth/controllers/auth_controller.dart';
-import 'package:sixam_mart_delivery/features/profile/controllers/profile_controller.dart';
-import 'package:sixam_mart_delivery/features/splash/controllers/splash_controller.dart';
-import 'package:sixam_mart_delivery/features/notification/domain/models/notification_body_model.dart';
-import 'package:sixam_mart_delivery/helper/route_helper.dart';
-import 'package:sixam_mart_delivery/util/app_constants.dart';
-import 'package:sixam_mart_delivery/util/dimensions.dart';
-import 'package:sixam_mart_delivery/util/images.dart';
-import 'package:sixam_mart_delivery/util/styles.dart';
+import 'package:shellafood_delivery/features/auth/controllers/auth_controller.dart';
+import 'package:shellafood_delivery/features/profile/controllers/profile_controller.dart';
+import 'package:shellafood_delivery/features/splash/controllers/splash_controller.dart';
+import 'package:shellafood_delivery/features/notification/domain/models/notification_body_model.dart';
+import 'package:shellafood_delivery/helper/route_helper.dart';
+import 'package:shellafood_delivery/util/app_constants.dart';
+import 'package:shellafood_delivery/util/dimensions.dart';
+import 'package:shellafood_delivery/util/images.dart';
+import 'package:shellafood_delivery/util/styles.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -28,16 +28,21 @@ class SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
 
-    if(Get.find<AuthController>().isLoggedIn()) {
+    if (Get.find<AuthController>().isLoggedIn()) {
       Get.find<ProfileController>().getProfile();
     }
 
     bool firstTime = true;
-    _onConnectivityChanged = Connectivity().onConnectivityChanged.listen((List<ConnectivityResult> results) {
-      if(!firstTime) {
+    _onConnectivityChanged = Connectivity()
+        .onConnectivityChanged
+        .listen((List<ConnectivityResult> results) {
+      if (!firstTime) {
         final result = results.first;
-        bool isNotConnected = result != ConnectivityResult.wifi && result != ConnectivityResult.mobile;
-        isNotConnected ? const SizedBox() : ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        bool isNotConnected = result != ConnectivityResult.wifi &&
+            result != ConnectivityResult.mobile;
+        isNotConnected
+            ? const SizedBox()
+            : ScaffoldMessenger.of(context).hideCurrentSnackBar();
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           backgroundColor: isNotConnected ? Colors.red : Colors.green,
           duration: Duration(seconds: isNotConnected ? 6000 : 3),
@@ -46,7 +51,7 @@ class SplashScreenState extends State<SplashScreen> {
             textAlign: TextAlign.center,
           ),
         ));
-        if(!isNotConnected) {
+        if (!isNotConnected) {
           _route();
         }
       }
@@ -65,28 +70,41 @@ class SplashScreenState extends State<SplashScreen> {
 
   void _route() {
     Get.find<SplashController>().getConfigData().then((isSuccess) {
-      if(isSuccess) {
+      if (isSuccess) {
         Timer(const Duration(seconds: 1), () async {
           double? minimumVersion = 0;
-          if(GetPlatform.isAndroid) {
-            minimumVersion = Get.find<SplashController>().configModel!.appMinimumVersionAndroid;
-          }else if(GetPlatform.isIOS) {
-            minimumVersion = Get.find<SplashController>().configModel!.appMinimumVersionIos;
+          if (GetPlatform.isAndroid) {
+            minimumVersion = Get.find<SplashController>()
+                .configModel!
+                .appMinimumVersionAndroid;
+          } else if (GetPlatform.isIOS) {
+            minimumVersion =
+                Get.find<SplashController>().configModel!.appMinimumVersionIos;
           }
-          if(AppConstants.appVersion < minimumVersion! || Get.find<SplashController>().configModel!.maintenanceMode!) {
-            Get.offNamed(RouteHelper.getUpdateRoute(AppConstants.appVersion < minimumVersion));
-          }else{
-            if(widget.body != null) {
+          if (AppConstants.appVersion < minimumVersion! ||
+              Get.find<SplashController>().configModel!.maintenanceMode!) {
+            Get.offNamed(RouteHelper.getUpdateRoute(
+                AppConstants.appVersion < minimumVersion));
+          } else {
+            if (widget.body != null) {
               if (widget.body!.notificationType == NotificationType.order) {
-                Get.offNamed(RouteHelper.getOrderDetailsRoute(widget.body!.orderId, fromNotification: true));
-              }else if(widget.body!.notificationType == NotificationType.order_request){
+                Get.offNamed(RouteHelper.getOrderDetailsRoute(
+                    widget.body!.orderId,
+                    fromNotification: true));
+              } else if (widget.body!.notificationType ==
+                  NotificationType.order_request) {
                 Get.offNamed(RouteHelper.getMainRoute('order-request'));
-              }else if(widget.body!.notificationType == NotificationType.general){
-                Get.offNamed(RouteHelper.getNotificationRoute(fromNotification: true));
+              } else if (widget.body!.notificationType ==
+                  NotificationType.general) {
+                Get.offNamed(
+                    RouteHelper.getNotificationRoute(fromNotification: true));
               } else {
-                Get.offNamed(RouteHelper.getChatRoute(notificationBody: widget.body, conversationId: widget.body!.conversationId, fromNotification: true));
+                Get.offNamed(RouteHelper.getChatRoute(
+                    notificationBody: widget.body,
+                    conversationId: widget.body!.conversationId,
+                    fromNotification: true));
               }
-            }else {
+            } else {
               if (Get.find<AuthController>().isLoggedIn()) {
                 Get.find<AuthController>().updateToken();
                 await Get.find<ProfileController>().getProfile();
@@ -111,7 +129,8 @@ class SplashScreenState extends State<SplashScreen> {
           child: Column(mainAxisSize: MainAxisSize.min, children: [
             Image.asset(Images.logo, width: 200),
             const SizedBox(height: Dimensions.paddingSizeSmall),
-            Text('suffix_name'.tr, style: robotoMedium, textAlign: TextAlign.center),
+            Text('suffix_name'.tr,
+                style: robotoMedium, textAlign: TextAlign.center),
           ]),
         ),
       ),

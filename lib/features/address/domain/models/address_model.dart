@@ -1,4 +1,4 @@
-import 'package:sixam_mart_delivery/features/address/domain/models/zone_response_model.dart';
+import 'package:shellafood_delivery/features/address/domain/models/zone_response_model.dart';
 
 class AddressModel {
   int? id;

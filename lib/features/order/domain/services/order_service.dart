@@ -1,14 +1,14 @@
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:sixam_mart_delivery/api/api_client.dart';
-import 'package:sixam_mart_delivery/common/models/response_model.dart';
-import 'package:sixam_mart_delivery/features/order/domain/models/ignore_model.dart';
-import 'package:sixam_mart_delivery/features/order/domain/models/order_cancellation_body.dart';
-import 'package:sixam_mart_delivery/features/order/domain/models/order_details_model.dart';
-import 'package:sixam_mart_delivery/features/order/domain/models/order_model.dart';
-import 'package:sixam_mart_delivery/features/order/domain/models/update_status_body_model.dart';
-import 'package:sixam_mart_delivery/features/order/domain/repositories/order_repository_interface.dart';
-import 'package:sixam_mart_delivery/features/order/domain/services/order_service_interface.dart';
+import 'package:shellafood_delivery/api/api_client.dart';
+import 'package:shellafood_delivery/common/models/response_model.dart';
+import 'package:shellafood_delivery/features/order/domain/models/ignore_model.dart';
+import 'package:shellafood_delivery/features/order/domain/models/order_cancellation_body.dart';
+import 'package:shellafood_delivery/features/order/domain/models/order_details_model.dart';
+import 'package:shellafood_delivery/features/order/domain/models/order_model.dart';
+import 'package:shellafood_delivery/features/order/domain/models/update_status_body_model.dart';
+import 'package:shellafood_delivery/features/order/domain/repositories/order_repository_interface.dart';
+import 'package:shellafood_delivery/features/order/domain/services/order_service_interface.dart';
 
 class OrderService implements OrderServiceInterface {
   final OrderRepositoryInterface orderRepositoryInterface;
@@ -40,8 +40,11 @@ class OrderService implements OrderServiceInterface {
   }
 
   @override
-  Future<ResponseModel> updateOrderStatus(UpdateStatusBodyModel updateStatusBody, List<MultipartBody> proofAttachment) async {
-    return await orderRepositoryInterface.updateOrderStatus(updateStatusBody, proofAttachment);
+  Future<ResponseModel> updateOrderStatus(
+      UpdateStatusBodyModel updateStatusBody,
+      List<MultipartBody> proofAttachment) async {
+    return await orderRepositoryInterface.updateOrderStatus(
+        updateStatusBody, proofAttachment);
   }
 
   @override
@@ -65,10 +68,11 @@ class OrderService implements OrderServiceInterface {
   }
 
   @override
-  List<OrderModel> processLatestOrders(List<OrderModel> latestOrderList, List<int?> ignoredIdList) {
+  List<OrderModel> processLatestOrders(
+      List<OrderModel> latestOrderList, List<int?> ignoredIdList) {
     List<OrderModel> latestOrderList0 = [];
     for (var order in latestOrderList) {
-      if(!ignoredIdList.contains(order.id)) {
+      if (!ignoredIdList.contains(order.id)) {
         latestOrderList0.add(order);
       }
     }
@@ -85,11 +89,12 @@ class OrderService implements OrderServiceInterface {
   }
 
   @override
-  List<IgnoreModel> tempList(DateTime currentTime, List<IgnoreModel> ignoredRequests) {
+  List<IgnoreModel> tempList(
+      DateTime currentTime, List<IgnoreModel> ignoredRequests) {
     List<IgnoreModel> tempList = [];
     tempList.addAll(ignoredRequests);
-    for(int index = 0; index < tempList.length; index++) {
-      if(currentTime.difference(tempList[index].time!).inMinutes > 10) {
+    for (int index = 0; index < tempList.length; index++) {
+      if (currentTime.difference(tempList[index].time!).inMinutes > 10) {
         tempList.removeAt(index);
       }
     }
@@ -99,7 +104,7 @@ class OrderService implements OrderServiceInterface {
   @override
   List<MultipartBody> prepareOrderProofImages(List<XFile> pickedPrescriptions) {
     List<MultipartBody> multiParts = [];
-    for(XFile file in pickedPrescriptions) {
+    for (XFile file in pickedPrescriptions) {
       multiParts.add(MultipartBody('order_proof[]', file));
     }
     return multiParts;
@@ -107,8 +112,6 @@ class OrderService implements OrderServiceInterface {
 
   @override
   Future<bool> setPriceService(int orderId, double price) {
-    return orderRepositoryInterface.setPriceService(orderId,price);
-
+    return orderRepositoryInterface.setPriceService(orderId, price);
   }
-
 }

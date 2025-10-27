@@ -1,9 +1,9 @@
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sixam_mart_delivery/api/api_client.dart';
-import 'package:sixam_mart_delivery/features/address/domain/models/zone_model.dart';
-import 'package:sixam_mart_delivery/features/address/domain/repositories/address_repository_interface.dart';
-import 'package:sixam_mart_delivery/util/app_constants.dart';
+import 'package:shellafood_delivery/api/api_client.dart';
+import 'package:shellafood_delivery/features/address/domain/models/zone_model.dart';
+import 'package:shellafood_delivery/features/address/domain/repositories/address_repository_interface.dart';
+import 'package:shellafood_delivery/util/app_constants.dart';
 
 class AddressRepository implements AddressRepositoryInterface {
   final ApiClient apiClient;
@@ -59,5 +59,4 @@ class AddressRepository implements AddressRepositoryInterface {
   Future update(Map<String, dynamic> body) {
     throw UnimplementedError();
   }
-
 }

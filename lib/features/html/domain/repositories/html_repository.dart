@@ -1,8 +1,8 @@
 import 'package:get/get.dart';
-import 'package:sixam_mart_delivery/api/api_client.dart';
-import 'package:sixam_mart_delivery/features/html/domain/repositories/html_repository_interface.dart';
-import 'package:sixam_mart_delivery/features/language/controllers/language_controller.dart';
-import 'package:sixam_mart_delivery/util/app_constants.dart';
+import 'package:shellafood_delivery/api/api_client.dart';
+import 'package:shellafood_delivery/features/html/domain/repositories/html_repository_interface.dart';
+import 'package:shellafood_delivery/features/language/controllers/language_controller.dart';
+import 'package:shellafood_delivery/util/app_constants.dart';
 
 class HtmlRepository implements HtmlRepositoryInterface {
   final ApiClient apiClient;
@@ -11,12 +11,15 @@ class HtmlRepository implements HtmlRepositoryInterface {
   @override
   Future<Response> getHtmlText(bool isPrivacyPolicy) async {
     return await apiClient.getData(
-      isPrivacyPolicy ? AppConstants.privacyPolicyUri : AppConstants.tramsAndConditionUri,
+      isPrivacyPolicy
+          ? AppConstants.privacyPolicyUri
+          : AppConstants.tramsAndConditionUri,
       headers: {
         'Content-Type': 'application/json; charset=UTF-8',
         'Accept': 'application/json',
         'moduleId': '',
-        AppConstants.localizationKey: Get.find<LocalizationController>().locale.languageCode,
+        AppConstants.localizationKey:
+            Get.find<LocalizationController>().locale.languageCode,
       },
     );
   }
@@ -45,5 +48,4 @@ class HtmlRepository implements HtmlRepositoryInterface {
   Future update(Map<String, dynamic> body) {
     throw UnimplementedError();
   }
-
 }

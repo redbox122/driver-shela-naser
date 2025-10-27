@@ -1,23 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sixam_mart_delivery/api/api_client.dart';
-import 'package:sixam_mart_delivery/features/language/domain/repositories/language_repository_interface.dart';
-import 'package:sixam_mart_delivery/util/app_constants.dart';
+import 'package:shellafood_delivery/api/api_client.dart';
+import 'package:shellafood_delivery/features/language/domain/repositories/language_repository_interface.dart';
+import 'package:shellafood_delivery/util/app_constants.dart';
 
 class LanguageRepository implements LanguageRepositoryInterface {
   final ApiClient apiClient;
   final SharedPreferences sharedPreferences;
-  LanguageRepository({required this.apiClient, required this.sharedPreferences});
+  LanguageRepository(
+      {required this.apiClient, required this.sharedPreferences});
 
   @override
   void updateHeader(Locale locale) {
-    apiClient.updateHeader(sharedPreferences.getString(AppConstants.token), locale.languageCode);
+    apiClient.updateHeader(
+        sharedPreferences.getString(AppConstants.token), locale.languageCode);
   }
 
   @override
   Locale getLocaleFromSharedPref() {
-    return Locale(sharedPreferences.getString(AppConstants.languageCode) ?? AppConstants.languages[0].languageCode!,
-        sharedPreferences.getString(AppConstants.countryCode) ?? AppConstants.languages[0].countryCode);
+    return Locale(
+        sharedPreferences.getString(AppConstants.languageCode) ??
+            AppConstants.languages[0].languageCode!,
+        sharedPreferences.getString(AppConstants.countryCode) ??
+            AppConstants.languages[0].countryCode);
   }
 
   @override
@@ -50,5 +55,4 @@ class LanguageRepository implements LanguageRepositoryInterface {
   Future update(Map<String, dynamic> body) {
     throw UnimplementedError();
   }
-
 }

@@ -2,12 +2,12 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:sixam_mart_delivery/helper/route_helper.dart';
+import 'package:shellafood_delivery/helper/route_helper.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
-import 'package:sixam_mart_delivery/util/app_constants.dart';
-import 'package:sixam_mart_delivery/util/dimensions.dart';
-import 'package:sixam_mart_delivery/common/widgets/custom_app_bar_widget.dart';
-import 'package:sixam_mart_delivery/features/cash_in_hand/widgets/fund_payment_dialog_widget.dart';
+import 'package:shellafood_delivery/util/app_constants.dart';
+import 'package:shellafood_delivery/util/dimensions.dart';
+import 'package:shellafood_delivery/common/widgets/custom_app_bar_widget.dart';
+import 'package:shellafood_delivery/features/cash_in_hand/widgets/fund_payment_dialog_widget.dart';
 
 class PaymentScreen extends StatefulWidget {
   final String? redirectUrl;
@@ -33,15 +33,17 @@ class PaymentScreenState extends State<PaymentScreen> {
   }
 
   void _initData() async {
-
     browser = MyInAppBrowser(redirectUrl: widget.redirectUrl);
     await InAppWebViewController.setWebContentsDebuggingEnabled(true);
 
-    bool swAvailable = await WebViewFeature.isFeatureSupported(WebViewFeature.SERVICE_WORKER_BASIC_USAGE);
-    bool swInterceptAvailable = await WebViewFeature.isFeatureSupported(WebViewFeature.SERVICE_WORKER_SHOULD_INTERCEPT_REQUEST);
+    bool swAvailable = await WebViewFeature.isFeatureSupported(
+        WebViewFeature.SERVICE_WORKER_BASIC_USAGE);
+    bool swInterceptAvailable = await WebViewFeature.isFeatureSupported(
+        WebViewFeature.SERVICE_WORKER_SHOULD_INTERCEPT_REQUEST);
 
     if (swAvailable && swInterceptAvailable) {
-      ServiceWorkerController serviceWorkerController = ServiceWorkerController.instance();
+      ServiceWorkerController serviceWorkerController =
+          ServiceWorkerController.instance();
       await serviceWorkerController.setServiceWorkerClient(ServiceWorkerClient(
         shouldInterceptRequest: (request) async {
           if (kDebugMode) {
@@ -56,8 +58,10 @@ class PaymentScreenState extends State<PaymentScreen> {
     await browser.openUrlRequest(
       urlRequest: URLRequest(url: WebUri(selectedUrl)),
       settings: InAppBrowserClassSettings(
-        webViewSettings: InAppWebViewSettings(useShouldOverrideUrlLoading: true, useOnLoadResource: true),
-        browserSettings: InAppBrowserSettings(hideUrlBar: true, hideToolbarTop: GetPlatform.isAndroid),
+        webViewSettings: InAppWebViewSettings(
+            useShouldOverrideUrlLoading: true, useOnLoadResource: true),
+        browserSettings: InAppBrowserSettings(
+            hideUrlBar: true, hideToolbarTop: GetPlatform.isAndroid),
       ),
     );
   }
@@ -71,15 +75,20 @@ class PaymentScreenState extends State<PaymentScreen> {
       },
       child: Scaffold(
         backgroundColor: Theme.of(context).primaryColor,
-        appBar: CustomAppBarWidget(title: 'payment'.tr, onBackPressed: () => _exitApp()),
+        appBar: CustomAppBarWidget(
+            title: 'payment'.tr, onBackPressed: () => _exitApp()),
         body: Center(
           child: SizedBox(
             width: Dimensions.webMaxWidth,
             child: Stack(
               children: [
-                _isLoading ? Center(
-                  child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).primaryColor)),
-                ) : const SizedBox.shrink(),
+                _isLoading
+                    ? Center(
+                        child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                                Theme.of(context).primaryColor)),
+                      )
+                    : const SizedBox.shrink(),
               ],
             ),
           ),
@@ -91,7 +100,6 @@ class PaymentScreenState extends State<PaymentScreen> {
   Future<bool?> _exitApp() async {
     return Get.dialog(const FundPaymentDialogWidget());
   }
-
 }
 
 class MyInAppBrowser extends InAppBrowser {
@@ -144,7 +152,7 @@ class MyInAppBrowser extends InAppBrowser {
 
   @override
   void onExit() {
-    if(_canRedirect) {
+    if (_canRedirect) {
       // Get.dialog(PaymentFailedDialog(orderID: orderID, orderAmount: orderAmount, maxCodOrderAmount: maxCodOrderAmount));
     }
     if (kDebugMode) {
@@ -153,7 +161,8 @@ class MyInAppBrowser extends InAppBrowser {
   }
 
   @override
-  Future<NavigationActionPolicy> shouldOverrideUrlLoading(navigationAction) async {
+  Future<NavigationActionPolicy> shouldOverrideUrlLoading(
+      navigationAction) async {
     if (kDebugMode) {
       print("\n\nOverride ${navigationAction.request.url}\n\n");
     }
@@ -163,14 +172,16 @@ class MyInAppBrowser extends InAppBrowser {
   @override
   void onLoadResource(resource) {
     if (kDebugMode) {
-      print("Started at: ${resource.startTime}ms ---> duration: ${resource.duration}ms ${resource.url ?? ''}");
+      print(
+          "Started at: ${resource.startTime}ms ---> duration: ${resource.duration}ms ${resource.url ?? ''}");
     }
   }
 
   @override
   void onConsoleMessage(consoleMessage) {
     if (kDebugMode) {
-      print("""console output:message: ${consoleMessage.message}messageLevel: ${consoleMessage.messageLevel.toValue()}""");
+      print(
+          """console output:message: ${consoleMessage.message}messageLevel: ${consoleMessage.messageLevel.toValue()}""");
     }
   }
 
@@ -178,23 +189,28 @@ class MyInAppBrowser extends InAppBrowser {
     if (kDebugMode) {
       print('---url---$url');
     }
-    if(_canRedirect) {
-      bool isSuccess = url.contains('${AppConstants.baseUrl}/success?flag=success');
+    if (_canRedirect) {
+      bool isSuccess =
+          url.contains('${AppConstants.baseUrl}/success?flag=success');
       bool isFailed = url.contains('${AppConstants.baseUrl}/success?flag=fail');
-      bool isCancel = url.contains('${AppConstants.baseUrl}/success?flag=cancel');
+      bool isCancel =
+          url.contains('${AppConstants.baseUrl}/success?flag=cancel');
       if (isSuccess || isFailed || isCancel) {
         _canRedirect = false;
         close();
       }
 
-      if(isSuccess || isFailed || isCancel) {
-        if(Get.currentRoute.contains(RouteHelper.payment)) {
+      if (isSuccess || isFailed || isCancel) {
+        if (Get.currentRoute.contains(RouteHelper.payment)) {
           Get.back();
         }
         Get.back();
-        Get.toNamed(RouteHelper.getSuccessRoute(isSuccess ? 'success' : isFailed ? 'fail' : 'cancel'));
+        Get.toNamed(RouteHelper.getSuccessRoute(isSuccess
+            ? 'success'
+            : isFailed
+                ? 'fail'
+                : 'cancel'));
       }
     }
   }
-
 }

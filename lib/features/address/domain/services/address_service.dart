@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
-import 'package:sixam_mart_delivery/features/address/domain/models/zone_model.dart';
-import 'package:sixam_mart_delivery/features/address/domain/repositories/address_repository_interface.dart';
-import 'package:sixam_mart_delivery/features/address/domain/services/address_service_interface.dart';
+import 'package:shellafood_delivery/features/address/domain/models/zone_model.dart';
+import 'package:shellafood_delivery/features/address/domain/repositories/address_repository_interface.dart';
+import 'package:shellafood_delivery/features/address/domain/services/address_service_interface.dart';
 
 class AddressService implements AddressServiceInterface {
   final AddressRepositoryInterface addressRepositoryInterface;
@@ -28,15 +28,15 @@ class AddressService implements AddressServiceInterface {
   }
 
   @override
-  int? setSelectedZoneIndex(List<int>? zoneIds, int? selectedZoneIndex, List<ZoneModel>? zoneList) {
+  int? setSelectedZoneIndex(
+      List<int>? zoneIds, int? selectedZoneIndex, List<ZoneModel>? zoneList) {
     int? zoneIndex = selectedZoneIndex;
-      for(int index = 0; index < zoneList!.length; index++) {
-        if(zoneIds!.contains(zoneList[index].id)) {
-          zoneIndex = index;
-          break;
-        }
+    for (int index = 0; index < zoneList!.length; index++) {
+      if (zoneIds!.contains(zoneList[index].id)) {
+        zoneIndex = index;
+        break;
       }
+    }
     return zoneIndex;
   }
-
 }
