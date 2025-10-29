@@ -11,6 +11,7 @@ import 'package:shellafood_delivery/theme/dark_theme.dart';
 import 'package:shellafood_delivery/theme/light_theme.dart';
 import 'package:shellafood_delivery/util/app_constants.dart';
 import 'package:shellafood_delivery/util/messages.dart';
+import 'package:shellafood_delivery/firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
@@ -29,21 +30,9 @@ Future<void> main() async {
   setPathUrlStrategy();
   WidgetsFlutterBinding.ensureInitialized();
 
-  if (GetPlatform.isAndroid) {
-    // await Firebase.initializeApp(
-    //   options: const FirebaseOptions(
-    //       apiKey: "AIzaSyDiuBou-3RduJOBCFOZDqEuWYt0yJvgUXU",
-    //       authDomain: "my-food-c1459.firebaseapp.com",
-    //       projectId: "my-food-c1459",
-    //       storageBucket: "my-food-c1459.appspot.com",
-    //       messagingSenderId: "609386859120",
-    //       appId: "1:609386859120:web:47b61844e19b9ee1f402b5",
-    //       measurementId: "G-Q2BZYSDVMD"
-    //   ),
-    // );
-  } else {
-    await Firebase.initializeApp();
-  }
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
   Map<String, Map<String, String>> languages = await di.init();
 

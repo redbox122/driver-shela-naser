@@ -33,7 +33,6 @@ dependencies:
   audioplayers: ^6.4.0
   flutter_html: ^3.0.0-alpha.5
   cached_network_image: ^3.3.0
-  image_compression_flutter: ^1.0.4
   win32: ^5.2.0
   path: ^1.8.1
   http_parser: ^4.0.2

@@ -92,6 +92,8 @@ class OrderModel {
   double? referrerBonusAmount;
   String? storeBusinessModel;
   int? storeChatPermission;
+  String? otp; // Customer OTP for delivery verification
+  String? otpStore; // Store OTP for pickup verification
 
   OrderModel({
     this.id,
@@ -104,7 +106,7 @@ class OrderModel {
     this.orderStatus,
     this.module_id,
     this.mainOrder,
-    this.groupOrder ,
+    this.groupOrder,
     this.totalTaxAmount,
     this.paymentMethod,
     this.transactionReference,
@@ -150,6 +152,8 @@ class OrderModel {
     this.referrerBonusAmount,
     this.storeBusinessModel,
     this.storeChatPermission,
+    this.otp,
+    this.otpStore,
   });
 
   OrderModel.fromJson(Map<String, dynamic> json) {
@@ -157,15 +161,33 @@ class OrderModel {
     itemCampaignId = json['item_campaign_id'];
     collectionOrder = json['collection_order'];
     userId = json['user_id'];
-    groupOrder = List.generate(
-        json["group_order"].length, (index) {
-
-          return json["group_order"][index]["order_group_id"]["id"];
-    });
-    groupOrderLocation = List.generate(
-        json["group_order"].length, (index) => LatLng(double.parse(json["group_order"][index]["order_group_id"]["store"]["latitude"]),double.parse( json["group_order"][index]["order_group_id"]["store"]["longitude"])));
-    mainOrderLocation=json["group_order"].isNotEmpty?LatLng(double.parse(json["group_order"][0]["main_order"]["store"]["latitude"]),double.parse(json["group_order"][0]["main_order"]["store"]["longitude"])):null;
-    mainOrder=json["group_order"].isNotEmpty?json["group_order"][0]["main_order_id"]:null;
+    if (json["group_order"] != null && json["group_order"].length > 0) {
+      groupOrder = List.generate(json["group_order"].length, (index) {
+        return json["group_order"][index]["order_group_id"]["id"];
+      });
+      groupOrderLocation = List.generate(
+          json["group_order"].length,
+          (index) => LatLng(
+              double.parse(json["group_order"][index]["order_group_id"]["store"]
+                  ["latitude"]),
+              double.parse(json["group_order"][index]["order_group_id"]["store"]
+                  ["longitude"])));
+      mainOrderLocation = json["group_order"].isNotEmpty
+          ? LatLng(
+              double.parse(
+                  json["group_order"][0]["main_order"]["store"]["latitude"]),
+              double.parse(
+                  json["group_order"][0]["main_order"]["store"]["longitude"]))
+          : null;
+      mainOrder = json["group_order"].isNotEmpty
+          ? json["group_order"][0]["main_order_id"]
+          : null;
+    } else {
+      groupOrder = [];
+      groupOrderLocation = [];
+      mainOrderLocation = null;
+      mainOrder = null;
+    }
     module_id = json['module_id'];
     orderAmount = json['order_amount']?.toDouble();
     couponDiscountAmount = json['coupon_discount_amount']?.toDouble();
@@ -278,15 +300,25 @@ class OrderModel {
     referrerBonusAmount = json['ref_bonus_amount']?.toDouble();
     storeBusinessModel = json['store_business_model'];
     storeChatPermission = json['chat_permission'];
+
+    // 🔧 DEBUG: Log the raw OTP values from API
+    print('🔧 OrderModel.fromJson DEBUG:');
+    print('   Raw json[otp]: ${json['otp']}');
+    print('   Raw json[otp_store]: ${json['otp_store']}');
+
+    // ✅ FIX: Correct the backwards parsing based on backend team findings
+    otp = json['otp']; // Customer OTP (for delivery)
+    otpStore = json['otp_store']; // Store OTP (for pickup)
+
+    // 🔧 DEBUG: Log the parsed OTP values
+    print('   Parsed otp (customer): $otp');
+    print('   Parsed otpStore (store): $otpStore');
   }
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
-    data["group_order"]=List.generate(groupOrder?.length??0, (index){
-      return {
-        "order_group_id":groupOrder![index],
-        "main_order_id":mainOrder
-      };
+    data["group_order"] = List.generate(groupOrder?.length ?? 0, (index) {
+      return {"order_group_id": groupOrder![index], "main_order_id": mainOrder};
     });
     data['id'] = id;
     data['item_campaign_id'] = itemCampaignId;
@@ -349,6 +381,8 @@ class OrderModel {
     data['ref_bonus_amount'] = referrerBonusAmount;
     data['store_business_model'] = storeBusinessModel;
     data['chat_permission'] = storeChatPermission;
+    data['otp'] = otp;
+    data['otp_store'] = otpStore;
     return data;
   }
 }

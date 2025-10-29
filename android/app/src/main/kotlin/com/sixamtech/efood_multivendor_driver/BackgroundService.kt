@@ -9,7 +9,6 @@ import androidx.core.content.ContextCompat
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.embedding.engine.dart.DartExecutor
 import io.flutter.view.FlutterCallbackInformation
-import io.flutter.view.FlutterMain
 
 class BackgroundService : Service(), LifecycleDetector.Listener {
 
@@ -64,7 +63,7 @@ class BackgroundService : Service(), LifecycleDetector.Listener {
                 engine.dartExecutor.executeDartCallback(
                     DartExecutor.DartCallback(
                         assets,
-                        FlutterMain.findAppBundlePath(),
+                        "",
                         callbackInformation
                     )
                 )

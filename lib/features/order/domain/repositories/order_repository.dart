@@ -118,9 +118,45 @@ class OrderRepository implements OrderRepositoryInterface {
     if (response.statusCode == 200) {
       responseModel = ResponseModel(true, response.body['message']);
     } else {
-      responseModel = ResponseModel(false, response.statusText);
+      // Enhanced error handling for structured error responses
+      String errorMessage = _extractErrorMessage(response);
+      responseModel = ResponseModel(false, errorMessage);
+
+      // Store the full error response for detailed error handling
+      responseModel.errorResponse = response.body;
     }
     return responseModel;
+  }
+
+  /// Extract meaningful error message from API response
+  String _extractErrorMessage(Response response) {
+    try {
+      if (response.body is Map<String, dynamic>) {
+        final body = response.body as Map<String, dynamic>;
+
+        // Check for structured error response
+        if (body.containsKey('errors') && body['errors'] is List) {
+          final errors = body['errors'] as List;
+          if (errors.isNotEmpty && errors.first is Map<String, dynamic>) {
+            final firstError = errors.first as Map<String, dynamic>;
+            return firstError['message'] ??
+                response.statusText ??
+                'order_acceptance_failed';
+          }
+        }
+
+        // Check for direct message field
+        if (body.containsKey('message')) {
+          return body['message'] ??
+              response.statusText ??
+              'order_acceptance_failed';
+        }
+      }
+    } catch (e) {
+      // Fallback to status text if parsing fails
+    }
+
+    return response.statusText ?? 'order_acceptance_failed';
   }
 
   @override

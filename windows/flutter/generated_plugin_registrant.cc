@@ -12,7 +12,6 @@
 #include <firebase_core/firebase_core_plugin_c_api.h>
 #include <flutter_inappwebview_windows/flutter_inappwebview_windows_plugin_c_api.h>
 #include <geolocator_windows/geolocator_windows.h>
-#include <image_compression_flutter/image_compression_flutter_plugin.h>
 #include <url_launcher_windows/url_launcher_windows.h>
 
 void RegisterPlugins(flutter::PluginRegistry* registry) {
@@ -28,8 +27,6 @@ void RegisterPlugins(flutter::PluginRegistry* registry) {
       registry->GetRegistrarForPlugin("FlutterInappwebviewWindowsPluginCApi"));
   GeolocatorWindowsRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("GeolocatorWindows"));
-  ImageCompressionFlutterPluginRegisterWithRegistrar(
-      registry->GetRegistrarForPlugin("ImageCompressionFlutterPlugin"));
   UrlLauncherWindowsRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("UrlLauncherWindows"));
 }

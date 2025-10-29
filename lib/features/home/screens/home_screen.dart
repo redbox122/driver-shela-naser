@@ -1,24 +1,22 @@
 import 'package:disable_battery_optimization/disable_battery_optimization.dart';
-import 'package:shimmer_animation/shimmer_animation.dart';
 import 'package:shellafood_delivery/features/notification/controllers/notification_controller.dart';
 import 'package:shellafood_delivery/features/order/controllers/order_controller.dart';
 import 'package:shellafood_delivery/features/profile/controllers/profile_controller.dart';
-import 'package:shellafood_delivery/helper/price_converter_helper.dart';
 import 'package:shellafood_delivery/helper/route_helper.dart';
-import 'package:shellafood_delivery/util/app_constants.dart';
 import 'package:shellafood_delivery/util/dimensions.dart';
 import 'package:shellafood_delivery/util/images.dart';
 import 'package:shellafood_delivery/util/styles.dart';
+import 'package:shellafood_delivery/util/app_colors.dart';
 import 'package:shellafood_delivery/common/widgets/confirmation_dialog_widget.dart';
 import 'package:shellafood_delivery/common/widgets/custom_alert_dialog_widget.dart';
-import 'package:shellafood_delivery/common/widgets/custom_button_widget.dart';
 import 'package:shellafood_delivery/common/widgets/custom_snackbar_widget.dart';
-import 'package:shellafood_delivery/common/widgets/order_shimmer_widget.dart';
-import 'package:shellafood_delivery/common/widgets/order_widget.dart';
-import 'package:shellafood_delivery/common/widgets/title_widget.dart';
-import 'package:shellafood_delivery/features/home/widgets/count_card_widget.dart';
-import 'package:shellafood_delivery/features/home/widgets/earning_widget.dart';
-import 'package:shellafood_delivery/features/order/screens/running_order_screen.dart';
+import 'package:shellafood_delivery/features/home/widgets/hero_order_card_widget.dart';
+import 'package:shellafood_delivery/features/home/widgets/quick_action_button_widget.dart';
+import 'package:shellafood_delivery/features/home/widgets/financial_overview_widget.dart';
+import 'package:shellafood_delivery/features/home/widgets/performance_card_widget.dart';
+import 'package:shellafood_delivery/common/services/quick_action_service.dart';
+import 'package:shellafood_delivery/features/order/screens/order_details_screen.dart';
+import 'package:shellafood_delivery/helper/price_converter_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_switch/flutter_switch.dart';
 import 'package:geolocator/geolocator.dart';
@@ -46,406 +44,477 @@ class HomeScreen extends StatelessWidget {
     _loadData();
 
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).cardColor,
-        leading: Padding(
-          padding: const EdgeInsets.all(Dimensions.paddingSizeSmall),
-          child: Image.asset(Images.logo, height: 30, width: 30),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: Theme.of(context).brightness == Brightness.dark
+              ? AppColors.backgroundGradientDark
+              : AppColors.meshGradientSoft,
         ),
-        titleSpacing: 0,
-        elevation: 0,
-        title: Text(AppConstants.appName,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: robotoMedium.copyWith(
-              color: Theme.of(context).textTheme.bodyLarge!.color,
-              fontSize: Dimensions.fontSizeDefault,
-            )),
-        actions: [
-          IconButton(
-            icon: GetBuilder<NotificationController>(
-                builder: (notificationController) {
-              return Stack(children: [
-                Icon(Icons.notifications,
-                    size: 25,
-                    color: Theme.of(context).textTheme.bodyLarge!.color),
-                notificationController.hasNotification
-                    ? Positioned(
-                        top: 0,
-                        right: 0,
-                        child: Container(
-                          height: 10,
-                          width: 10,
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).primaryColor,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                                width: 1, color: Theme.of(context).cardColor),
-                          ),
-                        ))
-                    : const SizedBox(),
-              ]);
-            }),
-            onPressed: () => Get.toNamed(RouteHelper.getNotificationRoute()),
-          ),
-          GetBuilder<ProfileController>(builder: (profileController) {
-            return GetBuilder<OrderController>(builder: (orderController) {
-              return (profileController.profileModel != null &&
-                      orderController.currentOrderList != null)
-                  ? FlutterSwitch(
-                      width: 75,
-                      height: 30,
-                      valueFontSize: Dimensions.fontSizeExtraSmall,
-                      showOnOff: true,
-                      activeText: 'online'.tr,
-                      inactiveText: 'offline'.tr,
-                      activeColor: Theme.of(context).primaryColor,
-                      value: profileController.profileModel!.active == 1,
-                      onToggle: (bool isActive) async {
-                        if (!isActive &&
-                            orderController.currentOrderList!.isNotEmpty) {
-                          showCustomSnackBar('you_can_not_go_offline_now'.tr);
-                        } else {
-                          if (!isActive) {
-                            Get.dialog(ConfirmationDialogWidget(
-                              icon: Images.warning,
-                              description: 'are_you_sure_to_offline'.tr,
-                              onYesPressed: () {
-                                Get.back();
-                                profileController.updateActiveStatus();
-                              },
-                            ));
-                          } else {
-                            LocationPermission permission =
-                                await Geolocator.checkPermission();
-                            if (permission == LocationPermission.denied ||
-                                permission ==
-                                    LocationPermission.deniedForever ||
-                                (GetPlatform.isIOS ? false : true)) {
-                              if (GetPlatform.isAndroid) {
-                                Get.dialog(
-                                    ConfirmationDialogWidget(
-                                      icon: Images.locationPermission,
-                                      iconSize: 200,
-                                      hasCancel: false,
-                                      description:
-                                          'this_app_collects_location_data'.tr,
-                                      onYesPressed: () {
-                                        Get.back();
-                                        _checkPermission(() => profileController
-                                            .updateActiveStatus());
-                                      },
-                                    ),
-                                    barrierDismissible: false);
-                              } else {
-                                _checkPermission(() =>
-                                    profileController.updateActiveStatus());
-                              }
-                            } else {
-                              profileController.updateActiveStatus();
-                            }
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Custom Modern Header
+              _buildModernHeader(context),
+
+              // Main Content
+              Expanded(
+                child: RefreshIndicator(
+                  onRefresh: () async {
+                    return await _loadData();
+                  },
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: GetBuilder<ProfileController>(
+                        builder: (profileController) {
+                      return Column(children: [
+                        // Hero Section: Active Order with overlapping effect
+                        GetBuilder<OrderController>(builder: (orderController) {
+                          bool hasActiveOrder =
+                              orderController.currentOrderList != null &&
+                                  orderController.currentOrderList!.isNotEmpty;
+
+                          // Debug information
+                          print('=== ORDER DEBUG ===');
+                          print('Has Active Order: $hasActiveOrder');
+                          if (hasActiveOrder) {
+                            print(
+                                'Order Count: ${orderController.currentOrderList!.length}');
+                            print(
+                                'First Order ID: ${orderController.currentOrderList![0].id}');
                           }
-                        }
-                      },
-                    )
-                  : const SizedBox();
-            });
-          }),
-          const SizedBox(width: Dimensions.paddingSizeSmall),
-        ],
-      ),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          return await _loadData();
-        },
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(Dimensions.paddingSizeSmall),
-          child: GetBuilder<ProfileController>(builder: (profileController) {
-            return Column(children: [
-              GetBuilder<OrderController>(builder: (orderController) {
-                bool hasActiveOrder =
-                    orderController.currentOrderList == null ||
-                        orderController.currentOrderList!.isNotEmpty;
-                bool hasMoreOrder = orderController.currentOrderList != null &&
-                    orderController.currentOrderList!.length > 1;
-                return Column(children: [
-                  hasActiveOrder
-                      ? TitleWidget(
-                          title: 'active_order'.tr,
-                          onTap: hasMoreOrder
-                              ? () {
-                                  Get.toNamed(
-                                      RouteHelper.getRunningOrderRoute(),
-                                      arguments: const RunningOrderScreen());
-                                }
-                              : null,
-                        )
-                      : const SizedBox(),
-                  SizedBox(
-                      height: hasActiveOrder
-                          ? Dimensions.paddingSizeExtraSmall
-                          : 0),
-                  orderController.currentOrderList == null
-                      ? OrderShimmerWidget(
-                          isEnabled: orderController.currentOrderList == null,
-                        )
-                      : orderController.currentOrderList!.isNotEmpty
-                          ? OrderWidget(
+                          print('==================');
+
+                          if (hasActiveOrder) {
+                            return HeroOrderCardWidget(
                               orderModel: orderController.currentOrderList![0],
                               isRunningOrder: true,
                               orderIndex: 0,
-                            )
-                          : const SizedBox(),
-                  SizedBox(
-                      height:
-                          hasActiveOrder ? Dimensions.paddingSizeDefault : 0),
-                ]);
-              }),
-              (profileController.profileModel != null &&
-                      profileController.profileModel!.earnings == 1)
-                  ? Column(children: [
-                      TitleWidget(title: 'earnings'.tr),
-                      const SizedBox(height: Dimensions.paddingSizeExtraSmall),
-                      Container(
-                        padding:
-                            const EdgeInsets.all(Dimensions.paddingSizeLarge),
-                        decoration: BoxDecoration(
-                          borderRadius:
-                              BorderRadius.circular(Dimensions.radiusSmall),
-                          color: Theme.of(context).primaryColor,
-                        ),
-                        child: Column(children: [
-                          Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: [
-                                const SizedBox(
-                                    width: Dimensions.paddingSizeSmall),
-                                Image.asset(Images.wallet,
-                                    width: 60, height: 60),
-                                const SizedBox(
-                                    width: Dimensions.paddingSizeLarge),
-                                Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                              onCallCustomer: () {
+                                // Call customer logic - implement when order details are available
+                                showCustomSnackBar(
+                                    'call_customer_feature_coming_soon'.tr);
+                              },
+                              onNavigate: () async {
+                                QuickActionService.navigateToActiveOrder();
+                              },
+                              onViewDetails: () {
+                                Get.toNamed(
+                                  RouteHelper.getOrderDetailsRoute(
+                                      orderController.currentOrderList![0].id),
+                                  arguments: OrderDetailsScreen(
+                                    orderId:
+                                        orderController.currentOrderList![0].id,
+                                    isRunningOrder: true,
+                                    orderIndex: 0,
+                                  ),
+                                );
+                              },
+                            );
+                          } else {
+                            // Show empty state with professional card
+                            return Container(
+                              margin: const EdgeInsets.symmetric(
+                                horizontal: Dimensions.paddingSizeHero,
+                                vertical: Dimensions.paddingSizeSmall,
+                              ),
+                              child: Card(
+                                elevation: Dimensions.elevationMedium,
+                                color: Colors
+                                    .black87, // Dark background for visibility
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(
+                                      Dimensions.radiusLarge),
+                                ),
+                                child: Container(
+                                  padding: const EdgeInsets.all(
+                                      Dimensions.paddingSizeLarge),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
                                     children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(
+                                            Dimensions.paddingSizeLarge),
+                                        decoration: BoxDecoration(
+                                          color: Theme.of(context)
+                                              .primaryColor
+                                              .withOpacity(0.2),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: Icon(
+                                          Icons.delivery_dining_rounded,
+                                          size: Dimensions.iconSizeHero + 8,
+                                          color: Colors
+                                              .white, // White icon for contrast
+                                        ),
+                                      ),
+                                      const SizedBox(
+                                          height:
+                                              Dimensions.paddingSizeDefault),
                                       Text(
-                                        'balance'.tr,
-                                        style: robotoMedium.copyWith(
-                                            fontSize: Dimensions.fontSizeSmall,
-                                            color: Theme.of(context).cardColor),
+                                        'no_active_orders'.tr,
+                                        style: robotoBold.copyWith(
+                                          fontSize: Dimensions.fontSizeLarge,
+                                          color: Colors
+                                              .white, // White text for visibility
+                                        ),
                                       ),
                                       const SizedBox(
                                           height: Dimensions.paddingSizeSmall),
-                                      profileController.profileModel != null
-                                          ? Text(
-                                              PriceConverterHelper.convertPrice(
-                                                  profileController
-                                                      .profileModel!.balance),
-                                              style: robotoBold.copyWith(
-                                                  fontSize: 24,
-                                                  color: Theme.of(context)
-                                                      .cardColor),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                            )
-                                          : Container(
-                                              height: 30,
-                                              width: 60,
-                                              color: Colors.white),
-                                    ]),
-                              ]),
-                          const SizedBox(height: 30),
-                          Row(children: [
-                            EarningWidget(
-                              title: 'today'.tr,
-                              amount:
-                                  profileController.profileModel?.todaysEarning,
-                            ),
-                            Container(
-                                height: 30,
-                                width: 1,
-                                color: Theme.of(context).cardColor),
-                            EarningWidget(
-                              title: 'this_week'.tr,
-                              amount: profileController
-                                  .profileModel?.thisWeekEarning,
-                            ),
-                            Container(
-                                height: 30,
-                                width: 1,
-                                color: Theme.of(context).cardColor),
-                            EarningWidget(
-                              title: 'this_month'.tr,
-                              amount: profileController
-                                  .profileModel?.thisMonthEarning,
-                            ),
-                          ]),
-                        ]),
-                      ),
-                      const SizedBox(height: Dimensions.paddingSizeDefault),
-                    ])
-                  : const SizedBox(),
-              TitleWidget(title: 'orders'.tr),
-              const SizedBox(height: Dimensions.paddingSizeExtraSmall),
-              Row(children: [
-                Expanded(
-                    child: CountCardWidget(
-                  title: 'todays_orders'.tr,
-                  backgroundColor: Theme.of(context).secondaryHeaderColor,
-                  height: 180,
-                  value: profileController.profileModel?.todaysOrderCount
-                      .toString(),
-                )),
-                const SizedBox(width: Dimensions.paddingSizeSmall),
-                Expanded(
-                    child: CountCardWidget(
-                  title: 'this_week_orders'.tr,
-                  backgroundColor: Theme.of(context).colorScheme.error,
-                  height: 180,
-                  value: profileController.profileModel?.thisWeekOrderCount
-                      .toString(),
-                )),
-              ]),
-              const SizedBox(height: Dimensions.paddingSizeSmall),
-              CountCardWidget(
-                title: 'total_orders'.tr,
-                backgroundColor: Theme.of(context).primaryColor,
-                height: 140,
-                value: profileController.profileModel!.orderCount.toString(),
+                                      Text(
+                                        'You will be notified when new orders arrive',
+                                        style: robotoRegular.copyWith(
+                                          fontSize: Dimensions.fontSizeDefault,
+                                          color: Colors.white.withOpacity(
+                                              0.8), // Light white for subtitle
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            );
+                          }
+                        }),
+
+                        // Quick Actions Row (10% screen space)
+                        DeliveryQuickActionsWidget(
+                          onCallSupport: () {
+                            QuickActionService.callSupport();
+                          },
+                          onEarningsHistory: () {
+                            QuickActionService.showEarningsOptions();
+                          },
+                          onNavigate: () {
+                            QuickActionService.navigateToActiveOrder();
+                          },
+                          onHelpCenter: () {
+                            QuickActionService.showHelpOptions();
+                          },
+                        ),
+
+                        const SizedBox(height: Dimensions.cardSpacingVertical),
+
+                        // Financial Overview Card (20% screen space)
+                        if (profileController.profileModel != null &&
+                            profileController.profileModel!.earnings == 1)
+                          FinancialOverviewWidget(
+                            balance: profileController.profileModel!.balance,
+                            cashInHand:
+                                profileController.profileModel!.cashInHands,
+                            todaysEarning:
+                                profileController.profileModel!.todaysEarning,
+                            thisWeekEarning:
+                                profileController.profileModel!.thisWeekEarning,
+                            thisMonthEarning: profileController
+                                .profileModel!.thisMonthEarning,
+                            showWarning:
+                                profileController.profileModel!.cashInHands! >
+                                    1000,
+                            onBalanceTap: () {
+                              QuickActionService.navigateToEarningsHistory();
+                            },
+                            onCashInHandTap: () {
+                              Get.toNamed(RouteHelper.getCashInHandRoute());
+                            },
+                            onEarningsTap: () {
+                              QuickActionService.showEarningsOptions();
+                            },
+                          ),
+
+                        const SizedBox(height: Dimensions.cardSpacingVertical),
+
+                        // Performance Metrics (20% screen space)
+                        DeliveryPerformanceWidget(
+                          todaysOrders:
+                              profileController.profileModel?.todaysOrderCount,
+                          weeklyOrders: profileController
+                              .profileModel?.thisWeekOrderCount,
+                          totalOrders:
+                              profileController.profileModel?.orderCount,
+                          onTodaysOrdersTap: () {
+                            Get.toNamed(RouteHelper.getFilteredOrdersRoute(
+                                'today', 'todays_orders'.tr));
+                          },
+                          onWeeklyOrdersTap: () {
+                            Get.toNamed(RouteHelper.getFilteredOrdersRoute(
+                                'week', 'this_week_orders'.tr));
+                          },
+                          onTotalOrdersTap: () {
+                            // Navigate to all orders screen
+                            Get.toNamed(RouteHelper.getMainRoute('order'));
+                          },
+                        ),
+
+                        // Remove redundant order stats - already shown in performance metrics above
+
+                        const SizedBox(height: Dimensions.paddingSizeSection),
+                      ]);
+                    }),
+                  ),
+                ),
               ),
-              const SizedBox(height: Dimensions.paddingSizeSmall),
-              profileController.profileModel != null
-                  ? Container(
-                      height: 120,
-                      width: MediaQuery.of(context).size.width,
-                      padding:
-                          const EdgeInsets.all(Dimensions.paddingSizeLarge),
-                      decoration: BoxDecoration(
-                        borderRadius:
-                            BorderRadius.circular(Dimensions.radiusDefault),
-                        color: Theme.of(context).primaryColor.withOpacity(0.05),
-                        border: Border.all(
-                            width: 2,
-                            color: Theme.of(context)
-                                .primaryColor
-                                .withOpacity(0.1)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModernHeader(BuildContext context) {
+    return Container(
+      height: Dimensions.headerHeightCompact,
+      decoration: BoxDecoration(
+        gradient: AppColors.meshGradientPrimary,
+        borderRadius: const BorderRadius.only(
+          bottomLeft: Radius.circular(Dimensions.radiusHero),
+          bottomRight: Radius.circular(Dimensions.radiusHero),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: Dimensions.paddingSizeHero,
+          vertical: Dimensions.paddingSizeCompact,
+        ),
+        child: Row(
+          children: [
+            // Left: Logo
+            Container(
+              padding: const EdgeInsets.all(Dimensions.paddingSizeCompact),
+              decoration: BoxDecoration(
+                color: AppColors.surface.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(Dimensions.radiusModern),
+              ),
+              child: Image.asset(
+                Images.logo,
+                height: 24,
+                width: 24,
+                color: AppColors.surface,
+              ),
+            ),
+
+            // Center: Earnings
+            Expanded(
+              child: GetBuilder<ProfileController>(
+                builder: (profileController) {
+                  return Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'todays_earning'.tr,
+                        style: robotoMedium.copyWith(
+                          fontSize: Dimensions.fontSizeSmall,
+                          color: AppColors.surface.withOpacity(0.9),
+                        ),
                       ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment:
-                            profileController.profileModel!.cashInHands! > 0 &&
-                                    profileController.profileModel!.earnings ==
-                                        1
-                                ? CrossAxisAlignment.start
-                                : CrossAxisAlignment.center,
-                        children: [
-                          Row(
-                              mainAxisAlignment:
-                                  profileController.profileModel!.cashInHands! >
-                                              0 &&
+                      const SizedBox(height: Dimensions.paddingSizeExtraSmall),
+                      Text(
+                        profileController.profileModel?.todaysEarning != null
+                            ? PriceConverterHelper.convertPrice(
+                                profileController.profileModel!.todaysEarning!)
+                            : '\$0.00',
+                        style: robotoBold.copyWith(
+                          fontSize: Dimensions.fontSizeEarningsCompact,
+                          color: AppColors.surface,
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+
+            // Right: Notifications + Toggle
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Notifications
+                GetBuilder<NotificationController>(
+                  builder: (notificationController) {
+                    return Stack(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(
+                              Dimensions.paddingSizeCompact),
+                          decoration: BoxDecoration(
+                            color: AppColors.surface.withOpacity(0.2),
+                            borderRadius:
+                                BorderRadius.circular(Dimensions.radiusModern),
+                          ),
+                          child: Icon(
+                            Icons.notifications_outlined,
+                            size: 20,
+                            color: AppColors.surface,
+                          ),
+                        ),
+                        if (notificationController.hasNotification)
+                          Positioned(
+                            top: 0,
+                            right: 0,
+                            child: Container(
+                              height: 8,
+                              width: 8,
+                              decoration: BoxDecoration(
+                                color: AppColors.error,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  width: 1,
+                                  color: AppColors.surface,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    );
+                  },
+                ),
+                const SizedBox(height: Dimensions.paddingSizeExtraSmall),
+                // Online/Offline toggle
+                GetBuilder<ProfileController>(
+                  builder: (profileController) {
+                    return GetBuilder<OrderController>(
+                      builder: (orderController) {
+                        return (profileController.profileModel != null &&
+                                orderController.currentOrderList != null)
+                            ? Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: Dimensions.paddingSizeCompact,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.surface.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(
+                                      Dimensions.radiusSmall),
+                                ),
+                                child: FlutterSwitch(
+                                  width: 60,
+                                  height: 25,
+                                  valueFontSize: Dimensions.fontSizeExtraSmall,
+                                  showOnOff: true,
+                                  activeText: 'on',
+                                  inactiveText: 'off',
+                                  activeColor: AppColors.success,
+                                  inactiveColor: AppColors.onSurfaceDisabled,
+                                  value:
+                                      profileController.profileModel!.active ==
+                                          1,
+                                  onToggle: (bool isActive) async {
+                                    if (!isActive &&
+                                        orderController
+                                            .currentOrderList!.isNotEmpty) {
+                                      showCustomSnackBar(
+                                          'you_can_not_go_offline_now'.tr);
+                                    } else {
+                                      if (!isActive) {
+                                        Get.dialog(ConfirmationDialogWidget(
+                                          icon: Images.warning,
+                                          description:
+                                              'are_you_sure_to_offline'.tr,
+                                          onYesPressed: () {
+                                            Get.back();
+                                            profileController
+                                                .updateActiveStatus();
+                                          },
+                                        ));
+                                      } else {
+                                        LocationPermission permission =
+                                            await Geolocator.checkPermission();
+                                        if (permission ==
+                                                LocationPermission.denied ||
+                                            permission ==
+                                                LocationPermission
+                                                    .deniedForever ||
+                                            (GetPlatform.isIOS
+                                                ? false
+                                                : true)) {
+                                          if (GetPlatform.isAndroid) {
+                                            Get.dialog(
+                                                ConfirmationDialogWidget(
+                                                  icon:
+                                                      Images.locationPermission,
+                                                  iconSize: 200,
+                                                  hasCancel: false,
+                                                  description:
+                                                      'this_app_collects_location_data'
+                                                          .tr,
+                                                  onYesPressed: () {
+                                                    Get.back();
+                                                    _checkPermission(() =>
+                                                        profileController
+                                                            .updateActiveStatus());
+                                                  },
+                                                ),
+                                                barrierDismissible: false);
+                                          } else {
+                                            _checkPermission(() =>
+                                                profileController
+                                                    .updateActiveStatus());
+                                          }
+                                        } else {
                                           profileController
-                                                  .profileModel!.earnings ==
-                                              1
-                                      ? MainAxisAlignment.spaceBetween
-                                      : MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                    PriceConverterHelper.convertPrice(
-                                        profileController
-                                            .profileModel!.cashInHands),
-                                    style: robotoBold.copyWith(fontSize: 30)),
-                                const SizedBox(
-                                    width: Dimensions.paddingSizeSmall),
-                                (profileController.profileModel!.cashInHands! >
-                                            0 &&
-                                        profileController
-                                                .profileModel!.earnings ==
-                                            1)
-                                    ? CustomButtonWidget(
-                                        width: 110,
-                                        height: 40,
-                                        buttonText: 'view_details'.tr,
-                                        backgroundColor:
-                                            Theme.of(context).primaryColor,
-                                        onPressed: () => Get.toNamed(
-                                            RouteHelper.getCashInHandRoute()),
-                                      )
-                                    : const SizedBox(),
-                              ]),
-                          Text('cash_in_your_hand'.tr,
-                              style: robotoMedium.copyWith(
-                                  fontSize: Dimensions.fontSizeLarge)),
-                        ],
-                      ),
-                    )
-                  : const CashInHandCardShimmer(),
-            ]);
-          }),
+                                              .updateActiveStatus();
+                                        }
+                                      }
+                                    }
+                                  },
+                                ),
+                              )
+                            : const SizedBox();
+                      },
+                    );
+                  },
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
   }
 
   void _checkPermission(Function callback) async {
-    LocationPermission permission = await Geolocator.requestPermission();
-    permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied ||
-        (GetPlatform.isIOS ? false : false)) {
-      Get.dialog(
-          CustomAlertDialogWidget(
-              description: 'you_denied'.tr,
-              onOkPressed: () async {
-                Get.back();
-                await Geolocator.requestPermission();
-                _checkPermission(callback);
-              }),
-          barrierDismissible: false);
-    } else if (permission == LocationPermission.deniedForever) {
-      Get.dialog(
-          CustomAlertDialogWidget(
-              description: 'you_denied_forever'.tr,
-              onOkPressed: () async {
-                Get.back();
-                await Geolocator.openAppSettings();
-                _checkPermission(callback);
-              }),
-          barrierDismissible: false);
-    } else {
-      callback();
+    try {
+      debugPrint('Home screen: Checking location permission');
+
+      LocationPermission permission = await Geolocator.requestPermission();
+      permission = await Geolocator.checkPermission();
+
+      debugPrint('Home screen: Permission status: $permission');
+
+      if (permission == LocationPermission.denied) {
+        debugPrint('Home screen: Permission denied, showing dialog');
+        Get.dialog(
+            CustomAlertDialogWidget(
+                description: 'you_denied'.tr,
+                onOkPressed: () async {
+                  Get.back();
+                  // Try one more time
+                  final retryPermission = await Geolocator.requestPermission();
+                  if (retryPermission == LocationPermission.denied) {
+                    debugPrint(
+                        'Home screen: Permission still denied after retry');
+                    return;
+                  }
+                  // If retry succeeded, execute callback
+                  callback();
+                }),
+            barrierDismissible: false);
+      } else if (permission == LocationPermission.deniedForever) {
+        debugPrint('Home screen: Permission denied forever, opening settings');
+        Get.dialog(
+            CustomAlertDialogWidget(
+                description: 'you_denied_forever'.tr,
+                onOkPressed: () async {
+                  Get.back();
+                  await Geolocator.openAppSettings();
+                }),
+            barrierDismissible: false);
+      } else {
+        debugPrint('Home screen: Permission granted, executing callback');
+        callback();
+      }
+    } catch (e) {
+      debugPrint('Home screen: Error checking permission: $e');
     }
-  }
-}
-
-class CashInHandCardShimmer extends StatelessWidget {
-  const CashInHandCardShimmer({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Shimmer(
-      duration: const Duration(seconds: 2),
-      enabled: true,
-      child: Container(
-        height: 120,
-        width: MediaQuery.of(context).size.width,
-        padding: const EdgeInsets.all(Dimensions.paddingSizeLarge),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-          color: Colors.grey[300],
-        ),
-        child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                Container(height: 20, width: 150, color: Colors.white),
-                const SizedBox(width: Dimensions.paddingSizeSmall),
-                Container(height: 40, width: 100, color: Colors.white),
-              ]),
-              Row(children: [
-                Container(height: 15, width: 200, color: Colors.white),
-              ]),
-            ]),
-      ),
-    );
   }
 }

@@ -1,7 +1,6 @@
 import 'package:country_code_picker/country_code_picker.dart';
 import 'package:shellafood_delivery/features/auth/controllers/auth_controller.dart';
 import 'package:shellafood_delivery/features/language/controllers/language_controller.dart';
-import 'package:shellafood_delivery/features/profile/controllers/profile_controller.dart';
 import 'package:shellafood_delivery/features/splash/controllers/splash_controller.dart';
 import 'package:shellafood_delivery/helper/custom_validator_helper.dart';
 import 'package:shellafood_delivery/helper/route_helper.dart';
@@ -215,7 +214,6 @@ class SignInScreen extends StatelessWidget {
           } else {
             authController.clearUserNumberAndPassword();
           }
-          await Get.find<ProfileController>().getProfile();
           Get.offAllNamed(RouteHelper.getInitialRoute());
         } else {
           showCustomSnackBar(status.message);

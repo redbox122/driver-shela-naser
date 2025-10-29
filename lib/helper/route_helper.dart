@@ -22,6 +22,7 @@ import 'package:shellafood_delivery/features/language/screens/language_screen.da
 import 'package:shellafood_delivery/features/notification/screens/notification_screen.dart';
 import 'package:shellafood_delivery/features/order/screens/order_details_screen.dart';
 import 'package:shellafood_delivery/features/order/screens/running_order_screen.dart';
+import 'package:shellafood_delivery/features/order/screens/filtered_orders_screen.dart';
 import 'package:shellafood_delivery/features/profile/screens/update_profile_screen.dart';
 import 'package:shellafood_delivery/features/splash/screens/splash_screen.dart';
 import 'package:shellafood_delivery/features/update/screens/update_screen.dart';
@@ -54,6 +55,7 @@ class RouteHelper {
   static const String transactionHistory = '/transaction-history';
   static const String cashInHand = '/cash-in-hand';
   static const String walletProvidedEarning = '/wallet-provided-earning';
+  static const String filteredOrders = '/filtered-orders';
 
   static String getInitialRoute({bool? fromOrderDetails}) =>
       '$initial?from_order_details=${fromOrderDetails.toString()}';
@@ -118,6 +120,8 @@ class RouteHelper {
   static String getTransactionHistoryRoute() => transactionHistory;
   static String getCashInHandRoute() => cashInHand;
   static String getWalletProvidedEarningRoute() => walletProvidedEarning;
+  static String getFilteredOrdersRoute(String filter, String title) =>
+      '$filteredOrders?filter=$filter&title=${Uri.encodeComponent(title)}';
 
   static List<GetPage> routes = [
     GetPage(
@@ -244,5 +248,12 @@ class RouteHelper {
     GetPage(
         name: walletProvidedEarning,
         page: () => const WalletProvidedHistoryScreen()),
+    GetPage(
+        name: filteredOrders,
+        page: () => FilteredOrdersScreen(
+              filterType: Get.parameters['filter'] ?? 'all',
+              title:
+                  Uri.decodeComponent(Get.parameters['title'] ?? 'orders'.tr),
+            )),
   ];
 }

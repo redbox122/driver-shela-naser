@@ -93,11 +93,15 @@ class OrderService implements OrderServiceInterface {
       DateTime currentTime, List<IgnoreModel> ignoredRequests) {
     List<IgnoreModel> tempList = [];
     tempList.addAll(ignoredRequests);
-    for (int index = 0; index < tempList.length; index++) {
-      if (currentTime.difference(tempList[index].time!).inMinutes > 10) {
-        tempList.removeAt(index);
+
+    // Use removeWhere instead of removeAt to avoid index issues
+    tempList.removeWhere((ignore) {
+      if (ignore.time != null) {
+        return currentTime.difference(ignore.time!).inMinutes > 10;
       }
-    }
+      return false;
+    });
+
     return tempList;
   }
 

@@ -39,8 +39,21 @@ class _VerifyDeliverySheetWidgetState extends State<VerifyDeliverySheetWidget> {
   @override
   void initState() {
     super.initState();
+    print('🔧 VerifyDeliverySheetWidget initialized:');
+    print('   isSenderPay: ${widget.isSenderPay}');
+    print('   verify: ${widget.verify}');
+    print('   isSetOtp: ${widget.isSetOtp}');
+
     if (widget.isSetOtp!) {
-      Get.find<OrderController>().setOtp('');
+      if (widget.isSenderPay) {
+        // For pickup (isSenderPay = true), use store OTP
+        print('🔧 Setting up for PICKUP - using store OTP');
+        Get.find<OrderController>().setStoreOtp('');
+      } else {
+        // For delivery (isSenderPay = false), use customer OTP
+        print('🔧 Setting up for DELIVERY - using customer OTP');
+        Get.find<OrderController>().setOtp('');
+      }
     }
   }
 
@@ -107,14 +120,25 @@ class _VerifyDeliverySheetWidgetState extends State<VerifyDeliverySheetWidget> {
                         animationDuration: const Duration(milliseconds: 300),
                         backgroundColor: Colors.transparent,
                         enableActiveFill: true,
-                        onChanged: (String text) =>
-                            orderController.setOtp(text),
+                        onChanged: (String text) {
+                          if (widget.isSenderPay) {
+                            // For pickup, use store OTP
+                            orderController.setStoreOtp(text);
+                          } else {
+                            // For delivery, use customer OTP
+                            orderController.setOtp(text);
+                          }
+                        },
                         beforeTextPaste: (text) => true,
                       ),
                     ),
                     const SizedBox(height: Dimensions.paddingSizeSmall),
-                    Text('collect_otp_from_customer'.tr,
-                        style: robotoRegular, textAlign: TextAlign.center),
+                    Text(
+                        widget.isSenderPay
+                            ? 'collect_otp_from_store'.tr
+                            : 'collect_otp_from_customer'.tr,
+                        style: robotoRegular,
+                        textAlign: TextAlign.center),
                     const SizedBox(height: Dimensions.paddingSizeLarge),
                   ])
                 : Column(children: [
@@ -156,9 +180,18 @@ class _VerifyDeliverySheetWidgetState extends State<VerifyDeliverySheetWidget> {
                     margin: const EdgeInsets.only(
                         bottom: Dimensions.paddingSizeSmall),
                     onPressed: (widget.verify! &&
-                            orderController.otp.length != 4)
+                            ((widget.isSenderPay &&
+                                    orderController.storeOtp.length != 4) ||
+                                (!widget.isSenderPay &&
+                                    orderController.otp.length != 4)))
                         ? null
                         : () {
+                            print(
+                                '🔧 VerifyDeliverySheetWidget button pressed:');
+                            print('   isSenderPay: ${widget.isSenderPay}');
+                            print(
+                                '   Status to send: ${widget.isSenderPay ? 'picked_up' : 'delivered'}');
+
                             if (widget.cod!) {
                               if (widget.verify! && widget.isParcel!) {
                                 Get.back(result: 'show_price_view');

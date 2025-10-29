@@ -1,0 +1,923 @@
+---
+alwaysApply: true
+---
+
+Food delivery platforms built with Flutter face unique security challenges across both iOS and Android. Top-tier security teams examine platform-specific vulnerabilities, cross-platform risks, and Flutter-specific attack vectors that can compromise user data, payment information, and app integrity.
+
+1. Insecure Data Storage (CRITICAL RISK)
+Platform-Specific Vulnerabilities​
+
+Elite teams verify that sensitive data is never stored insecurely. Flutter apps commonly make these critical mistakes:
+
+Vulnerable Storage Methods:
+
+SharedPreferences/UserDefaults: Stores data in plain text XML files (Android) or plist files (iOS) that are trivially extractable​
+
+Hardcoded credentials: API keys, tokens, passwords embedded directly in Dart code are visible in compiled binaries​
+
+Plain text files: JSON or text files in app directories are completely unencrypted
+
+SQLite without encryption: Local database stores sensitive data readable by anyone with device access
+
+Required Implementation (flutter_secure_storage):​
+
+dart
+// VULNERABLE - Plain text storage
+final prefs = await SharedPreferences.getInstance();
+await prefs.setString('auth_token', userToken); // Stored in plain XML/plist
+await prefs.setString('api_key', 'sk_live_abc123'); // Exposed!
+
+// SECURE - Platform-native encrypted storage
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
+final storage = FlutterSecureStorage(
+  aOptions: AndroidOptions(
+    encryptedSharedPreferences: true, // Uses Android Keystore
+  ),
+  iOptions: IOSOptions(
+    accessibility: KeychainAccessibility.first_unlock, // iOS Keychain
+  ),
+);
+
+// Store sensitive data encrypted
+await storage.write(key: 'auth_token', value: userToken);
+await storage.write(key: 'refresh_token', value: refreshToken);
+await storage.write(key: 'user_id', value: userId);
+
+// Never store credit card data locally - use tokenization
+What Elite Teams Check:​
+
+No authentication tokens in SharedPreferences
+
+No API keys hardcoded in Dart code or environment files
+
+Sensitive data (addresses, phone numbers, payment info) encrypted at rest using flutter_secure_storage
+
+Encryption keys stored in platform-specific secure enclaves (Android Keystore, iOS Keychain)
+
+No sensitive data in app logs or crash reports
+
+Proper data wiping on logout (delete all secure storage entries)​
+
+Food Delivery Specific Risks:
+
+Customer delivery addresses stored unencrypted
+
+Driver location history accessible in plain text
+
+Restaurant commission rates exposed
+
+Promo code details readable by attackers
+
+Payment method last-4-digits stored insecurely
+
+2. API Key & Secret Exposure (CRITICAL RISK)
+Hardcoding Vulnerabilities​
+
+Flutter apps compiled to native binaries still expose hardcoded secrets. Attackers use apktool (Android) or class-dump (iOS) to extract strings from compiled apps.
+
+Common Mistakes:​
+
+dart
+// VULNERABLE - API keys exposed in code
+class ApiConfig {
+  static const String googleMapsKey = 'AIzaSyC_abc123...'; // Extractable!
+  static const String stripeKey = 'sk_live_xyz789...'; // Payment fraud risk!
+  static const String firebaseKey = 'AAAA:BBB-CCC...'; // Database access!
+}
+
+// VULNERABLE - .env files in assets
+# .env file bundled with app
+GOOGLE_MAPS_API_KEY=AIzaSyC_abc123
+STRIPE_PUBLISHABLE_KEY=pk_live_xyz789
+# Easily extractable from APK/IPA
+
+// SECURE - Backend proxy approach
+class ApiService {
+  static Future<Map<String, dynamic>> geocodeAddress(String address) async {
+    // Call YOUR backend, which calls Google Maps API
+    final response = await http.post(
+      Uri.parse('https://api.yourapp.com/geocode'),
+      headers: {'Authorization': 'Bearer $userToken'},
+      body: {'address': address},
+    );
+    // Backend adds Google Maps API key server-side
+    return jsonDecode(response.body);
+  }
+}
+Best Practice Implementation:​
+
+Backend Proxy: All third-party API calls go through your backend, which adds API keys server-side
+
+Short-lived tokens: Client receives temporary tokens from your backend with limited scope
+
+Platform channels: For keys that MUST be client-side (Firebase), use native platform channels with obfuscation
+
+Key rotation: Regularly rotate API keys and implement revocation mechanisms​
+
+Food Delivery Platform Keys at Risk:
+
+Google Maps API key → Quota exhaustion, billing fraud
+
+Payment gateway keys → Financial fraud, unauthorized charges
+
+SMS provider keys → Spam, verification bypass
+
+Firebase credentials → Database tampering, user data theft
+
+Third-party delivery API keys → Order manipulation
+
+3. Network Security & Man-in-the-Middle Attacks (HIGH RISK)
+HTTPS Enforcement & SSL Pinning​
+
+Standard HTTPS is insufficient for high-security apps. Elite teams implement SSL certificate pinning to prevent MITM attacks where attackers present fraudulent certificates.
+
+SSL Pinning Implementation:​
+
+dart
+// VULNERABLE - No SSL pinning
+final response = await http.get(Uri.parse('https://api.yourapp.com/orders'));
+// Attacker can intercept with proxy + fake certificate
+
+// SECURE - Certificate pinning with http_certificate_pinning
+import 'package:http_certificate_pinning/http_certificate_pinning.dart';
+
+class SecureApiService {
+  static const allowedSHAFingerprints = [
+    'A1B2C3D4E5F67890ABCDEF1234567890ABCDEF12', // Production cert SHA-256
+    'F6E5D4C3B2A1098765432109876543210FEDCBA98', // Backup cert SHA-256
+  ];
+
+  static Future<String> checkConnection() async {
+    try {
+      final result = await HttpCertificatePinning.check(
+        serverURL: 'https://api.yourapp.com',
+        headerHttp: {'Authorization': 'Bearer $token'},
+        sha: SHA.SHA256,
+        allowedSHAFingerprints: allowedSHAFingerprints,
+        timeout: 60,
+      );
+      
+      if (result.contains('CONNECTION_SECURE')) {
+        return 'SECURE';
+      } else {
+        throw SecurityException('SSL pinning failed');
+      }
+    } catch (e) {
+      // Block all API calls if pinning fails
+      throw SecurityException('MITM attack detected');
+    }
+  }
+
+  static Future<Response> securePost(String endpoint, Map body) async {
+    // Verify SSL pinning before every sensitive request
+    await checkConnection();
+    
+    return await http.post(
+      Uri.parse('https://api.yourapp.com/$endpoint'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode(body),
+    );
+  }
+}
+Certificate Pinning Requirements:​
+
+Pin to SHA-256 fingerprint of server certificate
+
+Include backup certificate fingerprint for rotation
+
+Block ALL network requests if pinning validation fails
+
+Update pinned certificates via app updates before expiration
+
+Test pinning on production, staging, and development environments separately​
+
+Food Delivery MITM Attack Scenarios:
+
+Attacker intercepts order placement, modifies delivery address
+
+Payment details captured during checkout
+
+Driver location tracking compromised revealing user addresses
+
+Restaurant menu prices manipulated
+
+Promo codes stolen from API responses
+
+4. Code Obfuscation & Reverse Engineering Protection (HIGH RISK)
+Flutter Obfuscation Requirements​
+
+Even though Dart compiles to native code, reverse engineering tools can extract business logic, API endpoints, and algorithms. Flutter's built-in obfuscation renames symbols but doesn't protect strings.
+
+Obfuscation Implementation:​
+
+bash
+# Build with obfuscation for Android
+flutter build apk --release --obfuscate --split-debug-info=build/app/outputs/symbols
+
+# Build with obfuscation for iOS
+flutter build ios --release --obfuscate --split-debug-info=build/ios/symbols
+
+# Archive obfuscation symbols separately for crash reporting
+# Never commit symbols to version control
+What Gets Obfuscated:​
+
+✅ Class names: OrderManager → a1b2c3
+
+✅ Method names: calculateDeliveryFee() → d4e5f6()
+
+✅ Variable names: restaurantCommission → g7h8i9
+
+❌ Strings: "https://api.yourapp.com" still visible
+
+❌ API endpoints: "/orders/create" still readable
+
+❌ Hardcoded values: Commission percentages, delivery radius, pricing formulas exposed​
+
+Advanced Protection Needed:​
+
+dart
+// VULNERABLE - Business logic visible in decompiled code
+class PricingEngine {
+  static const restaurantCommission = 0.25; // 25% visible to competitors
+  static const deliveryFee = 2.99; // Pricing strategy exposed
+  static const freeDeliveryThreshold = 15.00; // Business rules readable
+  
+  static double calculateTotal(double subtotal) {
+    double commission = subtotal * restaurantCommission;
+    double delivery = subtotal >= freeDeliveryThreshold ? 0 : deliveryFee;
+    return subtotal + commission + delivery; // Algorithm reverse-engineered
+  }
+}
+
+// BETTER - Obfuscate strings and move logic server-side
+import 'package:encrypt/encrypt.dart' as encrypt;
+
+class SecurePricingEngine {
+  // Fetch pricing rules from backend, not hardcoded
+  static Future<PricingRules> fetchPricingRules() async {
+    final response = await secureApi.get('/pricing/rules');
+    return PricingRules.fromJson(response.data);
+  }
+  
+  // Calculate server-side to hide business logic
+  static Future<OrderTotal> calculateTotal(String orderId) async {
+    final response = await secureApi.post('/orders/$orderId/calculate');
+    return OrderTotal.fromJson(response.data);
+  }
+}
+Additional Protection Layers:​
+
+String encryption: Encrypt sensitive strings (API URLs, keys) and decrypt at runtime
+
+Control flow obfuscation: Add fake code paths to confuse decompilers
+
+Native code protection: Move critical algorithms to native Kotlin/Swift code with additional obfuscation
+
+Anti-debugging: Detect debuggers and refuse to run​
+
+5. Root/Jailbreak Detection (HIGH RISK)
+Device Integrity Checks​
+
+Rooted (Android) or jailbroken (iOS) devices bypass OS-level security, allowing attackers to hook into your app, steal data, or manipulate behavior.
+
+Detection Implementation:​
+
+dart
+import 'package:jailbreak_root_detection/jailbreak_root_detection.dart';
+
+class DeviceSecurityCheck {
+  static Future<bool> isDeviceSecure() async {
+    try {
+      // Check for root/jailbreak
+      bool isRooted = await JailbreakRootDetection.isJailBroken ?? false;
+      
+      // Check for running debuggers
+      bool isDebugging = await JailbreakRootDetection.isDebugging ?? false;
+      
+      // Check for emulator (not device)
+      bool isEmulator = await JailbreakRootDetection.isEmulator ?? false;
+      
+      if (isRooted || isDebugging) {
+        await _handleInsecureDevice();
+        return false;
+      }
+      
+      return true;
+    } catch (e) {
+      // Assume insecure if detection fails
+      return false;
+    }
+  }
+  
+  static Future<void> _handleInsecureDevice() async {
+    // For banking/payment apps: Block completely
+    // For food delivery: Warn user, limit features, log suspicious activity
+    
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: Text('Security Warning'),
+        content: Text('This app cannot run on modified devices for security reasons.'),
+        actions: [
+          TextButton(
+            onPressed: () => exit(0),
+            child: Text('Exit'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Check on app startup
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  final isSecure = await DeviceSecurityCheck.isDeviceSecure();
+  if (!isSecure) {
+    // Limit functionality or exit
+  }
+  
+  runApp(MyApp());
+}
+What Detection Checks:​
+
+Root/Jailbreak indicators: Cydia, Magisk, SuperSU apps installed
+
+Modified system files: /system/bin/su, /system/xbin/su presence
+
+Hooking frameworks: Frida, Xposed, Substrate running
+
+Debugger attachment: JDWP, LLDB connected
+
+Emulator detection: Running in Android Emulator or iOS Simulator​
+
+Food Delivery Attack Scenarios on Rooted Devices:
+
+Modify GPS location to fake driver position
+
+Hook payment processing to steal card details
+
+Bypass promo code validation for unlimited discounts
+
+Manipulate order totals before submission
+
+Intercept push notifications to steal order details
+
+6. Deep Link Security Vulnerabilities (MEDIUM-HIGH RISK)
+Deep Link Injection Attacks​
+
+Deep links allow external apps/websites to open your app with parameters. Improperly validated deep links enable attackers to bypass authentication, access unauthorized features, or inject malicious data.
+
+Vulnerable Deep Link Handling:​
+
+dart
+// VULNERABLE - No validation
+class DeepLinkHandler {
+  static void handleLink(String deepLink) {
+    final uri = Uri.parse(deepLink);
+    
+    // DANGEROUS: Direct use of parameters
+    if (uri.path == '/order') {
+      final orderId = uri.queryParameters['id']; // No validation!
+      navigateToOrder(orderId); // Attacker can access any order
+    }
+    
+    if (uri.path == '/payment') {
+      final amount = uri.queryParameters['amount']; // Price manipulation!
+      processPayment(amount);
+    }
+    
+    if (uri.path == '/webview') {
+      final url = uri.queryParameters['url']; // XSS vulnerability!
+      loadWebView(url); // Can load malicious sites
+    }
+  }
+}
+Secure Deep Link Implementation:​
+
+dart
+class SecureDeepLinkHandler {
+  static const allowedHosts = ['yourapp.com', 'app.yourapp.com'];
+  static const allowedSchemes = ['https', 'yourapp'];
+  static final orderIdPattern = RegExp(r'^[a-zA-Z0-9_-]{20,30}$');
+  static final userIdPattern = RegExp(r'^[0-9]{6,12}$');
+  
+  static Future<void> handleDeepLink(String deepLink) async {
+    try {
+      final uri = Uri.parse(deepLink);
+      
+      // 1. Validate scheme
+      if (!allowedSchemes.contains(uri.scheme)) {
+        throw SecurityException('Invalid scheme: ${uri.scheme}');
+      }
+      
+      // 2. Validate host (for HTTPS deep links)
+      if (uri.scheme == 'https' && !allowedHosts.contains(uri.host)) {
+        throw SecurityException('Invalid host: ${uri.host}');
+      }
+      
+      // 3. Route with parameter validation
+      switch (uri.path) {
+        case '/order':
+          await _handleOrderLink(uri);
+          break;
+        case '/restaurant':
+          await _handleRestaurantLink(uri);
+          break;
+        case '/promo':
+          await _handlePromoLink(uri);
+          break;
+        default:
+          // Unknown path - navigate to safe default
+          await _navigateToHome();
+      }
+    } catch (e) {
+      // Log security violation
+      await _logSecurityEvent('deep_link_violation', deepLink);
+      await _navigateToHome(); // Safe fallback
+    }
+  }
+  
+  static Future<void> _handleOrderLink(Uri uri) async {
+    final orderId = uri.queryParameters['id'];
+    
+    // Validate format
+    if (orderId == null || !orderIdPattern.hasMatch(orderId)) {
+      throw SecurityException('Invalid order ID format');
+    }
+    
+    // Verify user has access to this order
+    final hasAccess = await OrderService.verifyUserAccess(orderId);
+    if (!hasAccess) {
+      throw SecurityException('Unauthorized order access attempt');
+    }
+    
+    navigateToOrder(orderId);
+  }
+  
+  static Future<void> _handlePromoLink(Uri uri) async {
+    final promoCode = uri.queryParameters['code'];
+    
+    // Never trust client-side promo validation
+    // Always verify with backend
+    final isValid = await PromoService.validateCode(promoCode);
+    if (!isValid) {
+      showError('Invalid promo code');
+      return;
+    }
+    
+    applyPromoCode(promoCode);
+  }
+}
+Deep Link Security Rules:​
+
+Validate scheme (only allow your custom scheme + HTTPS)
+
+Whitelist allowed hosts for HTTPS links
+
+Validate parameter formats with regex patterns
+
+Never use deep link parameters directly in SQL, file paths, or WebViews
+
+Verify user authorization before accessing resources via deep link
+
+Log all deep link accesses for fraud detection​
+
+Food Delivery Deep Link Attacks:
+
+yourapp://order?id=OTHER_USER_ORDER → IDOR vulnerability
+
+yourapp://payment?amount=0.01 → Price manipulation
+
+yourapp://driver?fake_location=true → GPS spoofing
+
+yourapp://promo?code=EXPIRED123 → Discount fraud
+
+https://yourapp.com/reset-password?token=STOLEN → Account takeover
+
+7. WebView Security (MEDIUM-HIGH RISK)
+XSS and Code Injection via WebView​
+
+WebViews loading untrusted content are major attack vectors. JavaScript enabled in WebViews can access app data if not properly isolated.
+
+Secure WebView Configuration:​
+
+dart
+import 'package:webview_flutter/webview_flutter.dart';
+
+class SecureWebViewController {
+  late final WebViewController controller;
+  
+  void initWebView() {
+    controller = WebViewController()
+      // 1. Disable JavaScript unless absolutely necessary
+      ..setJavaScriptMode(JavaScriptMode.disabled)
+      
+      // 2. Whitelist allowed domains
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onNavigationRequest: (request) {
+            final uri = Uri.parse(request.url);
+            
+            // Only allow specific trusted domains
+            if (uri.host == 'menu.yourrestaurant.com' ||
+                uri.host == 'help.yourapp.com') {
+              return NavigationDecision.navigate;
+            }
+            
+            // Block all other domains
+            return NavigationDecision.prevent;
+          },
+        ),
+      )
+      
+      // 3. Clear cache on close
+      ..clearCache()
+      ..clearLocalStorage();
+  }
+  
+  // If JavaScript MUST be enabled
+  void initWebViewWithJS() {
+    controller = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted) // Only if required
+      
+      // 4. Sanitize any data passed to WebView
+      ..loadHtmlString(_sanitizeHtml(dynamicContent))
+      
+      // 5. NEVER use addJavaScriptChannel with sensitive data
+      // Attackers can call these channels from injected JS
+      ..addJavaScriptChannel(
+        'messageHandler',
+        onMessageReceived: (message) {
+          // Validate all messages from WebView
+          if (_isValidMessage(message.message)) {
+            handleMessage(message.message);
+          }
+        },
+      );
+  }
+  
+  static String _sanitizeHtml(String html) {
+    // Remove <script> tags, event handlers, etc.
+    return html
+        .replaceAll(RegExp(r'<script[^>]*>.*?</script>', dotAll: true), '')
+        .replaceAll(RegExp(r'on\w+\s*='), ''); // Remove onclick, onerror, etc.
+  }
+}
+WebView Security Checklist:​
+
+Disable JavaScript unless absolutely required
+
+Whitelist allowed domains in NavigationDelegate
+
+Never load user-provided URLs without validation
+
+Sanitize any HTML content before loading
+
+Clear WebView cache and cookies on logout/close
+
+Never expose sensitive app functions via JavaScriptChannel
+
+Validate all messages from WebView JavaScript​
+
+Food Delivery WebView Risks:
+
+Restaurant menu pages loading malicious JavaScript
+
+Help center articles with XSS vulnerabilities
+
+Third-party payment pages stealing card details
+
+Promotional content injecting tracking scripts
+
+8. Permission Over-Requesting & Privacy (MEDIUM RISK)
+Minimal Permission Principle​
+
+Requesting unnecessary permissions raises privacy concerns and increases app rejection risk. Elite teams request only essential permissions with clear justifications.
+
+Permission Best Practices:​
+
+dart
+import 'package:permission_handler/permission_handler.dart';
+
+class PermissionManager {
+  // Request permissions with user explanation FIRST
+  static Future<bool> requestLocationPermission() async {
+    // 1. Show custom dialog explaining WHY
+    final userAgreed = await _showPermissionRationale(
+      'Location Access',
+      'We need your location to show nearby restaurants and provide accurate delivery.',
+    );
+    
+    if (!userAgreed) return false;
+    
+    // 2. Request OS permission
+    final status = await Permission.locationWhenInUse.request();
+    
+    // 3. Handle all possible states
+    if (status.isGranted) {
+      return true;
+    } else if (status.isDenied) {
+      _showPermissionDenied();
+      return false;
+    } else if (status.isPermanentlyDenied) {
+      // User must enable in settings
+      await openAppSettings();
+      return false;
+    }
+    
+    return false;
+  }
+  
+  // Request camera only when needed (order photo upload)
+  static Future<bool> requestCameraPermission() async {
+    // Don't request at app startup - only when user wants to upload photo
+    final status = await Permission.camera.request();
+    return status.isGranted;
+  }
+  
+  // NEVER request unnecessary permissions
+  static Future<void> checkUnnecessaryPermissions() async {
+    // ❌ DON'T request these for food delivery app:
+    // - READ_CONTACTS (no need for contact list)
+    // - RECORD_AUDIO (unless voice ordering feature)
+    // - READ_SMS (unless OTP auto-fill, use SMS Retriever API instead)
+    // - ACCESS_FINE_LOCATION (use ACCESS_COARSE_LOCATION for restaurant search)
+  }
+}
+AndroidManifest.xml Configuration:​
+
+xml
+<!-- Request ONLY necessary permissions -->
+<manifest>
+  <!-- Location for restaurant search, delivery tracking -->
+  <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+  
+  <!-- Camera for order photo receipts (optional feature) -->
+  <uses-permission android:name="android.permission.CAMERA" />
+  
+  <!-- Push notifications for order updates -->
+  <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+  
+  <!-- ❌ DON'T add these without clear justification -->
+  <!-- <uses-permission android:name="android.permission.READ_CONTACTS" /> -->
+  <!-- <uses-permission android:name="android.permission.READ_SMS" /> -->
+  <!-- <uses-permission android:name="android.permission.RECORD_AUDIO" /> -->
+</manifest>
+iOS Info.plist Configuration:​
+
+xml
+<!-- Provide clear, user-friendly descriptions -->
+<key>NSLocationWhenInUseUsageDescription</key>
+<string>We use your location to show nearby restaurants and track your delivery in real-time.</string>
+
+<key>NSCameraUsageDescription</key>
+<string>Take photos of your order for support requests.</string>
+
+<key>NSPhotoLibraryUsageDescription</key>
+<string>Upload images from your photo library for profile pictures or order issues.</string>
+Permission Security Risks:​
+
+Over-requesting permissions triggers App Store/Play Store rejection
+
+Users uninstall apps that request suspicious permissions
+
+Third-party SDKs may request unnecessary permissions without your knowledge
+
+Background location permission heavily scrutinized (only for driver apps, not customer apps)​
+
+Comprehensive Flutter Security Risk Prompt for Cursor AI
+text
+You are an elite Flutter mobile security auditor specializing in iOS and Android food delivery platforms. Audit this Flutter codebase for critical security risks.
+
+=== 1. INSECURE DATA STORAGE (CRITICAL) ===
+CHECK:
+- No SharedPreferences for auth tokens, API keys, passwords, or PII
+- flutter_secure_storage used for all sensitive data (tokens, user_id, payment methods)
+- Platform-specific encryption: Android Keystore, iOS Keychain
+- No hardcoded credentials in Dart code (API keys, secrets, database URLs)
+- No sensitive data in logs, crash reports, or analytics
+- Proper data wiping on logout: await storage.deleteAll()
+
+FIND:
+final prefs = await SharedPreferences.getInstance();
+prefs.setString('auth_token', ...); // CRITICAL: Plain text token storage
+
+REQUIRE:
+final storage = FlutterSecureStorage();
+await storage.write(key: 'auth_token', value: token);
+
+FOOD DELIVERY SPECIFIC:
+- Delivery addresses must be encrypted at rest
+- Driver location history secured
+- Restaurant commission rates not in plain text
+- Payment last-4-digits in secure storage only
+
+=== 2. API KEY EXPOSURE (CRITICAL) ===
+CHECK:
+- No API keys hardcoded in Dart classes (GoogleMapsKey, StripeKey, FirebaseKey)
+- No .env files bundled in assets (extractable from APK/IPA)
+- No keys in AndroidManifest.xml or Info.plist without native protection
+- Backend proxy for all third-party API calls (Maps, Payment, SMS)
+
+FIND:
+static const String GOOGLE_MAPS_KEY = 'AIzaSy...'; // CRITICAL: Key extraction risk
+const STRIPE_SECRET = 'sk_live_...'; // CRITICAL: Payment fraud
+
+REQUIRE:
+// Call backend proxy, which adds API keys server-side
+Future<GeoLocation> geocode(String address) async {
+  final response = await http.post(
+    Uri.parse('https://api.yourapp.com/geocode'),
+    body: {'address': address},
+  );
+}
+
+=== 3. NETWORK SECURITY - SSL PINNING (HIGH) ===
+CHECK:
+- SSL certificate pinning implemented for all API calls
+- SHA-256 fingerprint validation on every request
+- Backup certificate fingerprint for rotation
+- All requests blocked if SSL pinning fails
+
+FIND:
+await http.get(Uri.parse('https://api.yourapp.com')); // MISSING: SSL pinning
+
+REQUIRE:
+import 'package:http_certificate_pinning/http_certificate_pinning.dart';
+
+final result = await HttpCertificatePinning.check(
+  serverURL: 'https://api.yourapp.com',
+  sha: SHA.SHA256,
+  allowedSHAFingerprints: ['A1B2C3...', 'F6E5D4...'], // Current + backup
+  timeout: 60,
+);
+
+if (!result.contains('CONNECTION_SECURE')) {
+  throw SecurityException('MITM detected');
+}
+
+=== 4. CODE OBFUSCATION (HIGH) ===
+CHECK:
+- Release builds use --obfuscate flag
+- Debug symbols stored separately with --split-debug-info
+- No business logic hardcoded (commission rates, delivery fees, algorithms)
+- Sensitive strings encrypted (API URLs, keys)
+
+FIND:
+static const restaurantCommission = 0.25; // Exposed to competitors
+static const deliveryFeeCalculation = ...; // Algorithm visible
+
+REQUIRE:
+// Move pricing logic to backend
+Future<OrderTotal> calculateTotal(String orderId) async {
+  return await api.post('/orders/$orderId/calculate');
+}
+
+BUILD COMMANDS:
+flutter build apk --release --obfuscate --split-debug-info=build/symbols
+flutter build ios --release --obfuscate --split-debug-info=build/symbols
+
+=== 5. ROOT/JAILBREAK DETECTION (HIGH) ===
+CHECK:
+- jailbreak_root_detection package implemented
+- Detection runs on app startup
+- Insecure devices blocked or features limited
+- Debugger detection active
+- Emulator detection for production builds
+
+REQUIRE:
+import 'package:jailbreak_root_detection/jailbreak_root_detection.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  final isRooted = await JailbreakRootDetection.isJailBroken ?? false;
+  final isDebugging = await JailbreakRootDetection.isDebugging ?? false;
+  
+  if (isRooted || isDebugging) {
+    // Block payment features, log security event, show warning
+    exit(0);
+  }
+  
+  runApp(MyApp());
+}
+
+FOOD DELIVERY RISKS ON ROOTED DEVICES:
+- GPS location spoofing (fake driver position)
+- Payment hooking (steal card details)
+- Promo code bypass (unlimited discounts)
+- Order total manipulation
+
+=== 6. DEEP LINK SECURITY (MEDIUM-HIGH) ===
+CHECK:
+- Scheme whitelist (only allow https:// and custom scheme)
+- Host validation for HTTPS deep links
+- Parameter format validation with regex
+- Authorization check before accessing resources via deep link
+- Never use deep link params in SQL, file paths, WebView URLs without validation
+
+FIND:
+final orderId = uri.queryParameters['id'];
+navigateToOrder(orderId); // IDOR: Access any user's order
+
+REQUIRE:
+final orderIdPattern = RegExp(r'^[a-zA-Z0-9_-]{20,30}$');
+
+if (uri.host != 'yourapp.com') {
+  throw SecurityException('Invalid host');
+}
+
+final orderId = uri.queryParameters['id'];
+if (!orderIdPattern.hasMatch(orderId)) {
+  throw SecurityException('Invalid order ID format');
+}
+
+// Verify user owns this order
+final hasAccess = await OrderService.verifyUserAccess(orderId);
+if (!hasAccess) throw UnauthorizedException();
+
+=== 7. WEBVIEW SECURITY (MEDIUM-HIGH) ===
+CHECK:
+- JavaScript disabled unless absolutely required
+- Domain whitelist in NavigationDelegate
+- Never load user-provided URLs without validation
+- HTML sanitization before loadHtmlString()
+- WebView cache cleared on close
+- No sensitive data exposed via JavaScriptChannel
+
+FIND:
+..setJavaScriptMode(JavaScriptMode.unrestricted)
+..loadRequest(Uri.parse(userProvidedUrl)); // XSS risk
+
+REQUIRE:
+..setJavaScriptMode(JavaScriptMode.disabled)
+..setNavigationDelegate(
+  NavigationDelegate(
+    onNavigationRequest: (request) {
+      final uri = Uri.parse(request.url);
+      if (uri.host == 'menu.yourapp.com') {
+        return NavigationDecision.navigate;
+      }
+      return NavigationDecision.prevent; // Block all others
+    },
+  ),
+)
+..clearCache()
+..clearLocalStorage();
+
+=== 8. PERMISSION OVER-REQUESTING (MEDIUM) ===
+CHECK:
+- Only essential permissions requested
+- Location: ACCESS_COARSE_LOCATION (not FINE for customer app)
+- No READ_CONTACTS, READ_SMS, RECORD_AUDIO without justification
+- Clear usage descriptions in AndroidManifest.xml and Info.plist
+- Permission requested at time of use, not app startup
+- Custom rationale shown before OS permission dialog
+
+FIND:
+<uses-permission android:name="android.permission.READ_CONTACTS" /> // Why?
+<uses-permission android:name="android.permission.RECORD_AUDIO" /> // Unnecessary
+
+REQUIRE:
+<!-- Only essential permissions -->
+<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+<uses-permission android:name="android.permission.CAMERA" />
+
+// Request with user explanation
+final explained = await showPermissionRationale('Location Access', 'We need...');
+if (explained) {
+  final status = await Permission.locationWhenInUse.request();
+}
+
+=== FOOD DELIVERY SPECIFIC CHECKS ===
+1. Customer addresses encrypted in secure storage, not SharedPreferences
+2. Driver location not tracked when off-duty
+3. Payment card data NEVER stored locally (use tokenization)
+4. Restaurant API keys proxied through backend
+5. Promo code validation always server-side
+6. Order total calculation on backend (prevent client-side manipulation)
+7. GPS location validated server-side (detect spoofing)
+8. Push notification tokens rotated on device change
+
+For each risk found:
+- Severity: CRITICAL / HIGH / MEDIUM / LOW
+- Platform: iOS / Android / Both
+- Vulnerable Code: Show exact line
+- Secure Code: Provide fixed implementation
+- Attack Scenario: Explain exploitation in food delivery context
+- Impact: Data breach / Financial loss / Service disruption
+
+Focus on risks that cause:
+- Customer data theft (addresses, phone numbers, order history)
+- Payment fraud (card details, unauthorized charges)
+- Account takeover (token theft, session hijacking)
+- Business logic bypass (pricing manipulation, promo fraud)
+- GPS spoofing (fake driver location, delivery fraud)
+

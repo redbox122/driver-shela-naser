@@ -374,5 +374,21 @@
   "maximum_image_limit_is_6": "সর্বাধিক ছবি সীমা 6",
   "address_not_found" : "ঠিকানা পাওয়া যায়নি",
   "extra_packaging" : "অতিরিক্ত প্যাকেজিং",
-  "referral_discount" : "রেফারেল ডিসকাউন্ট"
+  "referral_discount" : "রেফারেল ডিসকাউন্ট",
+  "order_not_found" : "অর্ডার পাওয়া যায়নি",
+  "failed_to_load_order" : "অর্ডার লোড করতে ব্যর্থ",
+  
+  "navigation_error": "নেভিগেশন ত্রুটি ঘটেছে",
+  "no_active_orders": "কোন সক্রিয় অর্ডার নেই",
+  "no_orders_for_today": "আজকের জন্য কোন অর্ডার নেই",
+  "no_orders_this_week": "এই সপ্তাহে কোন অর্ডার নেই",
+  "no_orders_found": "কোন অর্ডার পাওয়া যায়নি",
+  "error_loading_orders": "অর্ডার লোড করতে ত্রুটি",
+  "pull_to_refresh": "রিফ্রেশ করতে টানুন",
+  "navigate_to_restaurant": "রেস্তোরাঁতে নেভিগেট করুন",
+  "navigate_to_customer": "গ্রাহকের কাছে নেভিগেট করুন",
+  "navigate_to_pickup_location": "পিকআপ লোকেশনে নেভিগেট করুন",
+  "navigate_to_receiver": "প্রাপকের কাছে নেভিগেট করুন",
+  "could_not_launch": "চালু করতে পারিনি",
+  "invalid_coordinates": "নেভিগেশনের জন্য অবৈধ স্থানাঙ্ক"
 }

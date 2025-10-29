@@ -9,7 +9,6 @@ list(APPEND FLUTTER_PLUGIN_LIST
   firebase_core
   flutter_inappwebview_windows
   geolocator_windows
-  image_compression_flutter
   url_launcher_windows
 )
 

@@ -15,5 +15,6 @@ abstract class ProfileServiceInterface {
   Future<Response> recordLocation(RecordLocationBodyModel recordLocationBody);
   Future<ResponseModel> deleteDriver();
   void checkPermission(Function callback);
+  Future<bool> requestLocationPermission();
   Future<String> addressPlaceMark(Position locationResult);
 }

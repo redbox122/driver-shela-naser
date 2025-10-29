@@ -1,0 +1,411 @@
+---
+alwaysApply: true
+---
+
+Elite QA Team Criteria for Food Delivery Platform (Uber Eats/Hungerstation Type): Complete Bug Detection & Prevention System
+Your food delivery platform operates in a complex multi-stakeholder environment with customers, restaurants, drivers, and admins. A top-tier QA team focuses on critical vulnerabilities unique to this business model that can cause revenue loss, reputation damage, and service disruptions.
+
+Critical Security & Payment Vulnerabilities
+Payment Processing & Financial Security​
+
+Elite teams examine payment flows with extreme scrutiny since food delivery apps handle thousands of daily transactions. Key focus areas include:
+
+Payment gateway integration testing: Verify PCI DSS compliance, encryption of card data in transit and at rest, proper handling of refunds and chargebacks, failed transaction recovery mechanisms
+
+Double payment prevention: Test race conditions where users might be charged twice for the same order during network interruptions or rapid button clicks
+
+Refund abuse detection: Check for vulnerabilities where users can claim non-delivery and get refunds while keeping the food (friendly fraud)​
+
+Coupon/promo code exploitation: Test for race conditions allowing multiple redemptions of single-use codes, expired coupon validation bypass, stacking restrictions, percentage calculation errors​
+
+Commission calculation accuracy: Verify restaurant commission calculations are correct across different pricing tiers, ensure percentage-based fees calculate properly with taxes and discounts, check for rounding errors in split payments​
+
+Critical Test Cases:
+
+php
+// VULNERABLE - Coupon can be redeemed multiple times via race condition
+public function applyCoupon(Request $request) {
+    $coupon = Coupon::where('code', $request->code)->first();
+    if ($coupon->usage_count < $coupon->max_uses) {
+        $coupon->increment('usage_count'); // Race condition here
+        return $this->applyDiscount($coupon);
+    }
+}
+
+// SECURE - Use database locking
+public function applyCoupon(Request $request) {
+    DB::transaction(function() use ($request) {
+        $coupon = Coupon::where('code', $request->code)
+            ->lockForUpdate()
+            ->first();
+        
+        if (!$coupon || $coupon->usage_count >= $coupon->max_uses) {
+            throw new CouponInvalidException();
+        }
+        
+        if ($coupon->expires_at && $coupon->expires_at < now()) {
+            throw new CouponExpiredException();
+        }
+        
+        $coupon->increment('usage_count');
+        return $this->applyDiscount($coupon);
+    });
+}
+Real-Time Order & Inventory Management
+Race Conditions in Order Processing​
+
+Food delivery platforms experience intense race conditions due to concurrent operations from multiple actors (customers ordering, restaurants updating inventory, drivers accepting orders). Top teams test:
+
+Inventory overselling: Multiple customers ordering the last available item simultaneously
+
+Driver double-assignment: Same order assigned to multiple drivers or driver accepting multiple orders that conflict
+
+Order status conflicts: Restaurant marks order ready while customer cancels simultaneously
+
+Stock depletion bugs: Item marked out-of-stock after customer adds to cart but before checkout​
+
+Critical Implementation:
+
+php
+// VULNERABLE - Item can be oversold
+public function createOrder(Request $request) {
+    $item = MenuItem::find($request->item_id);
+    if ($item->quantity > 0) {
+        $item->decrement('quantity'); // Race condition
+        Order::create([...]);
+    }
+}
+
+// SECURE - Use pessimistic locking
+public function createOrder(Request $request) {
+    DB::transaction(function() use ($request) {
+        $item = MenuItem::where('id', $request->item_id)
+            ->lockForUpdate()
+            ->first();
+        
+        if (!$item || $item->quantity < $request->quantity) {
+            throw new InsufficientStockException();
+        }
+        
+        if (!$item->is_available || !$item->restaurant->is_open) {
+            throw new ItemUnavailableException();
+        }
+        
+        $item->decrement('quantity', $request->quantity);
+        
+        return Order::create([
+            'user_id' => auth()->id(),
+            'item_id' => $item->id,
+            'quantity' => $request->quantity,
+            'price_snapshot' => $item->price, // Store price at order time
+            'status' => OrderStatus::PENDING
+        ]);
+    });
+}
+Multi-Vendor Order Management​
+
+Order splitting bugs: Cart with items from multiple restaurants must split correctly into separate orders
+
+Partial refund calculations: When one restaurant cancels but others fulfill, refund amount must be accurate
+
+Commission calculation errors: Each vendor's commission calculated independently with proper tax handling
+
+Vendor payout accuracy: Ensure restaurant receives correct amount after platform fees, delivery fees, and discounts
+
+Geolocation & Real-Time Tracking
+GPS Tracking Accuracy & Privacy​
+
+Elite teams verify location-based features work reliably:
+
+Delivery radius validation: Restaurants only show to customers within delivery range, accounting for traffic and real-world road networks (not straight-line distance)
+
+ETA calculation accuracy: Estimated delivery time considers real-time traffic, restaurant preparation time, driver availability, and historical data​
+
+GPS drift handling: Driver location updates gracefully handle GPS inaccuracies, tunnels, signal loss
+
+Real-time location privacy: Customer location not exposed to drivers until order accepted, driver location not tracked when off-duty
+
+Geofencing for delivery confirmation: Verify driver is actually at delivery location before allowing "delivered" status​
+
+Race Conditions in Real-Time Updates​
+
+Food delivery apps face unique real-time synchronization challenges:
+
+WebSocket connection timing: Orders created between initial data fetch and WebSocket connection establishment must still appear
+
+Out-of-order message delivery: Status updates arriving out of sequence (e.g., "delivered" arrives before "picked up")
+
+Multi-device synchronization: Order status changes on one device must sync to all user devices
+
+Offline queue handling: Actions taken while offline must resolve conflicts when reconnecting​
+
+Driver Assignment & Route Optimization
+Dynamic Driver Assignment Bugs​
+
+Top teams test sophisticated assignment algorithms:
+
+Optimal driver selection: Algorithm considers distance, current load, estimated pickup time, driver ratings, vehicle capacity
+
+Fairness in order distribution: No driver consistently starved or overloaded, equitable distribution of high-value orders
+
+Rebalancing after cancellations: When driver cancels or becomes unavailable, order reassigned without customer impact
+
+Batch order assignment: Multiple orders to same driver optimized for route efficiency​
+
+Route Optimization Failures:
+
+php
+// Elite teams verify:
+// - Route recalculates dynamically when traffic changes
+// - Multi-stop routes optimized for minimum total time
+// - Alternative routes suggested when primary route blocked
+// - Delivery time predictions update based on actual driver progress
+Menu Synchronization & Availability
+Real-Time Menu Updates​
+
+Menu management across multiple platforms is a critical failure point:
+
+Multi-platform sync failures: Price change in POS must propagate to app, website, and third-party platforms (UberEats, DoorDash) in real-time​
+
+Item availability bugs: Out-of-stock items must be disabled across all channels immediately to prevent orders for unavailable items
+
+Price inconsistency: Same item showing different prices on different platforms
+
+Menu version conflicts: Old cached menu causing orders for discontinued items
+
+Schedule-based availability: Items only available during specific hours (breakfast menu, late-night menu) enforced correctly​
+
+Implementation Requirements:
+
+php
+// VULNERABLE - Menu changes not synced
+public function updateMenuItem(Request $request, MenuItem $item) {
+    $item->update($request->all());
+    // Other platforms still show old data
+}
+
+// SECURE - Broadcast to all platforms
+public function updateMenuItem(Request $request, MenuItem $item) {
+    DB::transaction(function() use ($request, $item) {
+        $item->update($request->validated());
+        
+        // Clear all platform caches
+        Cache::tags(['menu', "restaurant_{$item->restaurant_id}"])->flush();
+        
+        // Broadcast real-time update
+        broadcast(new MenuItemUpdated($item))->toOthers();
+        
+        // Sync to third-party platforms
+        dispatch(new SyncMenuToThirdPartyPlatforms($item));
+        
+        // Log for audit trail
+        ActivityLog::create([
+            'type' => 'menu_update',
+            'item_id' => $item->id,
+            'changes' => $item->getChanges()
+        ]);
+    });
+}
+Order State Machine & Workflow
+Order Status Transition Bugs​
+
+Food delivery orders follow complex state machines. Elite teams verify:
+
+Illegal state transitions prevented: Customer can't cancel after driver picked up, restaurant can't mark ready before accepting
+
+Concurrent status updates: Customer and restaurant updating status simultaneously handled correctly
+
+Rollback on failure: If notification fails after status change, transaction rolls back
+
+Timeout handling: Orders stuck in "searching for driver" auto-cancel after threshold
+
+State machine validation: All transitions logged, audit trail maintained​
+
+Critical States to Test:
+
+text
+Order Created → Restaurant Accepts → Preparing → Ready → Driver Assigned 
+→ Driver Arrived → Picked Up → En Route → Arrived → Delivered
+
+// Test illegal transitions:
+- Customer cancels after "Picked Up"
+- Restaurant rejects after "Preparing"
+- Driver unassigns after "Picked Up"
+- Concurrent state changes from multiple actors
+Push Notification Delivery
+Real-Time Notification Reliability​
+
+Push notifications are mission-critical for order updates:
+
+Token management: Device tokens expire after 270 days, must be refreshed and validated​
+
+Multi-device delivery: Notifications delivered to all user devices (phone, tablet, web)
+
+Priority handling: Critical notifications (order accepted, driver arrived) use high-priority channels, marketing uses normal priority​
+
+Delivery confirmation: Failed deliveries detected and retried, fallback to SMS if push fails
+
+Rate limiting: Bulk notifications staggered to avoid server overload
+
+Timing accuracy: Time-sensitive notifications (driver arriving in 2 minutes) sent immediately​
+
+Test Scenarios:
+
+php
+// Verify:
+// - Notifications sent even when app in background
+// - Order status notifications arrive in correct sequence
+// - Failed delivery triggers alternative notification method
+// - User receives notification on all logged-in devices
+// - High-priority notifications bypass battery optimization
+Data Breach & Account Security
+Account Takeover Prevention​
+
+Food delivery apps are prime targets for account fraud:
+
+Session management: Simultaneous logins from different locations flagged, session tokens expire appropriately
+
+Password security: Bcrypt/Argon2 hashing, minimum complexity requirements, breach detection
+
+Two-factor authentication: SMS or authenticator app 2FA for account changes
+
+Suspicious activity detection: Multiple failed login attempts, orders from unusual locations, payment method changes
+
+PII protection: Customer addresses, phone numbers, payment info encrypted at rest and in transit​
+
+Performance & Scalability Testing
+Peak Load Handling
+
+Elite teams simulate real-world peak scenarios:
+
+Lunch/dinner rush: 10x normal order volume handled without degradation
+
+Flash sale stress test: Promotional campaigns causing order spikes
+
+Database connection pooling: No connection exhaustion under high load
+
+Queue worker scaling: Background jobs (order processing, notifications) scale horizontally
+
+API rate limiting: Third-party API calls throttled to avoid blocking​
+
+Comprehensive Testing Prompt for Cursor AI
+text
+You are an elite QA engineer specializing in food delivery platforms (Uber Eats, DoorDash, Hungerstation). Audit this Laravel codebase for critical bugs and vulnerabilities.
+
+=== PAYMENT & FINANCIAL SECURITY ===
+1. Payment Race Conditions: Check all payment processing for double-charge vulnerabilities. Verify database transactions with locking on order creation.
+2. Coupon Redemption: Test for race conditions allowing multiple redemptions. Verify expiration validation, usage limit enforcement, stacking rules.
+   - Check: lockForUpdate() on coupon usage, atomic increment operations, expiry date validation
+3. Refund Logic: Verify refund calculations account for discounts, partial orders, commission adjustments. Check for refund abuse vulnerabilities.
+4. Commission Calculations: Verify restaurant commission accuracy across different order values, tax handling, discount impact.
+   - Formula: (order_total - delivery_fee - customer_discounts) * commission_rate
+5. Price Consistency: Ensure menu prices stored at order time (price_snapshot) to prevent price manipulation after order placement.
+
+=== INVENTORY & STOCK MANAGEMENT ===
+1. Overselling Prevention: Every item quantity check must use lockForUpdate() in database transaction.
+DB::transaction(function() {
+$item = MenuItem::lockForUpdate()->find($id);
+if ($item->quantity < $request->quantity) throw new OutOfStockException();
+$item->decrement('quantity', $request->quantity);
+});
+
+text
+2. Real-Time Availability: Menu items marked unavailable must instantly reflect across app, website, third-party platforms.
+3. Restaurant Operating Hours: Verify orders only accepted during open hours, accounting for timezone differences.
+4. Multi-Restaurant Orders: Cart items from different restaurants must split correctly into separate orders with independent tracking.
+
+=== ORDER STATE MACHINE ===
+1. Illegal Transitions: Prevent invalid status changes:
+- No cancellation after "picked_up" status
+- No restaurant rejection after "preparing"
+- No driver unassignment after "en_route"
+2. Concurrent Updates: Use optimistic locking or database transactions when multiple actors update order status.
+3. Timeout Handling: Orders in "searching_for_driver" > 15 min auto-cancel with customer notification.
+4. Rollback on Failure: If notification/webhook fails after status change, entire transaction rolls back.
+
+=== DRIVER ASSIGNMENT & ROUTING ===
+1. Assignment Algorithm: Verify driver selection considers:
+- Distance to restaurant + restaurant to customer
+- Current driver load and route optimization for multi-order deliveries
+- Driver ratings and acceptance rate
+- Vehicle capacity for large orders
+2. Double Assignment Prevention: Use database locks to prevent same order assigned to multiple drivers.
+3. Reassignment Logic: When driver cancels, order immediately reassigned without customer manual intervention.
+4. ETA Accuracy: Delivery time = restaurant_prep_time + driver_travel_time + traffic_factor. Update dynamically.
+
+=== GEOLOCATION & TRACKING ===
+1. Delivery Radius: Calculate using road network distance (Google Maps Distance Matrix), not straight-line.
+2. GPS Accuracy: Handle GPS drift, signal loss gracefully. Don't mark "delivered" if driver >50m from address.
+3. Real-Time Updates: WebSocket connection for live driver tracking. Handle reconnection, out-of-order messages.
+4. Privacy: Customer full address hidden from driver until order accepted. Driver not tracked when offline.
+
+=== MENU SYNCHRONIZATION ===
+1. Multi-Platform Sync: Menu changes must propagate to:
+- Mobile app (clear cache, push update)
+- Website (invalidate CDN cache)
+- Third-party platforms (API webhook to UberEats/DoorDash)
+2. Price Consistency: Same item same price everywhere. Cache invalidation on price update.
+3. Availability Sync: Out-of-stock items disabled everywhere within 30 seconds.
+4. Schedule-Based Menus: Breakfast/lunch/dinner menus show only during configured hours.
+
+=== PUSH NOTIFICATIONS ===
+1. Token Management: Expire tokens >270 days old. De-duplicate multiple tokens per user.
+2. Delivery Confirmation: Track failed deliveries, retry 3x, fallback to SMS if all attempts fail.
+3. Priority Handling: Use FCM high-priority for order status, normal for marketing.
+4. Multi-Device: Send to all user devices. Sync read status across devices.
+5. Rate Limiting: Stagger bulk sends to avoid server overload (max 1000/minute).
+
+=== SECURITY VULNERABILITIES ===
+1. SQL Injection: All queries use parameter binding or Eloquent ORM. Check raw queries: DB::select('... WHERE id = ?', [$id])
+2. Mass Assignment: All models define $fillable. Verify no sensitive fields (is_admin, commission_rate) mass-assignable.
+3. Authorization: Check Gates/Policies:
+- Customers can only view/cancel own orders
+- Restaurants can only manage own menu/orders
+- Drivers can only update assigned orders
+4. File Uploads: Restaurant logo/menu images validated for MIME type, size, stored outside public directory.
+5. Rate Limiting: API endpoints throttled (60 req/min general, 5 req/min login).
+
+=== RACE CONDITIONS ===
+1. Order Creation: Lock menu item inventory during order placement.
+2. Driver Assignment: Lock order record during driver assignment algorithm.
+3. Payment Processing: Idempotency keys prevent duplicate charges.
+4. Coupon Usage: Lock coupon record during redemption check.
+5. Refund Processing: Lock order financial records during refund calculation.
+
+=== TESTING REQUIREMENTS ===
+1. Feature Tests: Test complete order workflows end-to-end:
+- Customer creates order → Restaurant accepts → Driver assigned → Delivered
+- Customer cancels before restaurant accepts
+- Restaurant rejects order → Customer refunded
+2. Race Condition Tests: Use parallel HTTP requests to test concurrent actions:
+// Test 10 users ordering last item simultaneously
+Promise::all([
+Http::async()->post('/orders', ['item_id' => $lastItem]),
+// ... repeat 10 times
+])->wait();
+// Verify only 1 order succeeded, 9 got "out of stock"
+
+text
+3. Load Tests: Simulate 1000 concurrent orders, verify no deadlocks or timeouts.
+
+=== BUG PATTERNS TO DETECT ===
+1. Missing Database Transactions: Flag any create/update/delete operations not wrapped in DB::transaction()
+2. Missing Locks: Flag inventory checks without lockForUpdate()
+3. Hardcoded Values: Flag hardcoded commission rates, delivery fees, timeout values (use config/database)
+4. Missing Validation: Every Request must have validation rules
+5. Unhandled Exceptions: Every external API call must have try/catch
+6. Missing Eager Loading: Flag N+1 queries (Order::all() accessing $order->restaurant without with('restaurant'))
+7. Price Calculations Without Precision: Use bcmath or database DECIMAL for money calculations
+
+For each bug found:
+- Severity: CRITICAL / HIGH / MEDIUM / LOW
+- Impact: Revenue loss / Data breach / Service disruption / UX degradation
+- Vulnerable Code: Show exact line
+- Secure Code: Provide fixed implementation
+- Test Case: Provide PHPUnit test to verify fix
+
+Focus on bugs that cause:
+- Revenue loss (payment errors, commission miscalculation, refund abuse)
+- Service disruption (order routing failures, driver assignment bugs)
+- Data breaches (account takeover, PII exposure)
+- Customer complaints (wrong orders, overselling, delayed notifications)
