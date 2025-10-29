@@ -70,6 +70,10 @@ class AppConstants {
   static const String walletProvidedEarningListUri =
       '/api/v1/delivery-man/wallet-provided-earning-list';
 
+  // Support
+  static const String supportPhoneNumber =
+      '+966501234567'; // TODO: Update with actual support number
+
   //chat url
   static const String getConversationListUri =
       '/api/v1/delivery-man/message/list';
