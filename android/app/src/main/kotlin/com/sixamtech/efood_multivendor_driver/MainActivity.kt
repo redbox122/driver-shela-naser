@@ -1,4 +1,4 @@
-package com.delivery.shellafood_delivery
+package com.delivery.shala
 
 import android.content.Intent
 import android.os.Bundle

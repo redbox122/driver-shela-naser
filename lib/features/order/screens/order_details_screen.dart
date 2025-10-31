@@ -102,7 +102,15 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
   }
 
   Widget _buildOtpSection(OrderModel order) {
-    if (!['handover', 'picked_up'].contains(order.orderStatus)) {
+    // Only show OTPs after they've been successfully verified
+    // Store OTP: Show only after pickup is complete (status = 'picked_up')
+    // Customer OTP: Show only after delivery is complete (status = 'delivered')
+    bool shouldShowStoreOtp =
+        order.orderStatus == 'picked_up' || order.orderStatus == 'delivered';
+    bool shouldShowCustomerOtp = order.orderStatus == 'delivered';
+
+    // If no OTPs should be shown, return empty widget
+    if (!shouldShowStoreOtp && !shouldShowCustomerOtp) {
       return const SizedBox.shrink();
     }
 
@@ -118,33 +126,25 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (order.orderStatus == 'handover') ...[
-            Builder(builder: (context) {
-              print('🔧 OTP DISPLAY DEBUG - HANDOVER:');
-              print('   order.otpStore: ${order.otpStore}');
-              print('   order.otp: ${order.otp}');
-              return _buildOtpCard(
-                icon: Icons.store,
-                label: 'store_pickup_code'.tr,
-                otp: order.otpStore ?? 'N/A',
-                description: 'show_vendor_this_code'.tr,
-                color: Theme.of(context).primaryColor,
-              );
-            }),
+          // Show store OTP only after successful pickup verification
+          if (shouldShowStoreOtp && order.otpStore != null) ...[
+            _buildOtpCard(
+              icon: Icons.store,
+              label: 'store_pickup_code'.tr,
+              otp: order.otpStore!,
+              description: 'verified_at_pickup'.tr,
+              color: Theme.of(context).primaryColor,
+            ),
           ],
-          if (order.orderStatus == 'picked_up') ...[
-            Builder(builder: (context) {
-              print('🔧 OTP DISPLAY DEBUG - PICKED_UP:');
-              print('   order.otp: ${order.otp}');
-              print('   order.otpStore: ${order.otpStore}');
-              return _buildOtpCard(
-                icon: Icons.person,
-                label: 'customer_delivery_code'.tr,
-                otp: order.otp ?? 'N/A',
-                description: 'ask_customer_for_code'.tr,
-                color: Colors.green,
-              );
-            }),
+          // Show customer OTP only after successful delivery verification
+          if (shouldShowCustomerOtp && order.otp != null) ...[
+            _buildOtpCard(
+              icon: Icons.person,
+              label: 'customer_delivery_code'.tr,
+              otp: order.otp!,
+              description: 'verified_at_delivery'.tr,
+              color: Colors.green,
+            ),
           ],
         ],
       ),

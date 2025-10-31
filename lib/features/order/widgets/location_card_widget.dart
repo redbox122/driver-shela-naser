@@ -105,7 +105,7 @@ class LocationCardWidget extends StatelessWidget {
                   ),
                 ]),
                 Text(
-                  '${DateConverterHelper.timeDistanceInMin(orderModel.createdAt!)} ${'mins_ago'.tr}',
+                  DateConverterHelper.timeDistanceAgo(orderModel.createdAt!),
                   style: robotoBold.copyWith(
                       color: Theme.of(context).primaryColor),
                 ),

@@ -1,4 +1,4 @@
-package com.delivery.shellafood_delivery
+package com.delivery.shala
 
 import android.app.Service
 import android.content.Context
@@ -89,7 +89,7 @@ class BackgroundService : Service(), LifecycleDetector.Listener {
     }
 
     companion object {
-        private const val SHARED_PREFERENCES_NAME = "com.delivery.shellafood_delivery"
+        private const val SHARED_PREFERENCES_NAME = "com.delivery.shala"
 
         private const val KEY_CALLBACK_RAW_HANDLE = "callbackRawHandle"
 

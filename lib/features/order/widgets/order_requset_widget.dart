@@ -138,7 +138,8 @@ class OrderRequestWidget extends StatelessWidget {
                       ])),
                   Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
                     Text(
-                      '${DateConverterHelper.timeDistanceInMin(orderModel.createdAt!)} ${'mins_ago'.tr}',
+                      DateConverterHelper.timeDistanceAgo(
+                          orderModel.createdAt!),
                       style: robotoMedium.copyWith(
                           color: Theme.of(context).primaryColor,
                           fontSize: Dimensions.fontSizeSmall),

@@ -406,6 +406,8 @@
   "customer_delivery_code": "رمز التسليم للعميل",
   "show_vendor_this_code": "أظهر هذا الرمز للبائع",
   "ask_customer_for_code": "اطلب هذا الرمز من العميل",
+  "verified_at_pickup": "تم التحقق عند الاستلام",
+  "verified_at_delivery": "تم التحقق عند التسليم",
   "enter_store_pickup_code": "أدخل رمز الاستلام من المتجر",
   "ask_vendor_for_code": "اطلب من البائع رمز الاستلام للتحقق من الطلب",
   "verify": "تحقق",

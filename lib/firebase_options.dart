@@ -77,7 +77,7 @@ class DefaultFirebaseOptions {
     projectId: 'shella1',
     databaseURL: 'https://shella1-default-rtdb.firebaseio.com',
     storageBucket: 'shella1.firebasestorage.app',
-    iosBundleId: 'com.delivery.shellafood_delivery.shellafoodDelivery',
+    iosBundleId: 'com.delivery.shala.shellafoodDelivery',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(

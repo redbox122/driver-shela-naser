@@ -12,11 +12,12 @@ import 'package:shellafood_delivery/features/order/domain/models/order_model.dar
 import 'package:shellafood_delivery/features/order/domain/models/update_status_body_model.dart';
 import 'package:shellafood_delivery/features/order/domain/models/ignore_model.dart';
 import 'package:shellafood_delivery/features/order/domain/models/order_cancellation_body.dart';
+import 'package:shellafood_delivery/features/order/domain/services/order_service_interface.dart';
 import 'package:shellafood_delivery/helper/route_helper.dart';
 import 'package:shellafood_delivery/util/app_constants.dart';
 import 'package:shellafood_delivery/common/widgets/custom_snackbar_widget.dart';
 import 'package:get/get.dart';
-import 'package:shellafood_delivery/features/order/domain/services/order_service_interface.dart';
+import 'package:shellafood_delivery/helper/order_helper.dart';
 
 class OrderController extends GetxController implements GetxService {
   final OrderServiceInterface orderServiceInterface;
@@ -24,6 +25,64 @@ class OrderController extends GetxController implements GetxService {
 
   List<OrderModel>? _currentOrderList;
   List<OrderModel>? get currentOrderList => _currentOrderList;
+
+  /// Check if delivery person has reached maximum order capacity
+  bool hasReachedMaxCapacity() {
+    if (_currentOrderList == null) return false;
+    final assignedOrders = _getAssignedOrders();
+    return OrderHelper.hasReachedMaxCapacity(assignedOrders);
+  }
+
+  /// Get remaining order capacity for delivery person
+  int getRemainingCapacity() {
+    if (_currentOrderList == null) return OrderHelper.maxOrdersPerDeliveryMan;
+    final assignedOrders = _getAssignedOrders();
+    return OrderHelper.getRemainingCapacity(assignedOrders);
+  }
+
+  /// Check if delivery person can accept new orders
+  bool canAcceptNewOrders() {
+    if (_currentOrderList == null) return true;
+    final assignedOrders = _getAssignedOrders();
+    return OrderHelper.canAcceptNewOrders(assignedOrders);
+  }
+
+  /// Helper method to get only assigned orders
+  List<OrderModel> _getAssignedOrders() {
+    if (_currentOrderList == null) return [];
+    return _currentOrderList!
+        .where((order) =>
+            order.deliveryManId != null &&
+            order.deliveryManId ==
+                Get.find<ProfileController>().profileModel?.id)
+        .toList();
+  }
+
+  /// Get current orders sorted by priority (accepted orders first)
+  /// Only returns orders that are actually assigned to this delivery person
+  List<OrderModel>? get currentOrdersSorted {
+    if (_currentOrderList == null || _currentOrderList!.isEmpty) {
+      return _currentOrderList;
+    }
+
+    // Filter out available orders (DeliveryManId=null) and only keep assigned orders
+    final assignedOrders = _currentOrderList!
+        .where((order) =>
+            order.deliveryManId != null &&
+            order.deliveryManId ==
+                Get.find<ProfileController>().profileModel?.id)
+        .toList();
+
+    print('🔍 FILTERED ORDERS DEBUG:');
+    print('Total orders: ${_currentOrderList!.length}');
+    print('Assigned orders: ${assignedOrders.length}');
+    for (var order in assignedOrders) {
+      print(
+          'Assigned Order #${order.id}: Status=${order.orderStatus}, DeliveryManId=${order.deliveryManId}');
+    }
+
+    return OrderHelper.sortOrdersByPriority(assignedOrders);
+  }
 
   List<OrderModel>? _completedOrderList;
   List<OrderModel>? get completedOrderList => _completedOrderList;
@@ -185,6 +244,7 @@ class OrderController extends GetxController implements GetxService {
   Future<void> getLatestOrders() async {
     List<OrderModel>? latestOrderList =
         await orderServiceInterface.getLatestOrders();
+
     if (latestOrderList != null) {
       _latestOrderList = [];
       List<int?> ignoredIdList =

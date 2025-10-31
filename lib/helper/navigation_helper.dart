@@ -3,7 +3,6 @@ import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:shellafood_delivery/features/order/controllers/order_controller.dart';
 import 'package:shellafood_delivery/common/widgets/custom_snackbar_widget.dart';
-import 'package:shellafood_delivery/util/app_constants.dart';
 
 /// Helper service for smart navigation functionality
 /// Handles opening external navigation apps with appropriate destinations
@@ -48,10 +47,15 @@ class NavigationHelper {
       debugPrint('   Customer Lat: ${activeOrder.deliveryAddress?.latitude}');
       debugPrint('   Customer Lng: ${activeOrder.deliveryAddress?.longitude}');
 
+      // Check if order is in delivery phase (has food in hand)
+      final isInDeliveryPhase =
+          activeOrder.orderStatus?.toLowerCase() == 'picked_up' ||
+              activeOrder.orderStatus?.toLowerCase() == 'handover';
+
       // Determine destination based on order status and type
       if (activeOrder.orderType == 'parcel') {
         // For parcel orders
-        if (activeOrder.orderStatus == AppConstants.pickedUp) {
+        if (isInDeliveryPhase) {
           // Navigate to receiver location after pickup
           debugPrint(
               '   🎯 Navigating to RECEIVER location (parcel picked up)');
@@ -70,7 +74,7 @@ class NavigationHelper {
         }
       } else {
         // For food orders
-        if (activeOrder.orderStatus == AppConstants.pickedUp) {
+        if (isInDeliveryPhase) {
           // Navigate to customer location after pickup
           debugPrint('   🎯 Navigating to CUSTOMER location (food picked up)');
           url = _buildGoogleMapsUrl(
@@ -79,7 +83,7 @@ class NavigationHelper {
           );
         } else {
           // Navigate to restaurant location before pickup
-          // This includes: pending, confirmed, accepted, processing, handover
+          // This includes: pending, confirmed, accepted, processing
           debugPrint(
               '   🎯 Navigating to RESTAURANT location (food not picked up)');
           url = _buildGoogleMapsUrl(
@@ -159,14 +163,19 @@ class NavigationHelper {
 
       final activeOrder = orderController.currentOrderList!.first;
 
+      // Check if order is in delivery phase (has food in hand)
+      final isInDeliveryPhase =
+          activeOrder.orderStatus?.toLowerCase() == 'picked_up' ||
+              activeOrder.orderStatus?.toLowerCase() == 'handover';
+
       if (activeOrder.orderType == 'parcel') {
-        if (activeOrder.orderStatus == AppConstants.pickedUp) {
+        if (isInDeliveryPhase) {
           return 'navigate_to_receiver'.tr;
         } else {
           return 'navigate_to_pickup_location'.tr;
         }
       } else {
-        if (activeOrder.orderStatus == AppConstants.pickedUp) {
+        if (isInDeliveryPhase) {
           return 'navigate_to_customer'.tr;
         } else {
           return 'navigate_to_restaurant'.tr;

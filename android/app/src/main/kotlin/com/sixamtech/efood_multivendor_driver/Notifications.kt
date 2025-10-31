@@ -1,4 +1,4 @@
-package com.delivery.shellafood_delivery
+package com.delivery.shala
 
 import android.app.Notification
 import android.app.NotificationChannel

@@ -134,17 +134,22 @@ class AddressController extends GetxController implements GetxService {
 
   double getRestaurantDistance(LatLng storeLatLng, {LatLng? customerLatLng}) {
     double distance = 0;
+
+    double customerLat = customerLatLng?.latitude ??
+        Get.find<ProfileController>().recordLocationBody?.latitude ??
+        0;
+    double customerLng = customerLatLng?.longitude ??
+        Get.find<ProfileController>().recordLocationBody?.longitude ??
+        0;
+
     distance = Geolocator.distanceBetween(
           storeLatLng.latitude,
           storeLatLng.longitude,
-          customerLatLng?.latitude ??
-              Get.find<ProfileController>().recordLocationBody?.latitude ??
-              0,
-          customerLatLng?.longitude ??
-              Get.find<ProfileController>().recordLocationBody?.longitude ??
-              0,
+          customerLat,
+          customerLng,
         ) /
         1000;
+
     return distance;
   }
 }

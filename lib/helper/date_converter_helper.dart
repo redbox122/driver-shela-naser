@@ -22,7 +22,22 @@ class DateConverterHelper {
   }
 
   static DateTime dateTimeStringToDate(String dateTime) {
-    return DateFormat('yyyy-MM-dd HH:mm:ss').parse(dateTime);
+    try {
+      // Handle ISO format with timezone (e.g., "2025-01-16T10:30:00.000Z")
+      if (dateTime.contains('T') || dateTime.contains('Z')) {
+        return DateTime.parse(dateTime).toLocal();
+      }
+      // Handle format without timezone (assume it's already in local time)
+      DateTime parsed = DateFormat('yyyy-MM-dd HH:mm:ss').parse(dateTime, true);
+      // If no timezone info, assume UTC and convert to local
+      if (!parsed.isUtc) {
+        return parsed;
+      }
+      return parsed.toLocal();
+    } catch (e) {
+      // Fallback to basic parsing
+      return DateFormat('yyyy-MM-dd HH:mm:ss').parse(dateTime);
+    }
   }
 
   static DateTime convertStringToDatetime(String dateTime) {
@@ -60,9 +75,51 @@ class DateConverterHelper {
   }
 
   static int timeDistanceInMin(String time) {
-    DateTime currentTime = Get.find<SplashController>().currentTime;
-    DateTime rangeTime = dateTimeStringToDate(time);
-    return currentTime.difference(rangeTime).inMinutes;
+    try {
+      DateTime currentTime = Get.find<SplashController>().currentTime;
+      DateTime rangeTime = dateTimeStringToDate(time);
+      Duration difference = currentTime.difference(rangeTime);
+
+      // Ensure we return positive minutes only (avoid negative values)
+      int minutes = difference.inMinutes.abs();
+
+      // Cap at reasonable maximum to prevent showing huge numbers
+      // Max 1 day = 1440 minutes
+      const int maxMinutes = 1440;
+      return minutes > maxMinutes ? maxMinutes : minutes;
+    } catch (e) {
+      // Return 0 if parsing fails to avoid showing errors
+      return 0;
+    }
+  }
+
+  /// Returns human-readable time difference string (e.g., "5 mins ago", "2 hours ago", "3 days ago")
+  static String timeDistanceAgo(String time) {
+    try {
+      DateTime currentTime = Get.find<SplashController>().currentTime;
+      DateTime rangeTime = dateTimeStringToDate(time);
+      Duration difference = currentTime.difference(rangeTime);
+
+      int minutes = difference.inMinutes.abs();
+      int hours = difference.inHours.abs();
+      int days = difference.inDays.abs();
+
+      // Cap at 1 day to prevent huge numbers
+      if (days >= 1) {
+        return '$days ${days == 1 ? 'day' : 'days'} ago';
+      } else if (hours >= 1) {
+        return '$hours ${hours == 1 ? 'hour' : 'hours'} ago';
+      } else if (minutes >= 1) {
+        // Use existing translation for minutes
+        return '$minutes ${'mins_ago'.tr}';
+      } else {
+        return 'Just now';
+      }
+    } catch (e) {
+      // Fallback - show capped minutes
+      int mins = timeDistanceInMin(time);
+      return '$mins ${'mins_ago'.tr}';
+    }
   }
 
   static String _timeFormatter() {

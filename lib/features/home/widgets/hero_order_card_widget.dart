@@ -6,6 +6,7 @@ import 'package:shellafood_delivery/util/app_colors.dart';
 import 'package:shellafood_delivery/util/styles.dart';
 import 'package:shellafood_delivery/features/order/domain/models/order_model.dart';
 import 'package:shellafood_delivery/common/widgets/animated_shimmer_widget.dart';
+import 'package:shellafood_delivery/helper/order_helper.dart';
 import 'package:get/get.dart';
 
 /// Hero order card widget - prominent display for active orders
@@ -85,10 +86,8 @@ class _HeroOrderCardWidgetState extends State<HeroOrderCardWidget>
   }
 
   bool _isUrgentOrder() {
-    // Consider order urgent if it's been pending for more than 30 minutes
-    // or if it's a high-value order
-    return widget.orderModel.orderStatus == 'pending' ||
-        widget.orderModel.orderStatus == 'confirmed';
+    // Consider order urgent if it's picked up (has food) or pending
+    return OrderHelper.isUrgentOrder(widget.orderModel);
   }
 
   @override
@@ -193,13 +192,63 @@ class _HeroOrderCardWidgetState extends State<HeroOrderCardWidget>
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
-                                          Text(
-                                            '${parcel ? 'delivery_id'.tr : 'order_id'.tr}: #${widget.orderModel.id}',
-                                            style: robotoBold.copyWith(
-                                              fontSize:
-                                                  Dimensions.fontSizeLarge,
-                                              color: Colors.white,
-                                            ),
+                                          Row(
+                                            children: [
+                                              Expanded(
+                                                child: Text(
+                                                  '${parcel ? 'delivery_id'.tr : 'order_id'.tr}: #${widget.orderModel.id}',
+                                                  style: robotoBold.copyWith(
+                                                    fontSize: Dimensions
+                                                        .fontSizeLarge,
+                                                    color: Colors.white,
+                                                  ),
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                              if (OrderHelper.isUrgentOrder(
+                                                  widget.orderModel)) ...[
+                                                const SizedBox(
+                                                    width: Dimensions
+                                                        .paddingSizeSmall),
+                                                Container(
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
+                                                    horizontal: Dimensions
+                                                        .paddingSizeSmall,
+                                                    vertical: Dimensions
+                                                        .paddingSizeExtraSmall,
+                                                  ),
+                                                  decoration: BoxDecoration(
+                                                    color: AppColors.error
+                                                        .withOpacity(0.2),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            Dimensions
+                                                                .radiusSmall),
+                                                    border: Border.all(
+                                                      color: AppColors.error
+                                                          .withOpacity(0.5),
+                                                      width: 1.0,
+                                                    ),
+                                                  ),
+                                                  child: Text(
+                                                    widget.orderModel
+                                                                .orderStatus
+                                                                ?.toLowerCase() ==
+                                                            'accepted'
+                                                        ? 'ready_for_pickup'.tr
+                                                        : 'delivering_now'.tr,
+                                                    style:
+                                                        robotoMedium.copyWith(
+                                                      fontSize: Dimensions
+                                                          .fontSizeExtraSmall,
+                                                      color: AppColors.error,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ],
                                           ),
                                           const SizedBox(
                                               height: Dimensions
@@ -299,6 +348,11 @@ class _HeroOrderCardWidgetState extends State<HeroOrderCardWidget>
   }
 
   Widget _buildOrderDetails(bool parcel) {
+    final isInDeliveryPhase = OrderHelper.isInDeliveryPhase(widget.orderModel);
+    final contextualLocation =
+        OrderHelper.getContextualLocation(widget.orderModel);
+    final contextualLabel = OrderHelper.getContextualLabel(widget.orderModel);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -307,21 +361,15 @@ class _HeroOrderCardWidgetState extends State<HeroOrderCardWidget>
           children: [
             Icon(
               parcel
-                  ? (widget.orderModel.orderStatus == 'picked_up'
-                      ? Icons.person
-                      : Icons.store)
-                  : Icons.location_on,
+                  ? (isInDeliveryPhase ? Icons.person : Icons.store)
+                  : (isInDeliveryPhase ? Icons.home : Icons.store),
               size: Dimensions.iconSizeDefault,
               color: Colors.white.withOpacity(0.8),
             ),
             const SizedBox(width: Dimensions.paddingSizeSmall),
             Expanded(
               child: Text(
-                parcel
-                    ? (widget.orderModel.orderStatus == 'picked_up'
-                        ? 'receiver_location'.tr
-                        : 'customer_location'.tr)
-                    : 'store_location'.tr,
+                contextualLabel,
                 style: robotoMedium.copyWith(
                   fontSize: Dimensions.fontSizeDefault,
                   color: Colors.white.withOpacity(0.9),
@@ -337,13 +385,7 @@ class _HeroOrderCardWidgetState extends State<HeroOrderCardWidget>
           padding: const EdgeInsets.only(
               left: Dimensions.iconSizeDefault + Dimensions.paddingSizeSmall),
           child: Text(
-            parcel
-                ? (widget.orderModel.orderStatus == 'picked_up'
-                    ? widget.orderModel.receiverDetails?.address ??
-                        'address_not_found'.tr
-                    : widget.orderModel.deliveryAddress?.address ??
-                        'address_not_found'.tr)
-                : widget.orderModel.storeAddress ?? 'address_not_found'.tr,
+            contextualLocation,
             style: robotoRegular.copyWith(
               fontSize: Dimensions.fontSizeSmall,
               color: Colors.white.withOpacity(0.7),

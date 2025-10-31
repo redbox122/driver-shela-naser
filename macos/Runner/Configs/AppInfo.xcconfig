@@ -8,7 +8,7 @@
 PRODUCT_NAME = shellafood_delivery
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.delivery.shellafood_delivery.shellafoodDelivery
+PRODUCT_BUNDLE_IDENTIFIER = com.delivery.shala.shellafoodDelivery
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2025 com.delivery.shellafood_delivery. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2025 com.delivery.shala. All rights reserved.
