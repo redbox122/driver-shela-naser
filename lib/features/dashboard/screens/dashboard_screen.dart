@@ -3,9 +3,7 @@ import 'package:shellafood_delivery/features/auth/controllers/auth_controller.da
 import 'package:shellafood_delivery/features/order/controllers/order_controller.dart';
 import 'package:shellafood_delivery/features/disbursement/helper/disbursement_helper.dart';
 import 'package:shellafood_delivery/features/profile/controllers/profile_controller.dart';
-import 'package:shellafood_delivery/helper/notification_helper.dart';
 import 'package:shellafood_delivery/helper/route_helper.dart';
-import 'package:shellafood_delivery/main.dart';
 import 'package:shellafood_delivery/util/dimensions.dart';
 import 'package:shellafood_delivery/common/widgets/custom_alert_dialog_widget.dart';
 import 'package:shellafood_delivery/features/dashboard/widgets/bottom_nav_item_widget.dart';
@@ -58,14 +56,10 @@ class DashboardScreenState extends State<DashboardScreen> {
       String? orderID =
           message.data['title_loc_key'] ?? message.data['order_id'];
       bool isParcel = (message.data['order_type'] == 'parcel_order');
-      if (type != 'assign' &&
-          type != 'new_order' &&
-          type != 'message' &&
-          type != 'order_request' &&
-          type != 'order_status') {
-        NotificationHelper.showNotification(
-            message, flutterLocalNotificationsPlugin);
-      }
+
+      // Note: Notification is already shown by NotificationHelper.onMessage listener
+      // This listener only handles special UI actions (dialogs)
+
       if (type == 'new_order' || type == 'order_request') {
         Get.find<OrderController>().getCurrentOrders();
         Get.find<OrderController>().getLatestOrders();

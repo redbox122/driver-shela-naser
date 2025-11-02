@@ -390,5 +390,12 @@
   "navigate_to_pickup_location": "পিকআপ লোকেশনে নেভিগেট করুন",
   "navigate_to_receiver": "প্রাপকের কাছে নেভিগেট করুন",
   "could_not_launch": "চালু করতে পারিনি",
-  "invalid_coordinates": "নেভিগেশনের জন্য অবৈধ স্থানাঙ্ক"
+  "invalid_coordinates": "নেভিগেশনের জন্য অবৈধ স্থানাঙ্ক",
+  
+  "Order_Notification": "অর্ডার বিজ্ঞপ্তি",
+  "messages.new_order_push_description": "নতুন অর্ডার বিজ্ঞপ্তির বিবরণ",
+  "messages.Proceed_for_cooking": "প্রক্রিয়াকরণের জন্য এগিয়ে যান",
+  "messages.ready_for_delivery": "বিতরণের জন্য প্রস্তুত",
+  "messages.message": "বার্তা",
+  "messages.message_description": "বার্তার বিবরণ"
 }

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shellafood_delivery/features/auth/controllers/auth_controller.dart';
 import 'package:shellafood_delivery/features/chat/controllers/chat_controller.dart';
@@ -19,17 +20,45 @@ class NotificationHelper {
       FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin) async {
     var androidInitialize =
         const AndroidInitializationSettings('notification_icon');
-    var iOSInitialize = const DarwinInitializationSettings();
+    var iOSInitialize = const DarwinInitializationSettings(
+      requestAlertPermission: true,
+      requestBadgePermission: true,
+      requestSoundPermission: true,
+    );
     var initializationsSettings =
         InitializationSettings(android: androidInitialize, iOS: iOSInitialize);
-    flutterLocalNotificationsPlugin
-        .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()!
-        .requestNotificationsPermission();
-    flutterLocalNotificationsPlugin.initialize(initializationsSettings,
+
+    // Request notification permissions for Android 13+ (API 33+)
+    if (Platform.isAndroid) {
+      final AndroidFlutterLocalNotificationsPlugin? androidImplementation =
+          flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>();
+      if (androidImplementation != null) {
+        await androidImplementation.requestNotificationsPermission();
+        // Create notification channel for Android 8.0+ (API 26+)
+        await androidImplementation.createNotificationChannel(
+          const AndroidNotificationChannel(
+            'shellafood',
+            'shellafood',
+            description: 'Delivery notifications',
+            importance: Importance.max, // ⭐ KEY: Enables heads-up banners
+            playSound: true,
+            enableVibration: true,
+            showBadge: true, // Enable badge on app icon
+          ),
+        );
+
+        if (kDebugMode) {
+          print(
+              "🔔 Android notification channel 'shellafood' created with max importance");
+        }
+      }
+    }
+
+    await flutterLocalNotificationsPlugin.initialize(initializationsSettings,
         onDidReceiveNotificationResponse: (load) async {
       try {
-        if (load.payload!.isNotEmpty) {
+        if (load.payload != null && load.payload!.isNotEmpty) {
           NotificationBodyModel payload =
               NotificationBodyModel.fromJson(jsonDecode(load.payload!));
 
@@ -49,62 +78,91 @@ class NotificationHelper {
                 fromNotification: true));
           }
         }
-      } catch (_) {}
+      } catch (e) {
+        if (kDebugMode) {
+          print("Error handling notification tap: $e");
+        }
+      }
       return;
     });
 
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+    if (kDebugMode) {
+      print("🔔 Setting up onMessage listener...");
+    }
+
+    // Set up foreground message handler
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
       if (kDebugMode) {
-        print("onMessage message type:${message.data['type']}");
-        print("onMessage message:${message.data}");
+        print("🔔 onMessage FIRED - message received in foreground");
+        print("🔔 onMessage message type:${message.data['type']}");
+        print("🔔 onMessage message data:${message.data}");
+        print("🔔 onMessage notification title:${message.notification?.title}");
+        print("🔔 onMessage notification body:${message.notification?.body}");
       }
 
-      if (message.data['type'] == 'message' &&
-          Get.currentRoute.startsWith(RouteHelper.chatScreen)) {
-        if (Get.find<AuthController>().isLoggedIn()) {
-          Get.find<ChatController>().getConversationList(1);
-          if (Get.find<ChatController>()
-                  .messageModel!
-                  .conversation!
-                  .id
-                  .toString() ==
-              message.data['conversation_id'].toString()) {
-            Get.find<ChatController>().getMessages(
-              1,
-              NotificationBodyModel(
-                notificationType: NotificationType.message,
-                customerId:
-                    message.data['sender_type'] == AppConstants.user ? 0 : null,
-                vendorId: message.data['sender_type'] == AppConstants.vendor
-                    ? 0
-                    : null,
-              ),
-              null,
-              int.parse(message.data['conversation_id'].toString()),
-            );
-          } else {
-            NotificationHelper.showNotification(
-                message, flutterLocalNotificationsPlugin);
-          }
-        }
-      } else if (message.data['type'] == 'message' &&
-          Get.currentRoute.startsWith(RouteHelper.conversationListScreen)) {
-        if (Get.find<AuthController>().isLoggedIn()) {
-          Get.find<ChatController>().getConversationList(1);
-        }
-        NotificationHelper.showNotification(
-            message, flutterLocalNotificationsPlugin);
-      } else {
+      try {
+        // Always show notification in notification bar for ALL notification types
+        // Even if we also show dialogs for certain types
         String? type = message.data['type'];
 
-        if (type != 'assign' &&
-            type != 'new_order' &&
-            type != 'order_request') {
-          NotificationHelper.showNotification(
-              message, flutterLocalNotificationsPlugin);
-          Get.find<OrderController>().getCurrentOrders();
-          Get.find<OrderController>().getLatestOrders();
-          Get.find<NotificationController>().getNotificationList();
+        // Show notification in system notification bar for all types
+        await NotificationHelper.showNotification(
+            message, flutterLocalNotificationsPlugin);
+
+        if (kDebugMode) {
+          print("🔔 Notification display called for type: $type");
+        }
+
+        // Handle special cases based on notification type
+        try {
+          if (message.data['type'] == 'message' &&
+              Get.currentRoute.startsWith(RouteHelper.chatScreen)) {
+            if (Get.find<AuthController>().isLoggedIn()) {
+              Get.find<ChatController>().getConversationList(1);
+              if (Get.find<ChatController>()
+                      .messageModel!
+                      .conversation!
+                      .id
+                      .toString() ==
+                  message.data['conversation_id'].toString()) {
+                Get.find<ChatController>().getMessages(
+                  1,
+                  NotificationBodyModel(
+                    notificationType: NotificationType.message,
+                    customerId: message.data['sender_type'] == AppConstants.user
+                        ? 0
+                        : null,
+                    vendorId: message.data['sender_type'] == AppConstants.vendor
+                        ? 0
+                        : null,
+                  ),
+                  null,
+                  int.parse(message.data['conversation_id'].toString()),
+                );
+              }
+            }
+          } else if (message.data['type'] == 'message' &&
+              Get.currentRoute.startsWith(RouteHelper.conversationListScreen)) {
+            if (Get.find<AuthController>().isLoggedIn()) {
+              Get.find<ChatController>().getConversationList(1);
+            }
+          } else {
+            // Update order lists for order-related notifications
+            if (type != 'message') {
+              Get.find<OrderController>().getCurrentOrders();
+              Get.find<OrderController>().getLatestOrders();
+              Get.find<NotificationController>().getNotificationList();
+            }
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            print("🔔 Error in notification handler logic: $e");
+          }
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          print("🔔 ERROR in onMessage listener: $e");
+          print("🔔 Error stack: ${e.toString()}");
         }
       }
     });
@@ -139,31 +197,98 @@ class NotificationHelper {
 
   static Future<void> showNotification(
       RemoteMessage message, FlutterLocalNotificationsPlugin fln) async {
-    if (!GetPlatform.isIOS) {
-      String? title;
-      String? body;
-      String? image;
-      NotificationBodyModel? notificationBody =
-          convertNotification(message.data);
+    if (kDebugMode) {
+      print("🔔 showNotification called - type: ${message.data['type']}");
+    }
 
-      title = message.data['title'];
-      body = message.data['body'];
-      image = (message.data['image'] != null &&
-              message.data['image'].isNotEmpty)
-          ? message.data['image'].startsWith('http')
-              ? message.data['image']
-              : '${AppConstants.baseUrl}/storage/app/public/notification/${message.data['image']}'
-          : null;
+    String? title;
+    String? body;
+    String? image;
+    NotificationBodyModel? notificationBody = convertNotification(message.data);
 
+    // Get title and body from notification or data
+    title = message.notification?.title ?? message.data['title'];
+    body = message.notification?.body ?? message.data['body'];
+
+    // If still null, try alternative keys
+    title ??= message.data['title_loc_key'];
+    body ??= message.data['body_loc_key'];
+
+    // Translate keys if they match known translation keys (before setting defaults)
+    // This handles cases where backend sends translation keys instead of translated text
+    try {
+      if (title != null && Get.keys.containsKey(title)) {
+        title = title.tr;
+      }
+      if (body != null && Get.keys.containsKey(body)) {
+        body = body.tr;
+      }
+    } catch (_) {
+      // If translation fails, use original text
+    }
+
+    // Fallback to default if still null (after translation attempt)
+    final String finalTitle = title ?? 'New Notification';
+    final String finalBody = body ?? 'You have a new notification';
+
+    if (kDebugMode) {
+      print("🔔 Notification title: $finalTitle, body: $finalBody");
+    }
+
+    image = (message.data['image'] != null && message.data['image'].isNotEmpty)
+        ? message.data['image'].startsWith('http')
+            ? message.data['image']
+            : '${AppConstants.baseUrl}/storage/app/public/notification/${message.data['image']}'
+        : null;
+
+    if (GetPlatform.isIOS) {
+      // iOS: Show notification using local notifications plugin
+      // Firebase handles system notifications, but we show local for better control
+      const DarwinNotificationDetails iosPlatformChannelSpecifics =
+          DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+        sound: 'notification.aiff',
+      );
+      const NotificationDetails platformChannelSpecifics =
+          NotificationDetails(iOS: iosPlatformChannelSpecifics);
+
+      await fln.show(
+        message.hashCode,
+        finalTitle,
+        finalBody,
+        platformChannelSpecifics,
+        payload: notificationBody != null
+            ? jsonEncode(notificationBody.toJson())
+            : jsonEncode(message.data),
+      );
+
+      if (kDebugMode) {
+        print("🔔 iOS notification displayed");
+      }
+    } else {
+      // Android: Show notification with image support
       if (image != null && image.isNotEmpty) {
         try {
           await showBigPictureNotificationHiddenLargeIcon(
-              title, body, notificationBody, image, fln);
+              finalTitle, finalBody, notificationBody, image, fln);
+          if (kDebugMode) {
+            print("🔔 Android notification with image displayed");
+          }
         } catch (e) {
-          await showBigTextNotification(title, body!, notificationBody, fln);
+          if (kDebugMode) {
+            print("🔔 Error showing image notification, fallback to text: $e");
+          }
+          await showBigTextNotification(
+              finalTitle, finalBody, notificationBody, fln);
         }
       } else {
-        await showBigTextNotification(title, body!, notificationBody, fln);
+        await showBigTextNotification(
+            finalTitle, finalBody, notificationBody, fln);
+        if (kDebugMode) {
+          print("🔔 Android text notification displayed");
+        }
       }
     }
   }
@@ -173,16 +298,31 @@ class NotificationHelper {
       String body,
       NotificationBodyModel notificationBody,
       FlutterLocalNotificationsPlugin fln) async {
-    const AndroidNotificationDetails androidPlatformChannelSpecifics =
+    final AndroidNotificationDetails androidPlatformChannelSpecifics =
         AndroidNotificationDetails(
       'shellafood',
       'shellafood',
+      channelDescription: 'Delivery notifications',
       playSound: true,
       importance: Importance.max,
       priority: Priority.max,
-      sound: RawResourceAndroidNotificationSound('notification'),
+      sound: const RawResourceAndroidNotificationSound('notification'),
+      enableVibration: true,
+      channelShowBadge: true,
+      showWhen: true,
+      color: const Color(0xFF2A9849), // App primary green
+      colorized: true,
+      icon: 'notification_icon',
+      ticker: 'New delivery notification',
+      category: AndroidNotificationCategory.message,
+      visibility: NotificationVisibility.public,
+      autoCancel: true,
+      enableLights: true,
+      ledColor: const Color(0xFF2A9849),
+      ledOnMs: 1000,
+      ledOffMs: 500,
     );
-    const NotificationDetails platformChannelSpecifics =
+    final NotificationDetails platformChannelSpecifics =
         NotificationDetails(android: androidPlatformChannelSpecifics);
     await fln.show(0, title, body, platformChannelSpecifics,
         payload: jsonEncode(notificationBody.toJson()));
@@ -198,16 +338,34 @@ class NotificationHelper {
       htmlFormatBigText: true,
       contentTitle: title,
       htmlFormatContentTitle: true,
+      summaryText: '📦 Delivery Notification • Tap to open',
+      htmlFormatSummaryText: true,
     );
     AndroidNotificationDetails androidPlatformChannelSpecifics =
         AndroidNotificationDetails(
       'shellafood',
       'shellafood',
+      channelDescription: 'Delivery notifications',
       importance: Importance.max,
       styleInformation: bigTextStyleInformation,
       priority: Priority.max,
       playSound: true,
       sound: const RawResourceAndroidNotificationSound('notification'),
+      enableVibration: true,
+      channelShowBadge: true,
+      showWhen: true,
+      color: const Color(0xFF2A9849), // App primary green
+      colorized: true, // Colored notification bar
+      icon: 'notification_icon',
+      largeIcon: const DrawableResourceAndroidBitmap('notification_icon'),
+      ticker: 'New delivery notification',
+      category: AndroidNotificationCategory.message,
+      visibility: NotificationVisibility.public,
+      autoCancel: true,
+      enableLights: true,
+      ledColor: const Color(0xFF2A9849),
+      ledOnMs: 1000,
+      ledOffMs: 500,
     );
     NotificationDetails platformChannelSpecifics =
         NotificationDetails(android: androidPlatformChannelSpecifics);
@@ -232,19 +390,34 @@ class NotificationHelper {
       hideExpandedLargeIcon: true,
       contentTitle: title,
       htmlFormatContentTitle: true,
-      summaryText: body,
+      summaryText: '📦 Delivery Notification • Tap to view details',
       htmlFormatSummaryText: true,
     );
     final AndroidNotificationDetails androidPlatformChannelSpecifics =
         AndroidNotificationDetails(
       'shellafood',
       'shellafood',
+      channelDescription: 'Delivery notifications',
       largeIcon: FilePathAndroidBitmap(largeIconPath),
       priority: Priority.max,
       playSound: true,
       styleInformation: bigPictureStyleInformation,
       importance: Importance.max,
       sound: const RawResourceAndroidNotificationSound('notification'),
+      enableVibration: true,
+      channelShowBadge: true,
+      showWhen: true,
+      color: const Color(0xFF2A9849), // App primary green
+      colorized: true,
+      icon: 'notification_icon',
+      ticker: 'New delivery notification',
+      category: AndroidNotificationCategory.message,
+      visibility: NotificationVisibility.public,
+      autoCancel: true,
+      enableLights: true,
+      ledColor: const Color(0xFF2A9849),
+      ledOnMs: 1000,
+      ledOffMs: 500,
     );
     final NotificationDetails platformChannelSpecifics =
         NotificationDetails(android: androidPlatformChannelSpecifics);
@@ -292,8 +465,188 @@ class NotificationHelper {
   }
 }
 
-Future<dynamic> myBackgroundMessageHandler(RemoteMessage message) async {
+/// Background message handler - must be top-level function
+/// Called when app is terminated or in background
+/// Required annotation for AOT compilation (release builds)
+@pragma('vm:entry-point')
+Future<void> myBackgroundMessageHandler(RemoteMessage message) async {
   if (kDebugMode) {
-    print("onBackground: ${message.data}");
+    print("📱🔔 BACKGROUND NOTIFICATION RECEIVED!");
+    print("📱 Background data: ${message.data}");
+    print("📱 Background title: ${message.notification?.title}");
+    print("📱 Background body: ${message.notification?.body}");
+  }
+
+  try {
+    // Initialize local notifications plugin
+    final FlutterLocalNotificationsPlugin localNotifications =
+        FlutterLocalNotificationsPlugin();
+
+    // Initialize Android notification settings
+    const AndroidInitializationSettings androidInitialize =
+        AndroidInitializationSettings('notification_icon');
+
+    // Initialize iOS notification settings
+    const DarwinInitializationSettings iosInitialize =
+        DarwinInitializationSettings(
+      requestAlertPermission: true,
+      requestBadgePermission: true,
+      requestSoundPermission: true,
+    );
+
+    const InitializationSettings initializationSettings =
+        InitializationSettings(
+      android: androidInitialize,
+      iOS: iosInitialize,
+    );
+
+    // Initialize the plugin (safe to call multiple times)
+    await localNotifications.initialize(
+      initializationSettings,
+      onDidReceiveNotificationResponse: (details) {
+        // Handle notification tap when app opens from terminated state
+        if (kDebugMode) {
+          print("Notification tapped from background: ${details.payload}");
+        }
+        // Navigation will be handled when app fully initializes
+      },
+    );
+
+    // CRITICAL: Create notification channel for Android BEFORE showing notification
+    if (Platform.isAndroid) {
+      final AndroidFlutterLocalNotificationsPlugin? androidImplementation =
+          localNotifications.resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>();
+      if (androidImplementation != null) {
+        // Create notification channel with max importance for heads-up display
+        await androidImplementation.createNotificationChannel(
+          const AndroidNotificationChannel(
+            'shellafood',
+            'shellafood',
+            description: 'Delivery notifications',
+            importance: Importance.max, // ⭐ KEY: Enables heads-up banners
+            playSound: true,
+            enableVibration: true,
+            showBadge: true,
+          ),
+        );
+        if (kDebugMode) {
+          print("🔔 Background: Notification channel created");
+        }
+      }
+    }
+
+    // Get notification data
+    String? title = message.notification?.title ?? message.data['title'];
+    String? body = message.notification?.body ?? message.data['body'];
+
+    // Note: Cannot use Get.tr in background isolate, use original text
+    // Translations will be handled by app when it opens
+
+    if (title != null && body != null) {
+      // Convert notification data for payload
+      NotificationBodyModel? notificationBody =
+          NotificationHelper.convertNotification(message.data);
+
+      String? payload;
+      if (notificationBody != null) {
+        payload = jsonEncode(notificationBody.toJson());
+      } else {
+        payload = jsonEncode(message.data);
+      }
+
+      // Show notification for Android with enhanced styling
+      if (Platform.isAndroid) {
+        // Enhanced notification with rich styling and brand colors
+        final BigTextStyleInformation bigTextStyle = BigTextStyleInformation(
+          body,
+          htmlFormatBigText: true,
+          contentTitle: title,
+          htmlFormatContentTitle: true,
+          summaryText: '📦 Delivery Notification • Tap to open',
+          htmlFormatSummaryText: true,
+        );
+
+        final AndroidNotificationDetails androidPlatformChannelSpecifics =
+            AndroidNotificationDetails(
+          'shellafood',
+          'shellafood',
+          channelDescription: 'Delivery notifications',
+          importance: Importance.max, // ⭐ KEY: Enables heads-up banners
+          priority: Priority.max,
+          playSound: true,
+          enableVibration: true,
+          channelShowBadge: true,
+          showWhen: true,
+          sound: RawResourceAndroidNotificationSound('notification'),
+          largeIcon: DrawableResourceAndroidBitmap('notification_icon'),
+          styleInformation: bigTextStyle,
+          autoCancel: true,
+          ongoing: false,
+          color: const Color(0xFF2A9849), // App primary green color
+          colorized: true, // Enable colored notification bar
+          icon: 'notification_icon', // Small icon in status bar
+          ticker:
+              'New delivery notification', // Text that shows briefly in status bar
+          category: AndroidNotificationCategory.message,
+          visibility: NotificationVisibility.public,
+          enableLights: true, // Enable LED light for notification
+          ledColor: const Color(0xFF2A9849), // LED color matches app primary
+          ledOnMs: 1000, // LED on for 1 second
+          ledOffMs: 500, // LED off for 0.5 seconds
+        );
+
+        final NotificationDetails platformChannelSpecifics =
+            NotificationDetails(android: androidPlatformChannelSpecifics);
+
+        await localNotifications.show(
+          DateTime.now().millisecondsSinceEpoch.remainder(100000),
+          title,
+          body,
+          platformChannelSpecifics,
+          payload: payload,
+        );
+
+        if (kDebugMode) {
+          print("✅📱 Background notification DISPLAYED successfully!");
+          print("✅📱 Title: $title");
+          print("✅📱 Body: $body");
+        }
+      } else if (Platform.isIOS) {
+        // Show notification for iOS
+        const DarwinNotificationDetails iosPlatformChannelSpecifics =
+            DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+          sound: 'notification.aiff',
+        );
+
+        const NotificationDetails platformChannelSpecifics =
+            NotificationDetails(iOS: iosPlatformChannelSpecifics);
+
+        await localNotifications.show(
+          message.hashCode,
+          title,
+          body,
+          platformChannelSpecifics,
+          payload: payload,
+        );
+
+        if (kDebugMode) {
+          print("✅📱 iOS Background notification DISPLAYED successfully!");
+        }
+      }
+    } else {
+      if (kDebugMode) {
+        print("❌📱 Background notification SKIPPED - title or body is null");
+        print("❌📱 Title: $title, Body: $body");
+      }
+    }
+  } catch (e, stackTrace) {
+    if (kDebugMode) {
+      print("❌📱 ERROR in background notification handler: $e");
+      print("❌📱 Stack trace: $stackTrace");
+    }
   }
 }

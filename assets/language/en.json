@@ -441,5 +441,12 @@
   "navigate_to_pickup_location": "Navigate to Pickup Location",
   "navigate_to_receiver": "Navigate to Receiver",
   "could_not_launch": "Could not launch",
-  "invalid_coordinates": "Invalid coordinates for navigation"
+  "invalid_coordinates": "Invalid coordinates for navigation",
+  
+  "Order_Notification": "Order Notification",
+  "messages.new_order_push_description": "New order push description",
+  "messages.Proceed_for_cooking": "Proceed for processing",
+  "messages.ready_for_delivery": "Ready for delivery",
+  "messages.message": "Message",
+  "messages.message_description": "Message Description"
 }

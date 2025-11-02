@@ -10,6 +10,12 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <!-- Notification permission for Android 13+ (API 33+) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- Permission for receiving notifications when device is sleeping -->
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <!-- Permission for high-priority FCM messages -->
+    <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
 
     <queries>
         <intent>
@@ -38,6 +44,21 @@
         <meta-data android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyBme76mfXVdR5dXTIqQHaq8PxbEgL08eSQ"/>
 
+        <!-- Default notification channel for FCM background notifications -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="shellafood" />
+
+        <!-- Enable auto-initialization of Firebase Cloud Messaging -->
+        <meta-data
+            android:name="firebase_messaging_auto_init_enabled"
+            android:value="true" />
+
+        <!-- Notification icon -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/notification_icon" />
+
         <activity
             android:name=".MainActivity"
             android:launchMode="singleTop"
@@ -63,9 +84,6 @@
               android:name="io.flutter.embedding.android.SplashScreenDrawable"
               android:resource="@drawable/launch_background"
               />
-            <meta-data
-                android:name="com.google.firebase.messaging.default_notification_channel_id"
-                android:value="shellafood" />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>

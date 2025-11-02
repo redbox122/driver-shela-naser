@@ -374,5 +374,12 @@
   "maximum_image_limit_is_6" : "El límite máximo de imágenes es 6",
   "address_not_found" : "Dirección no encontrada",
   "extra_packaging" : "Embalaje Extra",
-  "referral_discount" : "Descuento de Referencia"
+  "referral_discount" : "Descuento de Referencia",
+  
+  "Order_Notification": "Notificación de Pedido",
+  "messages.new_order_push_description": "Descripción de notificación de nuevo pedido",
+  "messages.Proceed_for_cooking": "Proceder para procesamiento",
+  "messages.ready_for_delivery": "Listo para entrega",
+  "messages.message": "Mensaje",
+  "messages.message_description": "Descripción del Mensaje"
 }

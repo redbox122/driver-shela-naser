@@ -425,5 +425,12 @@
   "navigate_to_pickup_location": "التنقل إلى موقع الاستلام",
   "navigate_to_receiver": "التنقل إلى المستلم",
   "could_not_launch": "لا يمكن تشغيل",
-  "invalid_coordinates": "إحداثيات غير صالحة للتنقل"
+  "invalid_coordinates": "إحداثيات غير صالحة للتنقل",
+  
+  "Order_Notification": "إشعار الطلب",
+  "messages.new_order_push_description": "وصف إشعار الطلب الجديد",
+  "messages.Proceed_for_cooking": "المتابعة للمعالجة",
+  "messages.ready_for_delivery": "جاهز للتسليم",
+  "messages.message": "رسالة",
+  "messages.message_description": "وصف الرسالة"
 }

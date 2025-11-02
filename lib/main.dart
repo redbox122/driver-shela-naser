@@ -14,6 +14,7 @@ import 'package:shellafood_delivery/util/messages.dart';
 import 'package:shellafood_delivery/firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
@@ -39,15 +40,24 @@ Future<void> main() async {
   NotificationBodyModel? body;
   try {
     if (GetPlatform.isMobile) {
+      // Initialize notification helper FIRST to create channels
+      await NotificationHelper.initialize(flutterLocalNotificationsPlugin);
+
+      // Register background handler BEFORE any other Firebase operations
+      FirebaseMessaging.onBackgroundMessage(myBackgroundMessageHandler);
+
+      // Check for notification that opened app
       final RemoteMessage? remoteMessage =
           await FirebaseMessaging.instance.getInitialMessage();
       if (remoteMessage != null) {
         body = NotificationHelper.convertNotification(remoteMessage.data);
       }
-      await NotificationHelper.initialize(flutterLocalNotificationsPlugin);
-      FirebaseMessaging.onBackgroundMessage(myBackgroundMessageHandler);
     }
-  } catch (_) {}
+  } catch (e) {
+    if (kDebugMode) {
+      print("Error initializing notifications: $e");
+    }
+  }
 
   runApp(MyApp(languages: languages, body: body));
 }
