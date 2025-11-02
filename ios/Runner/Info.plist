@@ -45,5 +45,7 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSUserNotificationsUsageDescription</key>
+	<string>We need to send you notifications about new orders, order updates, and important delivery information.</string>
 </dict>
 </plist>
