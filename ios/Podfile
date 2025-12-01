@@ -1,5 +1,5 @@
 # Uncomment this line to define a global platform for your project
- platform :ios, '14.0'
+platform :ios, '14.0'
 
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
@@ -39,5 +39,14 @@ end
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
+    # Enforce minimum iOS 12.0 deployment target for pods that support it
+    # This fixes warnings about pods with deployment targets below 12.0
+    target.build_configurations.each do |config|
+      current_target = config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'].to_f
+      # Only update if below 12.0, but respect higher requirements (e.g., Firebase 13.0+, Google Maps 14.0+)
+      if current_target > 0 && current_target < 12.0
+        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '12.0'
+      end
+    end
   end
 end
