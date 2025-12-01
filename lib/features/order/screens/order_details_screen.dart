@@ -151,6 +151,227 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
     );
   }
 
+  Widget _buildOrderProofUploadSection(OrderModel order) {
+    // Only show for modules 6/7/8/9 when status is confirmed and not picked up
+    if (order.orderStatus != AppConstants.confirmed ||
+        ![6, 7, 8, 9].contains(order.module_id) ||
+        order.orderStatus == AppConstants.pickedUp) {
+      return const SizedBox.shrink();
+    }
+
+    return GetBuilder<OrderController>(builder: (orderController) {
+      final hasUploadedPhotos = order.orderProofFullUrl != null &&
+          order.orderProofFullUrl!.isNotEmpty;
+      final hasSelectedPhotos = orderController.pickedOrderProofImages.isNotEmpty;
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeDefault),
+      padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
+        border: Border.all(color: Theme.of(context).dividerColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.receipt_long,
+                  color: Theme.of(context).primaryColor, size: 24),
+              const SizedBox(width: Dimensions.paddingSizeSmall),
+              Text('upload_menu_facture_photos'.tr,
+                  style: robotoBold.copyWith(fontSize: Dimensions.fontSizeLarge)),
+            ],
+          ),
+          const SizedBox(height: Dimensions.paddingSizeSmall),
+          Text(
+            'upload_order_proof_description'.tr,
+            style: robotoRegular.copyWith(
+                color: Theme.of(context).hintColor,
+                fontSize: Dimensions.fontSizeSmall),
+          ),
+          const SizedBox(height: Dimensions.paddingSizeDefault),
+          
+          // Show already uploaded photos
+          if (hasUploadedPhotos) ...[
+            Text('uploaded_photos'.tr, style: robotoMedium),
+            const SizedBox(height: Dimensions.paddingSizeSmall),
+            GridView.builder(
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                childAspectRatio: 1.5,
+                crossAxisCount: ResponsiveHelper.isTab(context) ? 5 : 3,
+                mainAxisSpacing: 10,
+                crossAxisSpacing: 5,
+              ),
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: order.orderProofFullUrl!.length,
+              itemBuilder: (BuildContext context, index) {
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: InkWell(
+                    onTap: () => openDialog(
+                        context, order.orderProofFullUrl![index]),
+                    child: Center(
+                      child: ClipRRect(
+                        borderRadius:
+                            BorderRadius.circular(Dimensions.radiusSmall),
+                        child: CustomImageWidget(
+                          image: order.orderProofFullUrl![index],
+                          width: 100,
+                          height: 100,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: Dimensions.paddingSizeDefault),
+          ],
+
+          // Show selected photos (not yet uploaded)
+          if (hasSelectedPhotos) ...[
+            Text('selected_photos'.tr,
+                style: robotoMedium.copyWith(
+                    color: Theme.of(context).primaryColor)),
+            const SizedBox(height: Dimensions.paddingSizeSmall),
+            SizedBox(
+              height: 100,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: orderController.pickedOrderProofImages.length,
+                itemBuilder: (context, index) {
+                  return Container(
+                    margin: const EdgeInsets.only(right: 8),
+                    child: Stack(
+                      children: [
+                        ClipRRect(
+                          borderRadius:
+                              BorderRadius.circular(Dimensions.radiusSmall),
+                          child: Image.file(
+                            File(orderController.pickedOrderProofImages[index].path),
+                            width: 100,
+                            height: 100,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        Positioned(
+                          top: 0,
+                          right: 0,
+                          child: InkWell(
+                            onTap: () {
+                              orderController.pickOrderProofImages(
+                                  isRemove: true, isCamera: false);
+                              orderController.pickedOrderProofImages.removeAt(index);
+                              orderController.update();
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: const BoxDecoration(
+                                color: Colors.red,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.close,
+                                  color: Colors.white, size: 16),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: Dimensions.paddingSizeDefault),
+          ],
+
+          // Upload buttons
+          Row(
+            children: [
+              Expanded(
+                child: InkWell(
+                  onTap: () {
+                    Get.bottomSheet(
+                      CameraButtonSheetWidget(
+                        isOrderProof: true,
+                        onCameraTap: () {
+                          orderController.pickOrderProofImages(
+                              isRemove: false, isCamera: true);
+                          Get.back();
+                        },
+                        onGalleryTap: () {
+                          orderController.pickOrderProofImages(
+                              isRemove: false, isCamera: false);
+                          Get.back();
+                        },
+                      ),
+                      backgroundColor: Colors.transparent,
+                    );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        vertical: Dimensions.paddingSizeDefault),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).primaryColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
+                      border: Border.all(
+                          color: Theme.of(context).primaryColor, width: 1),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.add_photo_alternate,
+                            color: Theme.of(context).primaryColor),
+                        const SizedBox(width: Dimensions.paddingSizeSmall),
+                        Text('select_photos'.tr,
+                            style: robotoMedium.copyWith(
+                                color: Theme.of(context).primaryColor)),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              if (hasSelectedPhotos) ...[
+                const SizedBox(width: Dimensions.paddingSizeDefault),
+                Expanded(
+                  child: CustomButtonWidget(
+                    buttonText: 'upload'.tr,
+                    onPressed: () async {
+                      final success = await orderController.uploadOrderProof(order);
+                      if (success) {
+                        // Refresh order details
+                        await orderController.getOrderDetails(order.id, false);
+                        // Refresh the order model
+                        await orderController.getOrderWithId(order.id);
+                        setState(() {});
+                      }
+                    },
+                    radius: Dimensions.radiusDefault,
+                  ),
+                ),
+              ],
+            ],
+          ),
+          
+          if (hasSelectedPhotos)
+            Padding(
+              padding: const EdgeInsets.only(top: Dimensions.paddingSizeSmall),
+              child: Text(
+                '${orderController.pickedOrderProofImages.length}/5 photos selected',
+                style: robotoRegular.copyWith(
+                    fontSize: Dimensions.fontSizeSmall,
+                    color: Theme.of(context).hintColor),
+                textAlign: TextAlign.center,
+              ),
+            ),
+        ],
+      ),
+    );
+    });
+  }
+
   Future<String?> _showStoreOtpDialog() async {
     final TextEditingController otpController = TextEditingController();
     String? result;
@@ -184,6 +405,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                 controller: otpController,
                 autofocus: true,
                 keyboardType: TextInputType.number,
+                textDirection: TextDirection.ltr,
                 maxLength: 4,
                 textAlign: TextAlign.center,
                 style: robotoBold.copyWith(fontSize: 28, letterSpacing: 4),
@@ -870,6 +1092,8 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                           ])
                                     : const SizedBox(),
                               ]),
+                          // Order Proof Upload Section (Modules 6/7/8/9 when status is confirmed)
+                          _buildOrderProofUploadSection(controllerOrderModel),
                           (controllerOrderModel.orderStatus == 'delivered' &&
                                   controllerOrderModel.orderProofFullUrl !=
                                       null &&
@@ -1869,28 +2093,74 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                                               .profileModel!
                                                               .active ==
                                                           1) {
-                                                        // Show store OTP dialog
-                                                        String? storeOtp =
-                                                            await _showStoreOtpDialog();
+                                                        // Check module_id - only show OTP for module 3
+                                                        if (controllerOrderModel.module_id == 3) {
+                                                          // Module 3 - Show store OTP dialog
+                                                          String? storeOtp =
+                                                              await _showStoreOtpDialog();
 
-                                                        if (storeOtp != null &&
-                                                            storeOtp
-                                                                .isNotEmpty) {
-                                                          if (storeOtp.length !=
-                                                              4) {
+                                                          if (storeOtp != null &&
+                                                              storeOtp
+                                                                  .isNotEmpty) {
+                                                            if (storeOtp.length !=
+                                                                4) {
+                                                              showCustomSnackBar(
+                                                                  'otp_must_be_4_digits'
+                                                                      .tr);
+                                                              return;
+                                                            }
+
+                                                            // Set store OTP in controller
+                                                            Get.find<
+                                                                    OrderController>()
+                                                                .setStoreOtp(
+                                                                    storeOtp);
+
+                                                            // Update order status with store OTP
+                                                            Get.find<
+                                                                    OrderController>()
+                                                                .updateOrderStatus(
+                                                              controllerOrderModel,
+                                                              AppConstants
+                                                                  .pickedUp,
+                                                              back: widget
+                                                                      .fromLocationScreen
+                                                                  ? false
+                                                                  : true,
+                                                              gotoDashboard: widget
+                                                                      .fromLocationScreen
+                                                                  ? true
+                                                                  : false,
+                                                            );
+                                                          }
+                                                        } else if ([6, 7, 8, 9].contains(controllerOrderModel.module_id)) {
+                                                          // Modules 6/7/8/9 - Check if photos uploaded (MANDATORY)
+                                                          if (controllerOrderModel.orderProofFullUrl == null ||
+                                                              controllerOrderModel.orderProofFullUrl!.isEmpty) {
                                                             showCustomSnackBar(
-                                                                'otp_must_be_4_digits'
-                                                                    .tr);
+                                                                'please_upload_order_proof_photos_first'.tr,
+                                                                isError: true);
                                                             return;
                                                           }
-
-                                                          // Set store OTP in controller
+                                                          
+                                                          // Direct pickup, no OTP needed
                                                           Get.find<
                                                                   OrderController>()
-                                                              .setStoreOtp(
-                                                                  storeOtp);
-
-                                                          // Update order status with store OTP
+                                                              .updateOrderStatus(
+                                                            controllerOrderModel,
+                                                            AppConstants
+                                                                .pickedUp,
+                                                            back: widget
+                                                                    .fromLocationScreen
+                                                                ? false
+                                                                : true,
+                                                            gotoDashboard: widget
+                                                                    .fromLocationScreen
+                                                                ? true
+                                                                : false,
+                                                          );
+                                                        } else {
+                                                          // Default fallback - direct pickup
                                                           Get.find<
                                                                   OrderController>()
                                                               .updateOrderStatus(

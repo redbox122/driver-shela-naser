@@ -397,5 +397,18 @@
   "messages.Proceed_for_cooking": "প্রক্রিয়াকরণের জন্য এগিয়ে যান",
   "messages.ready_for_delivery": "বিতরণের জন্য প্রস্তুত",
   "messages.message": "বার্তা",
-  "messages.message_description": "বার্তার বিবরণ"
+  "messages.message_description": "বার্তার বিবরণ",
+  "order_accepted_successfully": "অর্ডার সফলভাবে গ্রহণ করা হয়েছে",
+  "order_confirmed_successfully": "অর্ডার সফলভাবে নিশ্চিত করা হয়েছে",
+  "please_upload_order_proof_photos_first": "অনুগ্রহ করে প্রথমে অর্ডার প্রমাণের ছবি আপলোড করুন",
+  "upload_menu_facture_photos": "মেনু/ফ্যাকচার ছবি আপলোড করুন",
+  "order_proof_photos_uploaded": "অর্ডার প্রমাণের ছবি সফলভাবে আপলোড করা হয়েছে",
+  "upload_order_proof_description": "অর্ডার সংগ্রহের প্রমাণ হিসাবে মেনু, রসিদ বা ফ্যাকচারের ছবি আপলোড করুন",
+  "uploaded_photos": "আপলোড করা ছবি",
+  "selected_photos": "নির্বাচিত ছবি",
+  "select_photos": "ছবি নির্বাচন করুন",
+  "upload": "আপলোড",
+  "please_select_at_least_one_photo": "অনুগ্রহ করে কমপক্ষে একটি ছবি নির্বাচন করুন",
+  "upload_failed": "আপলোড ব্যর্থ",
+  "maximum_5_photos_allowed": "সর্বোচ্চ ৫টি ছবি অনুমোদিত"
 }

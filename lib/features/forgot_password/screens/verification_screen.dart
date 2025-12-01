@@ -90,36 +90,41 @@ class VerificationScreenState extends State<VerificationScreen> {
                     Padding(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 39, vertical: 35),
-                      child: PinCodeTextField(
-                        length: 4,
-                        appContext: context,
-                        keyboardType: TextInputType.number,
-                        animationType: AnimationType.slide,
-                        pinTheme: PinTheme(
-                          shape: PinCodeFieldShape.box,
-                          fieldHeight: 60,
-                          fieldWidth: 60,
-                          borderWidth: 1,
-                          borderRadius:
-                              BorderRadius.circular(Dimensions.radiusSmall),
-                          selectedColor:
-                              Theme.of(context).primaryColor.withOpacity(0.2),
-                          selectedFillColor: Colors.white,
-                          inactiveFillColor:
-                              Theme.of(context).disabledColor.withOpacity(0.2),
-                          inactiveColor:
-                              Theme.of(context).primaryColor.withOpacity(0.2),
-                          activeColor:
-                              Theme.of(context).primaryColor.withOpacity(0.4),
-                          activeFillColor:
-                              Theme.of(context).disabledColor.withOpacity(0.2),
+                      child: Directionality(
+                        textDirection: TextDirection.ltr,
+                        child: PinCodeTextField(
+                          length: 4,
+                          appContext: context,
+                          keyboardType: TextInputType.number,
+                          animationType: AnimationType.slide,
+                          pinTheme: PinTheme(
+                            shape: PinCodeFieldShape.box,
+                            fieldHeight: 60,
+                            fieldWidth: 60,
+                            borderWidth: 1,
+                            borderRadius:
+                                BorderRadius.circular(Dimensions.radiusSmall),
+                            selectedColor:
+                                Theme.of(context).primaryColor.withOpacity(0.2),
+                            selectedFillColor: Colors.white,
+                            inactiveFillColor: Theme.of(context)
+                                .disabledColor
+                                .withOpacity(0.2),
+                            inactiveColor:
+                                Theme.of(context).primaryColor.withOpacity(0.2),
+                            activeColor:
+                                Theme.of(context).primaryColor.withOpacity(0.4),
+                            activeFillColor: Theme.of(context)
+                                .disabledColor
+                                .withOpacity(0.2),
+                          ),
+                          animationDuration: const Duration(milliseconds: 300),
+                          backgroundColor: Colors.transparent,
+                          enableActiveFill: true,
+                          onChanged:
+                              forgotPasswordController.updateVerificationCode,
+                          beforeTextPaste: (text) => true,
                         ),
-                        animationDuration: const Duration(milliseconds: 300),
-                        backgroundColor: Colors.transparent,
-                        enableActiveFill: true,
-                        onChanged:
-                            forgotPasswordController.updateVerificationCode,
-                        beforeTextPaste: (text) => true,
                       ),
                     ),
                     Row(mainAxisAlignment: MainAxisAlignment.center, children: [

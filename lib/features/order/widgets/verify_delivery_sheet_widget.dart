@@ -90,46 +90,49 @@ class _VerifyDeliverySheetWidgetState extends State<VerifyDeliverySheetWidget> {
                     const SizedBox(height: Dimensions.paddingSizeLarge),
                     SizedBox(
                       width: 200,
-                      child: PinCodeTextField(
-                        length: 4,
-                        appContext: context,
-                        keyboardType: TextInputType.number,
-                        animationType: AnimationType.slide,
-                        pinTheme: PinTheme(
-                          shape: PinCodeFieldShape.underline,
-                          fieldHeight: 30,
-                          fieldWidth: 30,
-                          borderWidth: 2,
-                          borderRadius:
-                              BorderRadius.circular(Dimensions.radiusSmall),
-                          selectedColor: Theme.of(context).primaryColor,
-                          selectedFillColor: Get.isDarkMode
-                              ? Colors.grey.shade900
-                              : Colors.white,
-                          inactiveFillColor: Get.isDarkMode
-                              ? Colors.grey.shade900
-                              : Theme.of(context).cardColor,
-                          inactiveColor:
-                              Theme.of(context).primaryColor.withOpacity(0.2),
-                          activeColor:
-                              Theme.of(context).primaryColor.withOpacity(0.7),
-                          activeFillColor: Get.isDarkMode
-                              ? Colors.grey.shade900
-                              : Theme.of(context).cardColor,
+                      child: Directionality(
+                        textDirection: TextDirection.ltr,
+                        child: PinCodeTextField(
+                          length: 4,
+                          appContext: context,
+                          keyboardType: TextInputType.number,
+                          animationType: AnimationType.slide,
+                          pinTheme: PinTheme(
+                            shape: PinCodeFieldShape.underline,
+                            fieldHeight: 30,
+                            fieldWidth: 30,
+                            borderWidth: 2,
+                            borderRadius:
+                                BorderRadius.circular(Dimensions.radiusSmall),
+                            selectedColor: Theme.of(context).primaryColor,
+                            selectedFillColor: Get.isDarkMode
+                                ? Colors.grey.shade900
+                                : Colors.white,
+                            inactiveFillColor: Get.isDarkMode
+                                ? Colors.grey.shade900
+                                : Theme.of(context).cardColor,
+                            inactiveColor:
+                                Theme.of(context).primaryColor.withOpacity(0.2),
+                            activeColor:
+                                Theme.of(context).primaryColor.withOpacity(0.7),
+                            activeFillColor: Get.isDarkMode
+                                ? Colors.grey.shade900
+                                : Theme.of(context).cardColor,
+                          ),
+                          animationDuration: const Duration(milliseconds: 300),
+                          backgroundColor: Colors.transparent,
+                          enableActiveFill: true,
+                          onChanged: (String text) {
+                            if (widget.isSenderPay) {
+                              // For pickup, use store OTP
+                              orderController.setStoreOtp(text);
+                            } else {
+                              // For delivery, use customer OTP
+                              orderController.setOtp(text);
+                            }
+                          },
+                          beforeTextPaste: (text) => true,
                         ),
-                        animationDuration: const Duration(milliseconds: 300),
-                        backgroundColor: Colors.transparent,
-                        enableActiveFill: true,
-                        onChanged: (String text) {
-                          if (widget.isSenderPay) {
-                            // For pickup, use store OTP
-                            orderController.setStoreOtp(text);
-                          } else {
-                            // For delivery, use customer OTP
-                            orderController.setOtp(text);
-                          }
-                        },
-                        beforeTextPaste: (text) => true,
                       ),
                     ),
                     const SizedBox(height: Dimensions.paddingSizeSmall),

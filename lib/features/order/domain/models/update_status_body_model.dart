@@ -6,6 +6,7 @@ class UpdateStatusBodyModel {
   String? otpStore;
   String method = 'put';
   String? reason;
+  int? moduleId;
 
   UpdateStatusBodyModel(
       {this.token,
@@ -13,7 +14,8 @@ class UpdateStatusBodyModel {
       this.status,
       this.otp,
       this.otpStore,
-      this.reason});
+      this.reason,
+      this.moduleId});
 
   UpdateStatusBodyModel.fromJson(Map<String, dynamic> json) {
     token = json['token'];
@@ -32,10 +34,11 @@ class UpdateStatusBodyModel {
     data['status'] = status!;
     data['_method'] = method;
 
-    // Send only the appropriate OTP field based on status
-    if (status == 'picked_up' && otpStore != null && otpStore!.isNotEmpty) {
+    // Send only the appropriate OTP field based on status and module_id
+    // Only send otp_store for module 3
+    if (status == 'picked_up' && moduleId == 3 && otpStore != null && otpStore!.isNotEmpty) {
       data['otp_store'] = otpStore!;
-      print('🔧 PICKUP API: Sending otp_store = ${otpStore}');
+      print('🔧 PICKUP API: Sending otp_store = ${otpStore} (Module 3)');
     } else if (status == 'delivered' && otp != null && otp!.isNotEmpty) {
       data['otp'] = otp!;
       print('🔧 DELIVERY API: Sending otp = ${otp}');

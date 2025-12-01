@@ -440,15 +440,17 @@ class OrderRequestWidget extends StatelessWidget {
 /*
                                   onTap();
 */
-                                                  orderModel
-                                                      .orderStatus = (orderModel
-                                                                  .orderStatus ==
-                                                              'pending' ||
-                                                          orderModel
-                                                                  .orderStatus ==
-                                                              'confirmed')
-                                                      ? 'accepted'
-                                                      : orderModel.orderStatus;
+                                                  // Update status based on module_id
+                                                  if (orderModel.orderStatus == 'pending' ||
+                                                      orderModel.orderStatus == 'confirmed') {
+                                                    if (orderModel.module_id == 3) {
+                                                      orderModel.orderStatus = 'accepted';
+                                                    } else if ([6, 7, 8, 9].contains(orderModel.module_id)) {
+                                                      orderModel.orderStatus = 'confirmed';
+                                                    } else {
+                                                      orderModel.orderStatus = 'accepted';
+                                                    }
+                                                  }
                                                   Get.find<OrderController>()
                                                       .getLatestOrders();
 

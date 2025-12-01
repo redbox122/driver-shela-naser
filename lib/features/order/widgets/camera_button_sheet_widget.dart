@@ -5,7 +5,16 @@ import 'package:shellafood_delivery/util/dimensions.dart';
 import 'package:shellafood_delivery/util/styles.dart';
 
 class CameraButtonSheetWidget extends StatelessWidget {
-  const CameraButtonSheetWidget({super.key});
+  final bool isOrderProof;
+  final VoidCallback? onCameraTap;
+  final VoidCallback? onGalleryTap;
+
+  const CameraButtonSheetWidget({
+    super.key,
+    this.isOrderProof = false,
+    this.onCameraTap,
+    this.onGalleryTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -33,8 +42,15 @@ class CameraButtonSheetWidget extends StatelessWidget {
               if (Get.isBottomSheetOpen!) {
                 Get.back();
               }
-              Get.find<OrderController>()
-                  .pickPrescriptionImage(isRemove: false, isCamera: true);
+              if (onCameraTap != null) {
+                onCameraTap!();
+              } else if (isOrderProof) {
+                Get.find<OrderController>()
+                    .pickOrderProofImages(isRemove: false, isCamera: true);
+              } else {
+                Get.find<OrderController>()
+                    .pickPrescriptionImage(isRemove: false, isCamera: true);
+              }
             },
             child: Column(children: [
               Container(
@@ -54,8 +70,15 @@ class CameraButtonSheetWidget extends StatelessWidget {
               if (Get.isBottomSheetOpen!) {
                 Get.back();
               }
-              Get.find<OrderController>()
-                  .pickPrescriptionImage(isRemove: false, isCamera: false);
+              if (onGalleryTap != null) {
+                onGalleryTap!();
+              } else if (isOrderProof) {
+                Get.find<OrderController>()
+                    .pickOrderProofImages(isRemove: false, isCamera: false);
+              } else {
+                Get.find<OrderController>()
+                    .pickPrescriptionImage(isRemove: false, isCamera: false);
+              }
             },
             child: Column(children: [
               Container(

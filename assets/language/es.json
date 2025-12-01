@@ -382,4 +382,17 @@
   "messages.ready_for_delivery": "Listo para entrega",
   "messages.message": "Mensaje",
   "messages.message_description": "Descripción del Mensaje"
+  "order_accepted_successfully": "Pedido aceptado exitosamente",
+  "order_confirmed_successfully": "Pedido confirmado exitosamente",
+  "please_upload_order_proof_photos_first": "Por favor suba primero las fotos de prueba del pedido",
+  "upload_menu_facture_photos": "Subir Fotos de Menú/Factura",
+  "order_proof_photos_uploaded": "Fotos de prueba del pedido subidas exitosamente",
+  "upload_order_proof_description": "Suba fotos del menú, recibo o factura como prueba de recolección del pedido",
+  "uploaded_photos": "Fotos Subidas",
+  "selected_photos": "Fotos Seleccionadas",
+  "select_photos": "Seleccionar Fotos",
+  "upload": "Subir",
+  "please_select_at_least_one_photo": "Por favor seleccione al menos una foto",
+  "upload_failed": "Error al subir",
+  "maximum_5_photos_allowed": "Máximo 5 fotos permitidas"
 }
