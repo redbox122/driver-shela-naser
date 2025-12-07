@@ -373,9 +373,18 @@ class FoodVariation {
   FoodVariation.fromJson(Map<String, dynamic> json) {
     name = json['name'];
     type = json['type'];
-    min = json['min'].toString();
-    max = json['max'].toString();
-    required = json['required'];
+    min = json['min']?.toString();
+    max = json['max']?.toString();
+    // Handle required field as boolean or string
+    if (json['required'] != null) {
+      if (json['required'] is bool) {
+        required = (json['required'] as bool).toString();
+      } else if (json['required'] is String) {
+        required = json['required'] as String;
+      } else {
+        required = json['required'].toString();
+      }
+    }
     if (json['values'] != null) {
       variationValues = [];
       json['values'].forEach((v) {
@@ -405,8 +414,9 @@ class VariationValue {
   VariationValue({this.level, this.optionPrice});
 
   VariationValue.fromJson(Map<String, dynamic> json) {
-    level = json['label'];
-    optionPrice = json['optionPrice'];
+    level = json['label']?.toString();
+    // Handle optionPrice as int, double, or string
+    optionPrice = json['optionPrice']?.toString();
   }
 
   Map<String, dynamic> toJson() {

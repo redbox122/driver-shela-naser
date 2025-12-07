@@ -165,7 +165,7 @@ class OrderController extends GetxController implements GetxService {
     if (isRemove) {
       _pickedOrderProofImages = [];
     } else {
-      // Limit to max 5 photos
+      // Limit to 5 images max
       if (_pickedOrderProofImages.length >= 5) {
         showCustomSnackBar('maximum_5_photos_allowed'.tr, isError: true);
         return;
@@ -183,6 +183,13 @@ class OrderController extends GetxController implements GetxService {
     }
   }
 
+  /// Uploads order proof photos (menu/facture/receipt) for modules 6/7/8/9
+  /// 
+  /// IMPORTANT: This method uploads photos for documentation purposes only.
+  /// The order status REMAINS "confirmed" after photo upload.
+  /// Status only changes to "picked_up" when DM clicks "Pick Up" button.
+  /// 
+  /// Flow: confirmed (with photos) → picked_up → delivered
   Future<bool> uploadOrderProof(OrderModel order) async {
     if (_pickedOrderProofImages.isEmpty) {
       showCustomSnackBar('please_select_at_least_one_photo'.tr, isError: true);
@@ -195,6 +202,7 @@ class OrderController extends GetxController implements GetxService {
     try {
       List<MultipartBody> multiParts =
           orderServiceInterface.prepareOrderProofImages(_pickedOrderProofImages);
+      // Status stays "confirmed" - photos are just documentation
       UpdateStatusBodyModel updateStatusBody = UpdateStatusBodyModel(
         orderId: order.id,
         status: AppConstants.confirmed,
@@ -346,33 +354,17 @@ class OrderController extends GetxController implements GetxService {
     print('🔧 ORDER STATUS UPDATE:');
     print('   Order ID: ${currentOrder.id}');
     print('   Status: $status');
-    print('   Module ID: ${currentOrder.module_id}');
     print('   Store OTP: $_storeOtp');
     print('   Customer OTP: $_otp');
 
-    List<MultipartBody> multiParts = [];
-    
-    // For order_proof upload (modules 6/7/8/9 when status is confirmed)
-    if (status == AppConstants.confirmed && 
-        [6, 7, 8, 9].contains(currentOrder.module_id) &&
-        _pickedOrderProofImages.isNotEmpty) {
-      multiParts.addAll(
-          orderServiceInterface.prepareOrderProofImages(_pickedOrderProofImages));
-    }
-    
-    // For prescriptions (existing functionality)
-    if (_pickedPrescriptions.isNotEmpty) {
-      multiParts.addAll(
-          orderServiceInterface.prepareOrderProofImages(_pickedPrescriptions));
-    }
-
+    List<MultipartBody> multiParts =
+        orderServiceInterface.prepareOrderProofImages(_pickedPrescriptions);
     UpdateStatusBodyModel updateStatusBody = UpdateStatusBodyModel(
       orderId: currentOrder.id,
       status: status,
       reason: reason,
       otp: status == AppConstants.delivered ? _otp : null,
       otpStore: status == AppConstants.pickedUp ? _storeOtp : null,
-      moduleId: currentOrder.module_id,
     );
 
     print('🔧 UpdateStatusBodyModel created:');
@@ -432,30 +424,12 @@ class OrderController extends GetxController implements GetxService {
         // Safely remove order from latest order list
         _removeOrderFromLatestList(orderID);
 
-        // Update status based on module_id
-        if (orderModel.module_id == 3) {
-          // Module 3: Status becomes 'accepted'
-          orderModel.orderStatus = AppConstants.accepted;
-          showCustomSnackBar(
-              'order_accepted_successfully'.tr,
-              isError: false);
-        } else if ([6, 7, 8, 9].contains(orderModel.module_id)) {
-          // Modules 6/7/8/9: Status becomes 'confirmed' (DM replaces vendor)
-          orderModel.orderStatus = AppConstants.confirmed;
-          showCustomSnackBar(
-              'order_confirmed_successfully'.tr,
-              isError: false);
-        } else {
-          // Default fallback
-          orderModel.orderStatus = AppConstants.accepted;
-          showCustomSnackBar(
-              responseModel.message ?? 'order_accepted_successfully'.tr,
-              isError: false);
-        }
-
         // Safely add order to current order list
         _addOrderToCurrentList(orderModel);
 
+        showCustomSnackBar(
+            responseModel.message ?? 'order_accepted_successfully'.tr,
+            isError: false);
         return true;
       } else {
         // Enhanced error handling for specific error codes

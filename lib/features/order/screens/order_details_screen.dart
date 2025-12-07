@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:photo_view/photo_view.dart';
-import 'package:shellafood_delivery/features/language/controllers/language_controller.dart';
 import 'package:shellafood_delivery/features/notification/controllers/notification_controller.dart';
 import 'package:shellafood_delivery/features/order/controllers/order_controller.dart';
 import 'package:shellafood_delivery/features/profile/controllers/profile_controller.dart';
@@ -372,6 +371,47 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
     });
   }
 
+  String _getSliderButtonText({
+    bool? parcel,
+    bool? accepted,
+    bool? cod,
+    bool? restConfModel,
+    bool? selfDelivery,
+    bool? pickedUp,
+    bool? handover,
+  }) {
+    try {
+      // Ensure all values are non-null before checking
+      final isParcel = parcel ?? false;
+      final isAccepted = accepted ?? false;
+      final isCod = cod ?? false;
+      final isRestConfModel = restConfModel ?? false;
+      final isSelfDelivery = selfDelivery ?? false;
+      final isPickedUp = pickedUp ?? false;
+      final isHandover = handover ?? false;
+      
+      String translationKey;
+      if (isParcel && isAccepted) {
+        translationKey = 'swipe_to_confirm_delivery';
+      } else if (isCod && isAccepted && !isRestConfModel && !isSelfDelivery) {
+        translationKey = 'swipe_to_confirm_order';
+      } else if (isPickedUp) {
+        translationKey = isParcel ? 'swipe_to_deliver_parcel' : 'swipe_to_deliver_order';
+      } else if (isHandover) {
+        translationKey = isParcel ? 'swipe_to_pick_up_parcel' : 'swipe_to_pick_up_order';
+      } else {
+        translationKey = 'swipe_to_pick_up_order';
+      }
+      
+      // Try to translate, fallback to key if translation fails
+      final translated = translationKey.tr;
+      return translated.isNotEmpty && translated != translationKey ? translated : translationKey;
+    } catch (e) {
+      // If anything fails, return a safe default
+      return 'Continue';
+    }
+  }
+
   Future<String?> _showStoreOtpDialog() async {
     final TextEditingController otpController = TextEditingController();
     String? result;
@@ -657,11 +697,17 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                     pickedUp ||
                     isUnassignedOrder ||
                     (widget.isRunningOrder ?? true);
+                // For modules 6/7/8/9: Show slider when confirmed AND photos uploaded
+                bool modules6789ReadyForPickup = confirmed &&
+                    [6, 7, 8, 9].contains(controllerOrderModel.module_id) &&
+                    controllerOrderModel.orderProofFullUrl != null &&
+                    controllerOrderModel.orderProofFullUrl!.isNotEmpty;
                 showSlider =
                     (cod && accepted && !restConfModel && !selfDelivery) ||
                         handover ||
                         pickedUp ||
-                        (parcel && accepted);
+                        (parcel && accepted) ||
+                        modules6789ReadyForPickup;
               }
 
               return (orderController.orderDetailsModel != null &&
@@ -1701,8 +1747,17 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                               (!cod ||
                                                   restConfModel ||
                                                   selfDelivery)) ||
-                                          processing! ||
-                                          confirmed!)
+                                          (processing! ||
+                                              (confirmed! &&
+                                                  !([6, 7, 8, 9].contains(
+                                                          controllerOrderModel
+                                                              .module_id) &&
+                                                      controllerOrderModel
+                                                              .orderProofFullUrl !=
+                                                          null &&
+                                                      controllerOrderModel
+                                                              .orderProofFullUrl!
+                                                          .isNotEmpty))))
                                       ? Container(
                                           padding: const EdgeInsets.all(
                                               Dimensions.paddingSizeDefault),
@@ -2087,14 +2142,33 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                                                   true);
                                                         }
                                                       });
-                                                    } else if (handover!) {
+                                                    } else if (([6, 7, 8, 9].contains(controllerOrderModel.module_id) &&
+                                                        confirmed! &&
+                                                        controllerOrderModel.orderProofFullUrl != null &&
+                                                        controllerOrderModel.orderProofFullUrl!.isNotEmpty) ||
+                                                        handover!) {
                                                       if (Get.find<
                                                                   ProfileController>()
                                                               .profileModel!
                                                               .active ==
                                                           1) {
+                                                        // Check if this is modules 6/7/8/9 with confirmed status and photos
+                                                        if ([6, 7, 8, 9].contains(controllerOrderModel.module_id) &&
+                                                            confirmed! &&
+                                                            controllerOrderModel.orderProofFullUrl != null &&
+                                                            controllerOrderModel.orderProofFullUrl!.isNotEmpty) {
+                                                          // Modules 6/7/8/9 - Direct pickup, no OTP needed
+                                                          Get.find<OrderController>().updateOrderStatus(
+                                                            controllerOrderModel,
+                                                            AppConstants.pickedUp,
+                                                            back: false, // Stay on order details page
+                                                            gotoDashboard: false, // Don't navigate to dashboard
+                                                          );
+                                                          return;
+                                                        }
                                                         // Check module_id - only show OTP for module 3
                                                         if (controllerOrderModel.module_id == 3) {
+                                                        // Check module_id - only show OTP for module 3
                                                           // Module 3 - Show store OTP dialog
                                                           String? storeOtp =
                                                               await _showStoreOtpDialog();
@@ -2123,14 +2197,8 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                                               controllerOrderModel,
                                                               AppConstants
                                                                   .pickedUp,
-                                                              back: widget
-                                                                      .fromLocationScreen
-                                                                  ? false
-                                                                  : true,
-                                                              gotoDashboard: widget
-                                                                      .fromLocationScreen
-                                                                  ? true
-                                                                  : false,
+                                                              back: false, // Stay on order details page
+                                                              gotoDashboard: false, // Don't navigate to dashboard
                                                             );
                                                           }
                                                         } else if ([6, 7, 8, 9].contains(controllerOrderModel.module_id)) {
@@ -2150,14 +2218,8 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                                             controllerOrderModel,
                                                             AppConstants
                                                                 .pickedUp,
-                                                            back: widget
-                                                                    .fromLocationScreen
-                                                                ? false
-                                                                : true,
-                                                            gotoDashboard: widget
-                                                                    .fromLocationScreen
-                                                                ? true
-                                                                : false,
+                                                            back: false, // Stay on order details page
+                                                            gotoDashboard: false, // Don't navigate to dashboard
                                                           );
                                                         } else {
                                                           // Default fallback - direct pickup
@@ -2167,14 +2229,8 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                                             controllerOrderModel,
                                                             AppConstants
                                                                 .pickedUp,
-                                                            back: widget
-                                                                    .fromLocationScreen
-                                                                ? false
-                                                                : true,
-                                                            gotoDashboard: widget
-                                                                    .fromLocationScreen
-                                                                ? true
-                                                                : false,
+                                                            back: false, // Stay on order details page
+                                                            gotoDashboard: false, // Don't navigate to dashboard
                                                           );
                                                         }
                                                       } else {
@@ -2185,28 +2241,15 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                                     }
                                                   },
                                                   label: Text(
-                                                    (parcel && accepted)
-                                                        ? 'swipe_to_confirm_delivery'
-                                                            .tr
-                                                        : (cod &&
-                                                                accepted &&
-                                                                !restConfModel &&
-                                                                !selfDelivery)
-                                                            ? 'swipe_to_confirm_order'
-                                                                .tr
-                                                            : pickedUp!
-                                                                ? parcel
-                                                                    ? 'swipe_to_deliver_parcel'
-                                                                        .tr
-                                                                    : 'swipe_to_deliver_order'
-                                                                        .tr
-                                                                : handover!
-                                                                    ? parcel
-                                                                        ? 'swipe_to_pick_up_parcel'
-                                                                            .tr
-                                                                        : 'swipe_to_pick_up_order'
-                                                                            .tr
-                                                                    : '',
+                                                    _getSliderButtonText(
+                                                      parcel: parcel,
+                                                      accepted: accepted,
+                                                      cod: cod,
+                                                      restConfModel: restConfModel,
+                                                      selfDelivery: selfDelivery,
+                                                      pickedUp: pickedUp,
+                                                      handover: handover,
+                                                    ),
                                                     style:
                                                         robotoMedium.copyWith(
                                                             fontSize: Dimensions
@@ -2218,24 +2261,17 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                                   dismissThresholds: 0.5,
                                                   dismissible: false,
                                                   shimmer: true,
-                                                  width: 1170,
+                                                  width: MediaQuery.of(context).size.width - (Dimensions.paddingSizeDefault * 2),
                                                   height: 60,
                                                   buttonSize: 50,
                                                   radius: 10,
                                                   icon: Center(
                                                       child: Icon(
-                                                    Get.find<LocalizationController>()
-                                                            .isLtr
-                                                        ? Icons
-                                                            .double_arrow_sharp
-                                                        : Icons
-                                                            .keyboard_arrow_left,
+                                                    Icons.double_arrow,
                                                     color: Colors.white,
                                                     size: 20.0,
                                                   )),
-                                                  isLtr: Get.find<
-                                                          LocalizationController>()
-                                                      .isLtr,
+                                                  isLtr: true,
                                                   boxShadow: const BoxShadow(
                                                       blurRadius: 0),
                                                   buttonColor: Theme.of(context)

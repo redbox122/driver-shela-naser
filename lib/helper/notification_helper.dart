@@ -249,7 +249,7 @@ class NotificationHelper {
         presentAlert: true,
         presentBadge: true,
         presentSound: true,
-        sound: 'notification.aiff',
+        sound: 'notification.wav',
       );
       const NotificationDetails platformChannelSpecifics =
           NotificationDetails(iOS: iosPlatformChannelSpecifics);
@@ -619,7 +619,7 @@ Future<void> myBackgroundMessageHandler(RemoteMessage message) async {
           presentAlert: true,
           presentBadge: true,
           presentSound: true,
-          sound: 'notification.aiff',
+          sound: 'notification.wav',
         );
 
         const NotificationDetails platformChannelSpecifics =

@@ -437,29 +437,10 @@ class OrderRequestWidget extends StatelessWidget {
                                                       id, index, orderModel)
                                                   .then((isSuccess) {
                                                 if (isSuccess) {
-/*
-                                  onTap();
-*/
-                                                  // Update status based on module_id
-                                                  if (orderModel.orderStatus == 'pending' ||
-                                                      orderModel.orderStatus == 'confirmed') {
-                                                    if (orderModel.module_id == 3) {
-                                                      orderModel.orderStatus = 'accepted';
-                                                    } else if ([6, 7, 8, 9].contains(orderModel.module_id)) {
-                                                      orderModel.orderStatus = 'confirmed';
-                                                    } else {
-                                                      orderModel.orderStatus = 'accepted';
-                                                    }
-                                                  }
+                                                  // Controller already updates status correctly based on module_id
+                                                  // No need to override it here
                                                   Get.find<OrderController>()
                                                       .getLatestOrders();
-
-                                                  /*Get.toNamed(
-                                    RouteHelper.getOrderDetailsRoute(orderModel.id),
-                                    arguments: OrderDetailsScreen(
-                                      orderId: orderModel.id, isRunningOrder: true, orderIndex: orderController.currentOrderList!.length-1,
-                                    ),
-                                  );*/
                                                 } else {
                                                   Get.find<OrderController>()
                                                       .getLatestOrders();
@@ -473,26 +454,19 @@ class OrderRequestWidget extends StatelessWidget {
                                                     orderModel)
                                                 .then((isSuccess) {
                                               if (isSuccess) {
-/*
-                                onTap();
-*/
-                                                orderModel
-                                                    .orderStatus = (orderModel
-                                                                .orderStatus ==
-                                                            'pending' ||
-                                                        orderModel
-                                                                .orderStatus ==
-                                                            'confirmed')
-                                                    ? 'accepted'
-                                                    : orderModel.orderStatus;
-/*
-                                Get.toNamed(
-                                  RouteHelper.getOrderDetailsRoute(orderModel.id),
-                                  arguments: OrderDetailsScreen(
-                                    orderId: orderModel.id, isRunningOrder: true, orderIndex: orderController.currentOrderList!.length-1,
-                                  ),
-                                );
-*/
+                                                // Controller already updates status correctly based on module_id
+                                                // No need to override it here
+                                                onTap();
+                                                Get.toNamed(
+                                                  RouteHelper.getOrderDetailsRoute(orderModel.id),
+                                                  arguments: OrderDetailsScreen(
+                                                    orderId: orderModel.id, 
+                                                    isRunningOrder: true, 
+                                                    orderIndex: orderController.currentOrderList != null 
+                                                        ? orderController.currentOrderList!.length - 1 
+                                                        : 0,
+                                                  ),
+                                                );
                                               } else {
                                                 Get.find<OrderController>()
                                                     .getLatestOrders();
@@ -504,16 +478,9 @@ class OrderRequestWidget extends StatelessWidget {
                                                     index, orderModel)
                                                 .then((isSuccess) {
                                               if (isSuccess) {
+                                                // Controller already updates status correctly based on module_id
+                                                // No need to override it here
                                                 onTap();
-                                                orderModel
-                                                    .orderStatus = (orderModel
-                                                                .orderStatus ==
-                                                            'pending' ||
-                                                        orderModel
-                                                                .orderStatus ==
-                                                            'confirmed')
-                                                    ? 'accepted'
-                                                    : orderModel.orderStatus;
                                                 Get.toNamed(
                                                   RouteHelper
                                                       .getOrderDetailsRoute(
@@ -521,10 +488,9 @@ class OrderRequestWidget extends StatelessWidget {
                                                   arguments: OrderDetailsScreen(
                                                     orderId: orderModel.id,
                                                     isRunningOrder: true,
-                                                    orderIndex: orderController
-                                                            .currentOrderList!
-                                                            .length -
-                                                        1,
+                                                    orderIndex: orderController.currentOrderList != null
+                                                        ? orderController.currentOrderList!.length - 1
+                                                        : 0,
                                                   ),
                                                 );
                                               } else {

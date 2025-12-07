@@ -238,20 +238,17 @@ class LocationCardWidget extends StatelessWidget {
                               .acceptOrder(orderModel.id, index, orderModel)
                               .then((isSuccess) {
                             if (isSuccess) {
+                              // Controller already updates status correctly based on module_id
+                              // No need to override it here
                               onTap();
-                              orderModel.orderStatus =
-                                  (orderModel.orderStatus == 'pending' ||
-                                          orderModel.orderStatus == 'confirmed')
-                                      ? 'accepted'
-                                      : orderModel.orderStatus;
                               Get.toNamed(
                                 RouteHelper.getOrderDetailsRoute(orderModel.id),
                                 arguments: OrderDetailsScreen(
                                   orderId: orderModel.id,
                                   isRunningOrder: true,
-                                  orderIndex:
-                                      orderController.currentOrderList!.length -
-                                          1,
+                                  orderIndex: orderController.currentOrderList != null
+                                      ? orderController.currentOrderList!.length - 1
+                                      : 0,
                                   fromLocationScreen: true,
                                 ),
                               );
