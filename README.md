@@ -1,16 +1,40 @@
-# shellafood_delivery
+# 🚀 Shella Food Delivery - Captain App
 
-A new Flutter application.
+تطبيق منفذي الخدمات (سائقي التوصيل)
 
-## Getting Started
+## 📚 التوثيق
 
-This project is a starting point for a Flutter application.
+للحصول على التوثيق الكامل باللغة العربية، يرجى زيارة:
 
-A few resources to get you started if this is your first Flutter project:
+**[📂 مجلد التوثيق - gaber_sgin](./gaber_sgin/)**
 
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
+أو ابدأ مباشرة من:  
+**[📖 دليل التوثيق](./gaber_sgin/README_DOCUMENTATION.md)**
 
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+---
+
+## ℹ️ معلومات المشروع
+
+- **الاسم:** منفذي الخدمات  
+- **النوع:** تطبيق Flutter  
+- **الإصدار:** 1.1.4+18  
+- **SDK:** Flutter 3.4.0+  
+
+---
+
+## 🚀 البدء السريع
+
+```bash
+# تحميل التبعيات
+flutter pub get
+
+# التشغيل
+flutter run
+
+# البناء (Android)
+flutter build apk --release
+```
+
+---
+
+**للتوثيق الكامل:** [gaber_sgin/README.md](./gaber_sgin/README.md)

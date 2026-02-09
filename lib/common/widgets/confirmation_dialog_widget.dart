@@ -68,7 +68,7 @@ class _ConfirmationDialogWidgetState extends State<ConfirmationDialogWidget> {
           _isTimedOut = true;
         });
         _forceResetLoadingState();
-        Get.back();
+        _safePopDialog();
       }
     });
   }
@@ -87,7 +87,12 @@ class _ConfirmationDialogWidgetState extends State<ConfirmationDialogWidget> {
 
   void _onCancelPressed() {
     _forceResetLoadingState();
-    Get.back();
+    _safePopDialog();
+  }
+
+  void _safePopDialog() {
+    if (!mounted) return;
+    Navigator.of(context, rootNavigator: true).maybePop();
   }
 
   @override
@@ -198,7 +203,7 @@ class _ConfirmationDialogWidgetState extends State<ConfirmationDialogWidget> {
                               ? 'yes'.tr
                               : 'ok'.tr,
                       onPressed: () =>
-                          widget.isLogOut ? Get.back() : widget.onYesPressed(),
+                          widget.isLogOut ? _safePopDialog() : widget.onYesPressed(),
                       height: 40,
                     )),
                   ])

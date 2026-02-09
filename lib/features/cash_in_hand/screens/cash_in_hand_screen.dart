@@ -26,6 +26,10 @@ class CashInHandScreen extends StatefulWidget {
 class _CashInHandScreenState extends State<CashInHandScreen> {
   final ScrollController scrollController = ScrollController();
 
+  void _logCashInHandAction(String action) {
+    debugPrint('\x1B[34m[CASH_IN_HAND] $action\x1B[0m');
+  }
+
   @override
   void initState() {
     Get.find<ProfileController>().getProfile();
@@ -154,6 +158,7 @@ class _CashInHandScreenState extends State<CashInHandScreen> {
                                                     .profileModel!.adjustable!
                                                 ? InkWell(
                                                     onTap: () {
+                                                      _logCashInHandAction('Tap: adjust_payments');
                                                       showDialog(
                                                           context: context,
                                                           builder: (BuildContext
@@ -258,6 +263,7 @@ class _CashInHandScreenState extends State<CashInHandScreen> {
                                                     : 0),
                                             InkWell(
                                               onTap: () {
+                                                _logCashInHandAction('Tap: pay_now');
                                                 if (profileController
                                                     .profileModel!
                                                     .showPayNowButton!) {
@@ -278,6 +284,8 @@ class _CashInHandScreenState extends State<CashInHandScreen> {
                                                                   .radiusExtraLarge)),
                                                     ),
                                                     builder: (context) {
+                                                      _logCashInHandAction(
+                                                          'ENTER: payment_method_sheet');
                                                       return ConstrainedBox(
                                                         constraints: BoxConstraints(
                                                             maxHeight: MediaQuery.of(
@@ -550,9 +558,10 @@ class _CashInHandScreenState extends State<CashInHandScreen> {
                                               cashInHandController
                                                   .walletProvidedTransactions!
                                                   .isEmpty)
-                                      ? const SizedBox()
-                                      : InkWell(
+                                          ? const SizedBox()
+                                          : InkWell(
                                           onTap: () {
+                                            _logCashInHandAction('Tap: view_all');
                                             if (cashInHandController
                                                     .selectedIndex ==
                                                 0) {

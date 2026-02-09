@@ -1,6 +1,7 @@
 import 'package:shellafood_delivery/features/splash/controllers/splash_controller.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter/material.dart';
 
 class DateConverterHelper {
   static String formatDate(DateTime dateTime) {
@@ -23,20 +24,16 @@ class DateConverterHelper {
 
   static DateTime dateTimeStringToDate(String dateTime) {
     try {
-      // Handle ISO format with timezone (e.g., "2025-01-16T10:30:00.000Z")
+      // Always normalize to local time before any comparisons
       if (dateTime.contains('T') || dateTime.contains('Z')) {
         return DateTime.parse(dateTime).toLocal();
       }
-      // Handle format without timezone (assume it's already in local time)
-      DateTime parsed = DateFormat('yyyy-MM-dd HH:mm:ss').parse(dateTime, true);
-      // If no timezone info, assume UTC and convert to local
-      if (!parsed.isUtc) {
-        return parsed;
-      }
+      final DateTime parsed =
+          DateFormat('yyyy-MM-dd HH:mm:ss').parse(dateTime, true);
       return parsed.toLocal();
     } catch (e) {
-      // Fallback to basic parsing
-      return DateFormat('yyyy-MM-dd HH:mm:ss').parse(dateTime);
+      // Fallback to basic parsing and local normalization
+      return DateFormat('yyyy-MM-dd HH:mm:ss').parse(dateTime).toLocal();
     }
   }
 
@@ -45,7 +42,7 @@ class DateConverterHelper {
   }
 
   static DateTime isoStringToLocalDate(String dateTime) {
-    return DateFormat('yyyy-MM-ddTHH:mm:ss.SSS').parse(dateTime);
+    return DateFormat('yyyy-MM-ddTHH:mm:ss.SSS').parse(dateTime).toLocal();
   }
 
   static String isoStringToLocalTimeOnly(String dateTime) {
@@ -93,28 +90,19 @@ class DateConverterHelper {
     }
   }
 
-  /// Returns human-readable time difference string (e.g., "5 mins ago", "2 hours ago", "3 days ago")
+  /// Returns human-readable time difference in minutes based on server time
   static String timeDistanceAgo(String time) {
     try {
       DateTime currentTime = Get.find<SplashController>().currentTime;
       DateTime rangeTime = dateTimeStringToDate(time);
       Duration difference = currentTime.difference(rangeTime);
-
-      int minutes = difference.inMinutes.abs();
-      int hours = difference.inHours.abs();
-      int days = difference.inDays.abs();
-
-      // Cap at 1 day to prevent huge numbers
-      if (days >= 1) {
-        return '$days ${days == 1 ? 'day' : 'days'} ago';
-      } else if (hours >= 1) {
-        return '$hours ${hours == 1 ? 'hour' : 'hours'} ago';
-      } else if (minutes >= 1) {
-        // Use existing translation for minutes
-        return '$minutes ${'mins_ago'.tr}';
-      } else {
-        return 'Just now';
+      if (difference.isNegative) {
+        debugPrint('Server time skew detected; showing time with abs diff.');
+        difference = rangeTime.difference(currentTime);
       }
+
+      final int minutes = difference.inMinutes;
+      return '$minutes ${'mins_ago'.tr}';
     } catch (e) {
       // Fallback - show capped minutes
       int mins = timeDistanceInMin(time);

@@ -33,7 +33,7 @@ class CustomAppBarWidget extends StatelessWidget
                 if (onBackPressed != null) {
                   onBackPressed!();
                 } else if (Get.previousRoute.isNotEmpty) {
-                  Get.back();
+                  Navigator.of(context, rootNavigator: true).maybePop();
                 } else {
                   Get.offAllNamed(RouteHelper.getInitialRoute());
                 }

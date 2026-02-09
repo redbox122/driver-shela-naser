@@ -254,7 +254,7 @@ class OrderRequestWidget extends StatelessWidget {
               ]),
             ),
             Container(
-              height: 80,
+              constraints: const BoxConstraints(minHeight: 80),
               decoration: BoxDecoration(
                 color: Theme.of(context).disabledColor.withOpacity(0.05),
                 borderRadius: const BorderRadius.vertical(

@@ -246,14 +246,15 @@ class _DeliveryManRegistrationScreenState
                                         .pickDmImageForRegistration(
                                             true, false),
                                     child: DottedBorder(
-                                      color: Theme.of(context).primaryColor,
-                                      strokeWidth: 1,
-                                      strokeCap: StrokeCap.butt,
-                                      dashPattern: const [5, 5],
-                                      padding: const EdgeInsets.all(0),
-                                      borderType: BorderType.RRect,
-                                      radius: const Radius.circular(
-                                          Dimensions.radiusDefault),
+                                      options: RoundedRectDottedBorderOptions(
+                                        radius: const Radius.circular(
+                                            Dimensions.radiusDefault),
+                                        color: Theme.of(context).primaryColor,
+                                        strokeWidth: 1,
+                                        strokeCap: StrokeCap.butt,
+                                        dashPattern: const [5, 5],
+                                        padding: const EdgeInsets.all(0),
+                                      ),
                                       child: Visibility(
                                         visible:
                                             authController.pickedImage != null,
@@ -613,14 +614,16 @@ class _DeliveryManRegistrationScreenState
                                         }
                                       },
                                       child: DottedBorder(
-                                        color: Theme.of(context).primaryColor,
-                                        strokeWidth: 1,
-                                        strokeCap: StrokeCap.butt,
-                                        dashPattern: const [5, 5],
-                                        padding: const EdgeInsets.all(5),
-                                        borderType: BorderType.RRect,
-                                        radius: const Radius.circular(
-                                            Dimensions.radiusDefault),
+                                        options: RoundedRectDottedBorderOptions(
+                                          radius: const Radius.circular(
+                                              Dimensions.radiusDefault),
+                                          color:
+                                              Theme.of(context).primaryColor,
+                                          strokeWidth: 1,
+                                          strokeCap: StrokeCap.butt,
+                                          dashPattern: const [5, 5],
+                                          padding: const EdgeInsets.all(5),
+                                        ),
                                         child: SizedBox(
                                           height: 120,
                                           width: double.infinity,
@@ -645,14 +648,15 @@ class _DeliveryManRegistrationScreenState
                                     padding: const EdgeInsets.only(
                                         bottom: Dimensions.paddingSizeSmall),
                                     child: DottedBorder(
-                                      color: Theme.of(context).primaryColor,
-                                      strokeWidth: 1,
-                                      strokeCap: StrokeCap.butt,
-                                      dashPattern: const [5, 5],
-                                      padding: const EdgeInsets.all(5),
-                                      borderType: BorderType.RRect,
-                                      radius: const Radius.circular(
-                                          Dimensions.radiusDefault),
+                                      options: RoundedRectDottedBorderOptions(
+                                        radius: const Radius.circular(
+                                            Dimensions.radiusDefault),
+                                        color: Theme.of(context).primaryColor,
+                                        strokeWidth: 1,
+                                        strokeCap: StrokeCap.butt,
+                                        dashPattern: const [5, 5],
+                                        padding: const EdgeInsets.all(5),
+                                      ),
                                       child: Stack(children: [
                                         ClipRRect(
                                           borderRadius: BorderRadius.circular(

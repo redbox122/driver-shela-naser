@@ -58,6 +58,11 @@ class OrderService implements OrderServiceInterface {
   }
 
   @override
+  Future<ResponseModel> cancelOrder(int? orderID, {String? reason}) async {
+    return await orderRepositoryInterface.cancelOrder(orderID, reason: reason);
+  }
+
+  @override
   List<IgnoreModel> getIgnoreList() {
     return orderRepositoryInterface.getIgnoreList();
   }

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:shellafood_delivery/api/api_checker.dart';
 import 'package:shellafood_delivery/common/models/error_response.dart';
+import 'package:shellafood_delivery/features/splash/controllers/splash_controller.dart';
 import 'package:shellafood_delivery/util/app_constants.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -182,12 +183,14 @@ class ApiClient extends GetxService {
     } else if (response0.statusCode != 200 && response0.body == null) {
       response0 = const Response(statusCode: 0, statusText: noInternetMessage);
     }
+    _updateServerTimeFromBody(body);
     debugPrint(
         '====> API Response: [${response0.statusCode}] $uri\n${response0.body}');
     if (handleError) {
       if (response0.statusCode == 200) {
         return response0;
       } else {
+        _logApiError(response0, uri);
         ApiChecker.checkApi(response0);
         return const Response();
       }
@@ -202,4 +205,151 @@ class MultipartBody {
   XFile? file;
 
   MultipartBody(this.key, this.file);
+}
+
+void _logApiError(Response response, String uri) {
+  final String url = response.request?.url.toString() ?? '';
+  final int? status = response.statusCode;
+  final Map<String, String>? headers = response.headers;
+  final String body = response.bodyString ?? response.body?.toString() ?? '';
+
+  final String prettyBody = _tryPrettyJson(body);
+  final String headerDump =
+      headers == null ? '' : headers.entries.map((e) => '${e.key}: ${e.value}').join('\n');
+
+  debugPrint('\x1B[32m====> API Error\x1B[0m');
+  debugPrint('\x1B[32mStatus: $status\x1B[0m');
+  if (url.isNotEmpty) {
+    debugPrint('\x1B[32mURL: $url\x1B[0m');
+  } else {
+    debugPrint('\x1B[32mURL: ${AppConstants.baseUrl + uri}\x1B[0m');
+  }
+  if (headerDump.isNotEmpty) {
+    debugPrint('\x1B[32mHeaders:\n$headerDump\x1B[0m');
+  }
+  if (prettyBody.isNotEmpty) {
+    debugPrint('\x1B[32mBody:\n$prettyBody\x1B[0m');
+  }
+
+  final String? requestId = _findRequestId(headers);
+  if (requestId != null) {
+    debugPrint('\x1B[32mRequest-ID: $requestId\x1B[0m');
+  }
+}
+
+bool _updateServerTimeFromHeaders(Map<String, String> headers) {
+  final String? dateHeader = headers['date'];
+  if (dateHeader == null || dateHeader.isEmpty) {
+    return false;
+  }
+  try {
+    final DateTime serverTime = HttpDate.parse(dateHeader);
+    if (Get.isRegistered<SplashController>()) {
+      Get.find<SplashController>().updateServerTime(serverTime);
+    }
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+bool _updateServerTimeFromBody(dynamic body) {
+  final dynamic rawValue = _extractServerTimeRaw(body);
+  if (rawValue == null) {
+    return false;
+  }
+  final DateTime? serverTime = _parseServerTimeValue(rawValue);
+  if (serverTime == null) {
+    return false;
+  }
+  debugPrint('Server time raw: $rawValue');
+  debugPrint('Server time parsed: $serverTime');
+  if (Get.isRegistered<SplashController>()) {
+    final splash = Get.find<SplashController>();
+    splash.updateServerTime(serverTime);
+    final int offsetMs =
+        splash.currentTime.difference(DateTime.now()).inMilliseconds;
+    debugPrint('Server time offset ms: $offsetMs');
+  }
+  return true;
+}
+
+dynamic _extractServerTimeRaw(dynamic body) {
+  if (body is Map<String, dynamic>) {
+    final dynamic direct = body['server_time'];
+    if (direct != null) return direct;
+
+    final dynamic data = body['data'];
+    if (data is Map<String, dynamic>) {
+      final dynamic nested = data['server_time'];
+      if (nested != null) return nested;
+    }
+  }
+  return null;
+}
+
+DateTime? _parseServerTimeValue(dynamic value) {
+  if (value == null) return null;
+  if (value is int) {
+    return _dateTimeFromEpoch(value);
+  }
+  if (value is num) {
+    return _dateTimeFromEpoch(value.toInt());
+  }
+  if (value is String) {
+    final String trimmed = value.trim();
+    if (trimmed.isEmpty) return null;
+    try {
+      final String normalized = _ensureTimezoneOffset(trimmed);
+      return DateTime.parse(normalized);
+    } catch (_) {
+      return null;
+    }
+  }
+  return null;
+}
+
+DateTime _dateTimeFromEpoch(int epoch) {
+  final int ms = epoch > 1000000000000 ? epoch : epoch * 1000;
+  return DateTime.fromMillisecondsSinceEpoch(ms, isUtc: true);
+}
+
+String _ensureTimezoneOffset(String value) {
+  final String trimmed = value.trim();
+  final bool hasZulu = trimmed.endsWith('Z');
+  final bool hasOffset =
+      RegExp(r'[+-]\d{2}:\d{2}$').hasMatch(trimmed) ||
+          RegExp(r'[+-]\d{4}$').hasMatch(trimmed);
+  if (hasZulu || hasOffset) {
+    return trimmed;
+  }
+
+  final Duration offset = DateTime.now().timeZoneOffset;
+  final String sign = offset.isNegative ? '-' : '+';
+  final int hours = offset.inHours.abs();
+  final int minutes = (offset.inMinutes.abs()) % 60;
+  final String hh = hours.toString().padLeft(2, '0');
+  final String mm = minutes.toString().padLeft(2, '0');
+  return '$trimmed$sign$hh:$mm';
+}
+
+String _tryPrettyJson(String input) {
+  try {
+    final dynamic decoded = jsonDecode(input);
+    const JsonEncoder encoder = JsonEncoder.withIndent('  ');
+    return encoder.convert(decoded);
+  } catch (_) {
+    return input;
+  }
+}
+
+String? _findRequestId(Map<String, String>? headers) {
+  if (headers == null) return null;
+  for (final entry in headers.entries) {
+    final key = entry.key.toLowerCase();
+    if (key == 'x-request-id' || key == 'x-correlation-id' || key == 'request-id') {
+      return entry.value;
+    }
+  }
+  return null;
 }

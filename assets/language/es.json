@@ -394,5 +394,10 @@
   "upload": "Subir",
   "please_select_at_least_one_photo": "Por favor seleccione al menos una foto",
   "upload_failed": "Error al subir",
-  "maximum_5_photos_allowed": "Máximo 5 fotos permitidas"
+  "maximum_5_photos_allowed": "Máximo 5 fotos permitidas",
+  "pickup_photos": "Fotos de Recogida",
+  "please_take_pickup_photo_first": "Por favor fotograf íe el pedido en la recogida",
+  "pickup_photo_instruction": "Toma una foto clara de los artículos al recogers de la ubicación",
+  "please_take_delivery_photo_first": "Por favor toma una foto de entrega primero",
+  "delivery_requires_photo_proof": "La entrega requiere prueba de foto para completar"
 }

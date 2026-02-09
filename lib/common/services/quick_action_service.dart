@@ -8,6 +8,12 @@ import 'package:shellafood_delivery/common/widgets/custom_snackbar_widget.dart';
 /// Service for handling quick action button functionalities
 /// Provides callbacks for all home screen quick action buttons
 class QuickActionService {
+  static void _safePopDialog() {
+    final navigator = Get.key.currentState;
+    if (navigator != null && navigator.canPop()) {
+      navigator.maybePop();
+    }
+  }
   /// Calls customer support using phone dialer
   static Future<void> callSupport() async {
     try {
@@ -86,7 +92,7 @@ class QuickActionService {
               title: Text('cash_in_hand'.tr),
               subtitle: Text('view_cash_in_hand_details'.tr),
               onTap: () {
-                Get.back();
+                _safePopDialog();
                 navigateToEarningsHistory();
               },
             ),
@@ -95,7 +101,7 @@ class QuickActionService {
               title: Text('wallet_earnings'.tr),
               subtitle: Text('view_wallet_provided_earnings'.tr),
               onTap: () {
-                Get.back();
+                _safePopDialog();
                 navigateToWalletEarnings();
               },
             ),
@@ -103,7 +109,7 @@ class QuickActionService {
         ),
         actions: [
           TextButton(
-            onPressed: () => Get.back(),
+            onPressed: () => _safePopDialog(),
             child: Text('cancel'.tr),
           ),
         ],
@@ -124,7 +130,7 @@ class QuickActionService {
               title: Text('terms_and_conditions'.tr),
               subtitle: Text('view_terms_and_conditions'.tr),
               onTap: () {
-                Get.back();
+                _safePopDialog();
                 navigateToHelpCenter();
               },
             ),
@@ -133,7 +139,7 @@ class QuickActionService {
               title: Text('privacy_policy'.tr),
               subtitle: Text('view_privacy_policy'.tr),
               onTap: () {
-                Get.back();
+                _safePopDialog();
                 navigateToPrivacyPolicy();
               },
             ),
@@ -141,7 +147,7 @@ class QuickActionService {
         ),
         actions: [
           TextButton(
-            onPressed: () => Get.back(),
+            onPressed: () => _safePopDialog(),
             child: Text('cancel'.tr),
           ),
         ],

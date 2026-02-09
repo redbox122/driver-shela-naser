@@ -161,24 +161,55 @@ class OrderWidget extends StatelessWidget {
               child: CustomButtonWidget(
             height: 45,
             onPressed: () async {
-              String url;
-              if (parcel && (orderModel.orderStatus == 'picked_up')) {
-                url =
-                    'https://www.google.com/maps/dir/?api=1&destination=${orderModel.receiverDetails!.latitude}'
-                    ',${orderModel.receiverDetails!.longitude}&mode=d';
+              final String status =
+                  (orderModel.orderStatus ?? '').toLowerCase().trim();
+              final bool isPickedUp =
+                  status == 'picked_up' || status == 'handover';
+              String? lat;
+              String? lng;
+              String reason = '';
+
+              if (parcel && isPickedUp) {
+                lat = orderModel.receiverDetails?.latitude;
+                lng = orderModel.receiverDetails?.longitude;
+                reason = 'parcel_receiver';
               } else if (parcel) {
-                url =
-                    'https://www.google.com/maps/dir/?api=1&destination=${orderModel.deliveryAddress!.latitude}'
-                    ',${orderModel.deliveryAddress!.longitude}&mode=d';
-              } else if (orderModel.orderStatus == 'picked_up') {
-                url =
-                    'https://www.google.com/maps/dir/?api=1&destination=${orderModel.deliveryAddress!.latitude}'
-                    ',${orderModel.deliveryAddress!.longitude}&mode=d';
+                lat = orderModel.deliveryAddress?.latitude;
+                lng = orderModel.deliveryAddress?.longitude;
+                reason = 'parcel_pickup';
+              } else if (isPickedUp) {
+                lat = orderModel.deliveryAddress?.latitude;
+                lng = orderModel.deliveryAddress?.longitude;
+                reason = 'food_customer';
               } else {
-                url =
-                    'https://www.google.com/maps/dir/?api=1&destination=${orderModel.storeLat ?? '0'}'
-                    ',${orderModel.storeLng ?? '0'}&mode=d';
+                lat = orderModel.storeLat;
+                lng = orderModel.storeLng;
+                reason = 'food_store';
               }
+
+              if (lat == null || lng == null || lat == '0' || lng == '0') {
+                // Fallback if primary coordinates are missing
+                if (!parcel && !isPickedUp) {
+                  lat = orderModel.deliveryAddress?.latitude ?? lat;
+                  lng = orderModel.deliveryAddress?.longitude ?? lng;
+                  reason = 'fallback_customer';
+                } else {
+                  lat = orderModel.storeLat ?? lat;
+                  lng = orderModel.storeLng ?? lng;
+                  reason = 'fallback_store';
+                }
+              }
+
+              if (lat == null || lng == null) {
+                showCustomSnackBar('invalid_coordinates'.tr);
+                return;
+              }
+
+              debugPrint(
+                  'Direction debug: orderId=${orderModel.id} status=$status parcel=$parcel reason=$reason lat=$lat lng=$lng');
+
+              String url =
+                  'https://www.google.com/maps/dir/?api=1&destination=$lat,$lng&mode=d';
               if (await canLaunchUrlString(url)) {
                 await launchUrlString(url,
                     mode: LaunchMode.externalApplication);

@@ -62,7 +62,7 @@ class DashboardScreenState extends State<DashboardScreen> {
 
       if (type == 'new_order' || type == 'order_request') {
         Get.find<OrderController>().getCurrentOrders();
-        Get.find<OrderController>().getLatestOrders();
+        Get.find<OrderController>().getLatestOrdersIfActive();
         Get.dialog(NewRequestDialogWidget(
             isRequest: true,
             onTap: () => _navigateRequestPage(),
@@ -70,7 +70,7 @@ class DashboardScreenState extends State<DashboardScreen> {
             isParcel: isParcel));
       } else if (type == 'assign' && orderID != null && orderID.isNotEmpty) {
         Get.find<OrderController>().getCurrentOrders();
-        Get.find<OrderController>().getLatestOrders();
+        Get.find<OrderController>().getLatestOrdersIfActive();
         Get.dialog(NewRequestDialogWidget(
             isRequest: false,
             orderId: int.parse(message.data['order_id'].toString()),
@@ -105,7 +105,7 @@ class DashboardScreenState extends State<DashboardScreen> {
           Get.find<ProfileController>().profileModel!.active == 0) {
         Get.dialog(CustomAlertDialogWidget(
             description: 'you_are_offline_now'.tr,
-            onOkPressed: () => Get.back()));
+            onOkPressed: () => _safePopDialog()));
       } else {
         _setPage(1);
       }
@@ -185,5 +185,10 @@ class DashboardScreenState extends State<DashboardScreen> {
       _pageController!.jumpToPage(pageIndex);
       _pageIndex = pageIndex;
     });
+  }
+
+  void _safePopDialog() {
+    if (!mounted) return;
+    Navigator.of(context, rootNavigator: true).maybePop();
   }
 }

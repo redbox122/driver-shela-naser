@@ -30,6 +30,7 @@ import 'package:shellafood_delivery/features/order/widgets/order_item_widget.dar
 import 'package:shellafood_delivery/features/order/widgets/verify_delivery_sheet_widget.dart';
 import 'package:shellafood_delivery/features/order/widgets/info_card_widget.dart';
 import 'package:shellafood_delivery/features/order/widgets/slider_button_widget.dart';
+import 'package:shellafood_delivery/features/order/screens/order_debug_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -60,6 +61,23 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
     _timer = Timer.periodic(const Duration(seconds: 10), (timer) {
       Get.find<OrderController>().getOrderWithId(widget.orderId!);
     });
+  }
+
+  void _showCancelDialog(OrderModel order) {
+    final bool isParcel = order.orderType == 'parcel';
+    Get.defaultDialog(
+      title: 'are_you_sure_to_cancel'.tr,
+      middleText: isParcel
+          ? 'you_want_to_cancel_this_delivery'.tr
+          : 'you_want_to_cancel_this_order'.tr,
+      textConfirm: 'confirm'.tr,
+      textCancel: 'cancel'.tr,
+      confirmTextColor: Colors.white,
+      onConfirm: () {
+        Get.back();
+        Get.find<OrderController>().cancelOrder(order.id);
+      },
+    );
   }
 
   Future<void> _loadData() async {
@@ -151,10 +169,18 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
   }
 
   Widget _buildOrderProofUploadSection(OrderModel order) {
-    // Only show for modules 6/7/8/9 when status is confirmed and not picked up
-    if (order.orderStatus != AppConstants.confirmed ||
-        ![6, 7, 8, 9].contains(order.module_id) ||
-        order.orderStatus == AppConstants.pickedUp) {
+    // ✅ PICKUP PHOTOS: Show for ANY order pickup as long as status is accepted/confirmed
+    // بدون قيد GPS - تظهر من جول ما يقبل الطلب
+    // كل طلب فيها استلام من نقطة تحتاج تصوير - مو متعلق بـ module type
+    
+    // Hide if already picked up
+    if (order.orderStatus == AppConstants.pickedUp) {
+      return const SizedBox.shrink();
+    }
+
+    // Show only for accepted, confirmed, or handover status
+    if (![AppConstants.accepted, AppConstants.confirmed, AppConstants.handover]
+        .contains(order.orderStatus)) {
       return const SizedBox.shrink();
     }
 
@@ -162,6 +188,47 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
       final hasUploadedPhotos = order.orderProofFullUrl != null &&
           order.orderProofFullUrl!.isNotEmpty;
       final hasSelectedPhotos = orderController.pickedOrderProofImages.isNotEmpty;
+      
+      // Show helper message if no photos uploaded yet
+      if (!hasUploadedPhotos && !hasSelectedPhotos) {
+        return Container(
+          margin: const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeDefault),
+          padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
+          decoration: BoxDecoration(
+            color: Colors.blue[50],
+            border: Border.all(color: Colors.blue[300]!, width: 1),
+            borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.camera_alt_rounded, color: Colors.blue[600], size: 28),
+              const SizedBox(width: Dimensions.paddingSizeDefault),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'please_take_pickup_photo_first'.tr,
+                      style: robotoBold.copyWith(
+                        color: Colors.blue[700],
+                        fontSize: Dimensions.fontSizeMedium,
+                      ),
+                    ),
+                    const SizedBox(height: Dimensions.paddingSizeExtraSmall),
+                    Text(
+                      'pickup_photo_instruction'.tr,
+                      style: robotoRegular.copyWith(
+                        color: Colors.blue[600],
+                        fontSize: Dimensions.fontSizeSmall,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      }
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeDefault),
@@ -176,10 +243,10 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
         children: [
           Row(
             children: [
-              Icon(Icons.receipt_long,
+              Icon(Icons.camera_alt_rounded,
                   color: Theme.of(context).primaryColor, size: 24),
               const SizedBox(width: Dimensions.paddingSizeSmall),
-              Text('upload_menu_facture_photos'.tr,
+              Text('pickup_photos'.tr,
                   style: robotoBold.copyWith(fontSize: Dimensions.fontSizeLarge)),
             ],
           ),
@@ -717,6 +784,10 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                           child: SingleChildScrollView(
                         physics: const BouncingScrollPhysics(),
                         child: Column(children: [
+                          // 🔍 DEBUG WIDGET - Remove in production
+                          if (controllerOrderModel != null)
+                            OrderDebugWidget(order: controllerOrderModel),
+                          
                           Row(children: [
                             Text(
                                 '${parcel! ? 'delivery_id'.tr : 'order_id'.tr}:',
@@ -1106,7 +1177,8 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                 (Get.find<SplashController>()
                                             .getModule(
                                                 controllerOrderModel.moduleType)
-                                            .orderAttachment! &&
+                                            .orderAttachment ==
+                                        true &&
                                         controllerOrderModel
                                                 .orderAttachmentFullUrl !=
                                             null &&
@@ -1224,7 +1296,8 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                           SizedBox(height: !parcel ? 10 : 0),
                           Get.find<SplashController>()
                                   .getModuleConfig(order.moduleType)
-                                  .addOn!
+                                  .addOn ==
+                              true
                               ? Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
@@ -1238,7 +1311,8 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                               : const SizedBox(),
                           Get.find<SplashController>()
                                   .getModuleConfig(order.moduleType)
-                                  .addOn!
+                                  .addOn ==
+                              true
                               ? Divider(
                                   thickness: 1,
                                   color: Theme.of(context)
@@ -1248,7 +1322,8 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                               : const SizedBox(),
                           Get.find<SplashController>()
                                   .getModuleConfig(order.moduleType)
-                                  .addOn!
+                                  .addOn ==
+                              true
                               ? Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
@@ -1266,7 +1341,8 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                           SizedBox(
                               height: Get.find<SplashController>()
                                       .getModuleConfig(order.moduleType)
-                                      .addOn!
+                                      .addOn ==
+                                  true
                                   ? 10
                                   : 0),
                           !parcel
@@ -1390,14 +1466,15 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                           ),
                           partialPay!
                               ? DottedBorder(
-                                  color: Theme.of(context).primaryColor,
-                                  strokeWidth: 1,
-                                  strokeCap: StrokeCap.butt,
-                                  dashPattern: const [8, 5],
-                                  padding: const EdgeInsets.all(0),
-                                  borderType: BorderType.RRect,
-                                  radius: const Radius.circular(
-                                      Dimensions.radiusDefault),
+                                  options: RoundedRectDottedBorderOptions(
+                                    radius: const Radius.circular(
+                                        Dimensions.radiusDefault),
+                                    color: Theme.of(context).primaryColor,
+                                    strokeWidth: 1,
+                                    strokeCap: StrokeCap.butt,
+                                    dashPattern: const [8, 5],
+                                    padding: const EdgeInsets.all(0),
+                                  ),
                                   child: Ink(
                                     padding: const EdgeInsets.all(
                                         Dimensions.paddingSizeSmall),
@@ -1607,95 +1684,171 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                   ]),
                             )
                           : const SizedBox(),
-                      showDeliveryConfirmImage &&
+                        (cancelPermission == true &&
+                                (accepted == true || processing == true) &&
+                                !showSlider)
+                            ? Padding(
+                                padding: const EdgeInsets.only(
+                                    bottom: Dimensions.paddingSizeSmall),
+                                child: CustomButtonWidget(
+                                  buttonText: 'cancel'.tr,
+                                  backgroundColor: Colors.red,
+                                  onPressed: orderController.isLoading
+                                      ? null
+                                      : () => _showCancelDialog(
+                                          controllerOrderModel),
+                                ),
+                              )
+                            : const SizedBox(),
+                        showDeliveryConfirmImage &&
                               controllerOrderModel.orderStatus != 'delivered' &&
                               !parcel
-                          ? CustomButtonWidget(
-                              buttonText: 'complete_delivery'.tr,
-                              onPressed: () {
-                                if (Get.find<SplashController>()
-                                    .configModel!
-                                    .orderDeliveryVerification!) {
-                                  Get.find<NotificationController>()
-                                      .sendDeliveredNotification(
-                                          controllerOrderModel.id);
-
-                                  Get.bottomSheet(
-                                          VerifyDeliverySheetWidget(
-                                            currentOrderModel:
-                                                controllerOrderModel,
-                                            verify: Get.find<SplashController>()
-                                                .configModel!
-                                                .orderDeliveryVerification,
-                                            orderAmount: partialPay!
-                                                ? controllerOrderModel
-                                                    .payments![1].amount!
-                                                    .toDouble()
-                                                : controllerOrderModel
-                                                    .orderAmount,
-                                            cod: cod! ||
-                                                (partialPay &&
-                                                    controllerOrderModel
-                                                            .payments![1]
-                                                            .paymentMethod ==
-                                                        'cash_on_delivery'),
+                          ? Column(children: [
+                              // ✅ MANDATORY INSTRUCTION
+                              if (!orderController.hasPickedDeliveryPhotos())
+                                Container(
+                                  padding: const EdgeInsets.all(
+                                      Dimensions.paddingSizeDefault),
+                                  margin: const EdgeInsets.only(
+                                      bottom: Dimensions.paddingSizeSmall),
+                                  decoration: BoxDecoration(
+                                    color: Colors.orange[50],
+                                    border: Border.all(
+                                        color: Colors.orange[400]!,
+                                        width: 2),
+                                    borderRadius: BorderRadius.circular(
+                                        Dimensions.radiusDefault),
+                                  ),
+                                  child: Row(children: [
+                                    Icon(Icons.warning_amber_rounded,
+                                        color: Colors.orange[700],
+                                        size: 24),
+                                    const SizedBox(
+                                        width: Dimensions
+                                            .paddingSizeSmall),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'please_take_delivery_photo_first'
+                                                .tr,
+                                            style: robotoMedium.copyWith(
+                                                color:
+                                                    Colors.orange[700]),
                                           ),
-                                          isScrollControlled: true)
-                                      .then((isSuccess) {
-                                    if (isSuccess &&
-                                        (cod! ||
-                                            (partialPay! &&
-                                                controllerOrderModel
-                                                        .payments![1]
-                                                        .paymentMethod ==
-                                                    'cash_on_delivery'))) {
-                                      Get.bottomSheet(
-                                          CollectMoneyDeliverySheetWidget(
-                                            currentOrderModel:
-                                                controllerOrderModel,
-                                            verify: Get.find<SplashController>()
-                                                .configModel!
-                                                .orderDeliveryVerification,
-                                            orderAmount: partialPay!
-                                                ? controllerOrderModel
-                                                    .payments![1].amount!
-                                                    .toDouble()
-                                                : controllerOrderModel
-                                                    .orderAmount,
-                                            cod: cod ||
-                                                (partialPay &&
-                                                    controllerOrderModel
-                                                            .payments![1]
-                                                            .paymentMethod ==
-                                                        'cash_on_delivery'),
+                                          const SizedBox(
+                                              height: Dimensions
+                                                  .paddingSizeExtraSmall),
+                                          Text(
+                                            'delivery_requires_photo_proof'
+                                                .tr,
+                                            style: robotoRegular.copyWith(
+                                                fontSize:
+                                                    Dimensions.fontSizeSmall,
+                                                color:
+                                                    Colors.orange[600]),
                                           ),
-                                          isScrollControlled: true,
-                                          isDismissible: false);
-                                    }
-                                  });
-                                } else {
-                                  Get.bottomSheet(
-                                      CollectMoneyDeliverySheetWidget(
-                                        currentOrderModel: controllerOrderModel,
-                                        verify: Get.find<SplashController>()
-                                            .configModel!
-                                            .orderDeliveryVerification,
-                                        orderAmount: partialPay!
-                                            ? controllerOrderModel
-                                                .payments![1].amount!
-                                                .toDouble()
-                                            : controllerOrderModel.orderAmount,
-                                        cod: cod! ||
-                                            (partialPay &&
-                                                controllerOrderModel
-                                                        .payments![1]
-                                                        .paymentMethod ==
-                                                    'cash_on_delivery'),
+                                        ],
                                       ),
-                                      isScrollControlled: true);
-                                }
-                              },
-                            )
+                                    ),
+                                  ]),
+                                ),
+                              CustomButtonWidget(
+                                buttonText: 'complete_delivery'.tr,
+                                // MANDATORY: Disable if no delivery photo
+                                backgroundColor: orderController.hasPickedDeliveryPhotos()
+                                    ? Theme.of(context).primaryColor
+                                    : Colors.grey[400],
+                                onPressed: orderController.hasPickedDeliveryPhotos()
+                                    ? () {
+                                        if (Get.find<SplashController>()
+                                            .configModel!
+                                            .orderDeliveryVerification!) {
+                                          Get.find<NotificationController>()
+                                              .sendDeliveredNotification(
+                                                  controllerOrderModel.id);
+
+                                          Get.bottomSheet(
+                                                  VerifyDeliverySheetWidget(
+                                                    currentOrderModel:
+                                                        controllerOrderModel,
+                                                    verify: Get.find<SplashController>()
+                                                        .configModel!
+                                                        .orderDeliveryVerification,
+                                                    orderAmount: partialPay!
+                                                        ? controllerOrderModel
+                                                            .payments![1].amount!
+                                                            .toDouble()
+                                                        : controllerOrderModel
+                                                            .orderAmount,
+                                                    cod: cod! ||
+                                                        (partialPay &&
+                                                            controllerOrderModel
+                                                                    .payments![1]
+                                                                    .paymentMethod ==
+                                                                'cash_on_delivery'),
+                                                  ),
+                                                  isScrollControlled: true)
+                                              .then((isSuccess) {
+                                            if (isSuccess &&
+                                                (cod! ||
+                                                    (partialPay! &&
+                                                        controllerOrderModel
+                                                                .payments![1]
+                                                                .paymentMethod ==
+                                                            'cash_on_delivery'))) {
+                                              Get.bottomSheet(
+                                                  CollectMoneyDeliverySheetWidget(
+                                                    currentOrderModel:
+                                                        controllerOrderModel,
+                                                    verify: Get.find<SplashController>()
+                                                        .configModel!
+                                                        .orderDeliveryVerification,
+                                                    orderAmount: partialPay!
+                                                        ? controllerOrderModel
+                                                            .payments![1].amount!
+                                                            .toDouble()
+                                                        : controllerOrderModel
+                                                            .orderAmount,
+                                                    cod: cod ||
+                                                        (partialPay &&
+                                                            controllerOrderModel
+                                                                    .payments![1]
+                                                                    .paymentMethod ==
+                                                                'cash_on_delivery'),
+                                                  ),
+                                                  isScrollControlled: true,
+                                                  isDismissible: false);
+                                            }
+                                          });
+                                        } else {
+                                          Get.bottomSheet(
+                                              CollectMoneyDeliverySheetWidget(
+                                                currentOrderModel:
+                                                    controllerOrderModel,
+                                                verify: Get.find<SplashController>()
+                                                    .configModel!
+                                                    .orderDeliveryVerification,
+                                                orderAmount: partialPay!
+                                                    ? controllerOrderModel
+                                                        .payments![1].amount!
+                                                        .toDouble()
+                                                    : controllerOrderModel.orderAmount,
+                                                cod: cod! ||
+                                                    (partialPay &&
+                                                        controllerOrderModel
+                                                                .payments![1]
+                                                                .paymentMethod ==
+                                                            'cash_on_delivery'),
+                                              ),
+                                              isScrollControlled: true);
+                                        }
+                                      }
+                                    : null, // ❌ DISABLED: No delivery photo taken
+                              ),
+                            ])
                           : showBottomView
                               ? (isUnassignedOrder
                                   ? Row(children: [
@@ -2142,33 +2295,18 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                                                   true);
                                                         }
                                                       });
-                                                    } else if (([6, 7, 8, 9].contains(controllerOrderModel.module_id) &&
-                                                        confirmed! &&
-                                                        controllerOrderModel.orderProofFullUrl != null &&
-                                                        controllerOrderModel.orderProofFullUrl!.isNotEmpty) ||
-                                                        handover!) {
+                                                    } else if ((confirmed! || handover!) &&
+                                                        ![AppConstants.acceptanceRejected, AppConstants.delivered, AppConstants.pickedUp]
+                                                            .contains(controllerOrderModel.orderStatus)) {
+                                                      // ✅ GENERAL PICKUP LOGIC - applies to ALL orders
+                                                      // بدون قيد module - لأي طلب في حالة confirmed أو handover
                                                       if (Get.find<
                                                                   ProfileController>()
                                                               .profileModel!
                                                               .active ==
                                                           1) {
-                                                        // Check if this is modules 6/7/8/9 with confirmed status and photos
-                                                        if ([6, 7, 8, 9].contains(controllerOrderModel.module_id) &&
-                                                            confirmed! &&
-                                                            controllerOrderModel.orderProofFullUrl != null &&
-                                                            controllerOrderModel.orderProofFullUrl!.isNotEmpty) {
-                                                          // Modules 6/7/8/9 - Direct pickup, no OTP needed
-                                                          Get.find<OrderController>().updateOrderStatus(
-                                                            controllerOrderModel,
-                                                            AppConstants.pickedUp,
-                                                            back: false, // Stay on order details page
-                                                            gotoDashboard: false, // Don't navigate to dashboard
-                                                          );
-                                                          return;
-                                                        }
-                                                        // Check module_id - only show OTP for module 3
+                                                        // Step 1: Check if module 3 needs OTP
                                                         if (controllerOrderModel.module_id == 3) {
-                                                        // Check module_id - only show OTP for module 3
                                                           // Module 3 - Show store OTP dialog
                                                           String? storeOtp =
                                                               await _showStoreOtpDialog();
@@ -2189,50 +2327,32 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                                                     OrderController>()
                                                                 .setStoreOtp(
                                                                     storeOtp);
-
-                                                            // Update order status with store OTP
-                                                            Get.find<
-                                                                    OrderController>()
-                                                                .updateOrderStatus(
-                                                              controllerOrderModel,
-                                                              AppConstants
-                                                                  .pickedUp,
-                                                              back: false, // Stay on order details page
-                                                              gotoDashboard: false, // Don't navigate to dashboard
-                                                            );
+                                                          } else {
+                                                            return; // User cancelled OTP
                                                           }
-                                                        } else if ([6, 7, 8, 9].contains(controllerOrderModel.module_id)) {
-                                                          // Modules 6/7/8/9 - Check if photos uploaded (MANDATORY)
-                                                          if (controllerOrderModel.orderProofFullUrl == null ||
-                                                              controllerOrderModel.orderProofFullUrl!.isEmpty) {
-                                                            showCustomSnackBar(
-                                                                'please_upload_order_proof_photos_first'.tr,
-                                                                isError: true);
-                                                            return;
-                                                          }
-                                                          
-                                                          // Direct pickup, no OTP needed
-                                                          Get.find<
-                                                                  OrderController>()
-                                                              .updateOrderStatus(
-                                                            controllerOrderModel,
-                                                            AppConstants
-                                                                .pickedUp,
-                                                            back: false, // Stay on order details page
-                                                            gotoDashboard: false, // Don't navigate to dashboard
-                                                          );
-                                                        } else {
-                                                          // Default fallback - direct pickup
-                                                          Get.find<
-                                                                  OrderController>()
-                                                              .updateOrderStatus(
-                                                            controllerOrderModel,
-                                                            AppConstants
-                                                                .pickedUp,
-                                                            back: false, // Stay on order details page
-                                                            gotoDashboard: false, // Don't navigate to dashboard
-                                                          );
                                                         }
+                                                        
+                                                        // Step 2: Check if pickup photos are uploaded
+                                                        // ✅ Apply to ALL orders, check status not module
+                                                        if (!Get.find<OrderController>().hasUploadedRestaurantPhotos(controllerOrderModel)) {
+                                                          print(' ❌ PICKUP BLOCKED: No pickup photos uploaded');
+                                                          showCustomSnackBar(
+                                                              'please_upload_order_proof_photos_first'.tr,
+                                                              isError: true);
+                                                          return;
+                                                        }
+                                                        
+                                                        print('✅ PICKUP ALLOWED: All validations passed');
+                                                        // Step 3: Update status to 'picked_up'
+                                                        Get.find<
+                                                                OrderController>()
+                                                            .updateOrderStatus(
+                                                          controllerOrderModel,
+                                                          AppConstants
+                                                              .pickedUp,
+                                                          back: false,
+                                                          gotoDashboard: false,
+                                                        );
                                                       } else {
                                                         showCustomSnackBar(
                                                             'make_yourself_online_first'

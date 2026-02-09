@@ -101,6 +101,7 @@ class MyApp extends StatelessWidget {
                       AppConstants.languages[0].countryCode),
                   initialRoute: RouteHelper.getSplashRoute(body),
                   getPages: RouteHelper.routes,
+                  navigatorObservers: [AppRouteLogger()],
                   defaultTransition: Transition.topLevel,
                   transitionDuration: const Duration(milliseconds: 500),
                   builder: (BuildContext context, widget) {
@@ -112,6 +113,34 @@ class MyApp extends StatelessWidget {
         });
       });
     });
+  }
+}
+
+class AppRouteLogger extends GetObserver {
+  void _logRoute(String action, Route<dynamic>? route) {
+    final String name = route?.settings.name ?? 'unknown';
+    debugPrint('\x1B[34m[ROUTE] $action: $name\x1B[0m');
+  }
+
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    super.didPush(route, previousRoute);
+    _logRoute('ENTER', route);
+  }
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    super.didPop(route, previousRoute);
+    _logRoute('EXIT', route);
+    if (previousRoute != null) {
+      _logRoute('BACK_TO', previousRoute);
+    }
+  }
+
+  @override
+  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
+    super.didReplace(newRoute: newRoute, oldRoute: oldRoute);
+    _logRoute('REPLACE', newRoute);
   }
 }
 

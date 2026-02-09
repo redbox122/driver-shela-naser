@@ -43,7 +43,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
               if (widget.fromNotification) {
                 Get.offAllNamed(RouteHelper.getInitialRoute());
               } else {
-                Get.back();
+                Navigator.of(context, rootNavigator: true).maybePop();
               }
             }),
         body: GetBuilder<NotificationController>(

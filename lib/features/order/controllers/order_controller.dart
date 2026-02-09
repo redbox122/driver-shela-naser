@@ -135,6 +135,47 @@ class OrderController extends GetxController implements GetxService {
   List<XFile> _pickedOrderProofImages = [];
   List<XFile> get pickedOrderProofImages => _pickedOrderProofImages;
 
+  /// ✅ دالة محسنة للتحقق من وجود صور المطعم المرفوعة
+  /// تتعامل مع null و empty string معاً
+  bool hasUploadedRestaurantPhotos(OrderModel? order) {
+    if (order == null) return false;
+    
+    // التحقق الصحيح: null OR empty list OR all elements are empty
+    if (order.orderProofFullUrl == null) {
+      debugPrint('🔍 No restaurant photos: orderProofFullUrl is null');
+      return false;
+    }
+    
+    if (order.orderProofFullUrl!.isEmpty) {
+      debugPrint('🔍 No restaurant photos: orderProofFullUrl list is empty');
+      return false;
+    }
+    
+    // التحقق من أن جميع الصور ليست فارغة
+    final hasValidPhotos = order.orderProofFullUrl!
+        .where((url) => url != null && url.isNotEmpty)
+        .isNotEmpty;
+    
+    debugPrint('🔍 Restaurant photos check: $hasValidPhotos (${order.orderProofFullUrl!.length} photos)');
+    return hasValidPhotos;
+  }
+
+  /// ✅ دالة للتحقق من التقاط صور التسليم
+  bool hasPickedDeliveryPhotos() {
+    final hasPicked = _pickedPrescriptions.isNotEmpty;
+    debugPrint('🔍 Delivery photos picked: $hasPicked (${_pickedPrescriptions.length} photos)');
+    return hasPicked;
+  }
+
+  /// ✅ دالة للتحقق من وجود صور التسليم المرفوعة
+  bool hasUploadedDeliveryPhotos(OrderModel? order) {
+    if (order == null) return false;
+    // TODO: هذا يعتمد على field من الخادم - تأكد من الاسم الصحيح
+    // قد يكون: deliveryImage, deliveryProof, proofImage, إلخ
+    debugPrint('🔍 Delivery photos uploaded check needed - verify field name with backend');
+    return false; // سيتم تحديثه حسب تجاوب الخادم
+  }
+
   void changeDeliveryImageStatus({bool isUpdate = true}) {
     _showDeliveryImageField = !_showDeliveryImageField;
     if (isUpdate) {
@@ -185,7 +226,14 @@ class OrderController extends GetxController implements GetxService {
 
   /// Uploads order proof photos (menu/facture/receipt) for modules 6/7/8/9
   /// 
-  /// IMPORTANT: This method uploads photos for documentation purposes only.
+  /// ✅ IMPORTANT FLOW:
+  /// 1. User selects photos → pickOrderProofImages()
+  /// 2. User clicks upload → uploadOrderProof()
+  /// 3. Success → show message + refresh order
+  /// 4. Then user can click "Pick Up" button
+  /// 5. "Pick Up" validates hasUploadedRestaurantPhotos() FIRST
+  /// 6. If true → updateOrderStatus('picked_up')
+  /// 
   /// The order status REMAINS "confirmed" after photo upload.
   /// Status only changes to "picked_up" when DM clicks "Pick Up" button.
   /// 
@@ -196,12 +244,20 @@ class OrderController extends GetxController implements GetxService {
       return false;
     }
 
+    // Debug print - check order status before upload
+    print('📸 UPLOADING RESTAURANT PHOTOS:');
+    print('   Order ID: ${order.id}');
+    print('   Current Status: ${order.orderStatus}');
+    print('   Selected Photos: ${_pickedOrderProofImages.length}');
+    print('   Module ID: ${order.module_id}');
+
     _isLoading = true;
     update();
 
     try {
       List<MultipartBody> multiParts =
           orderServiceInterface.prepareOrderProofImages(_pickedOrderProofImages);
+      
       // Status stays "confirmed" - photos are just documentation
       UpdateStatusBodyModel updateStatusBody = UpdateStatusBodyModel(
         orderId: order.id,
@@ -209,22 +265,31 @@ class OrderController extends GetxController implements GetxService {
         moduleId: order.module_id,
       );
 
+      print('📸 Sending upload request...');
       ResponseModel responseModel = await orderServiceInterface.updateOrderStatus(
           updateStatusBody, multiParts);
 
       if (responseModel.isSuccess) {
         // Clear picked images after successful upload
         _pickedOrderProofImages = [];
+        
         // Refresh order details to get updated orderProofFullUrl
         await getOrderDetails(order.id, false);
+        
+        print('✅ PHOTOS UPLOADED SUCCESSFULLY');
+        print('   Photos are now saved on server');
+        print('   "Pick Up" button is NOW ENABLED');
+        
         showCustomSnackBar('order_proof_photos_uploaded'.tr, isError: false);
         update();
         return true;
       } else {
+        print('❌ Upload failed: ${responseModel.message}');
         showCustomSnackBar(responseModel.message, isError: true);
         return false;
       }
     } catch (e) {
+      print('❌ Upload error: $e');
       showCustomSnackBar('upload_failed'.tr, isError: true);
       debugPrint('Order proof upload error: $e');
       return false;
@@ -319,28 +384,45 @@ class OrderController extends GetxController implements GetxService {
   }
 
   Future<void> getLatestOrders() async {
-    List<OrderModel>? latestOrderList =
-        await orderServiceInterface.getLatestOrders();
+    try {
+      List<OrderModel>? latestOrderList =
+          await orderServiceInterface.getLatestOrders();
 
-    if (latestOrderList != null) {
-      _latestOrderList = [];
-      List<int?> ignoredIdList =
-          orderServiceInterface.prepareIgnoreIdList(_ignoredRequests);
-      List<OrderModel> processedOrders = orderServiceInterface
-          .processLatestOrders(latestOrderList, ignoredIdList);
+      if (latestOrderList != null) {
+        _latestOrderList = [];
+        List<int?> ignoredIdList =
+            orderServiceInterface.prepareIgnoreIdList(_ignoredRequests);
+        List<OrderModel> processedOrders = orderServiceInterface
+            .processLatestOrders(latestOrderList, ignoredIdList);
 
-      // Apply security filtering based on delivery man's profile
-      final profileController = Get.find<ProfileController>();
-      List<OrderModel> filteredOrders = OrderFilterService.filterLatestOrders(
-          processedOrders, profileController.profileModel);
+        // Apply security filtering based on delivery man's profile
+        final profileController = Get.find<ProfileController>();
+        List<OrderModel> filteredOrders = OrderFilterService.filterLatestOrders(
+            processedOrders, profileController.profileModel);
 
-      _latestOrderList!.addAll(filteredOrders);
+        _latestOrderList!.addAll(filteredOrders);
 
-      // Log filtering results for debugging
-      debugPrint(
-          'Orders filtered: ${processedOrders.length} -> ${filteredOrders.length}');
+        // Log filtering results for debugging
+        debugPrint(
+            'Orders filtered: ${processedOrders.length} -> ${filteredOrders.length}');
+      }
+    } catch (e) {
+      debugPrint('getLatestOrders error: $e');
+    } finally {
+      update();
     }
-    update();
+  }
+
+  /// Fetch latest orders only when delivery man is active
+  Future<void> getLatestOrdersIfActive() async {
+    final profileController = Get.find<ProfileController>();
+    if (profileController.profileModel == null ||
+        profileController.profileModel!.active != 1) {
+      _latestOrderList = [];
+      update();
+      return;
+    }
+    await getLatestOrders();
   }
 
   Future<bool> updateOrderStatus(OrderModel currentOrder, String status,
@@ -450,6 +532,34 @@ class OrderController extends GetxController implements GetxService {
       showCustomSnackBar('unexpected_error_occurred'.tr, isError: true);
       debugPrint('Order acceptance error: $e');
       return false;
+    } finally {
+      _isLoading = false;
+      update();
+    }
+  }
+
+  Future<void> cancelOrder(int? orderID, {String? reason}) async {
+    _isLoading = true;
+    update();
+
+    try {
+      ResponseModel responseModel =
+          await orderServiceInterface.cancelOrder(orderID, reason: reason);
+
+      if (responseModel.isSuccess) {
+        showCustomSnackBar(responseModel.message ?? 'canceled'.tr,
+            isError: false);
+        await getCurrentOrders();
+        await getLatestOrders();
+        Get.offAllNamed(RouteHelper.getMainRoute('order-request'));
+      } else {
+        showCustomSnackBar(
+            responseModel.message ?? 'unexpected_error_occurred'.tr,
+            isError: true);
+      }
+    } catch (e) {
+      showCustomSnackBar('unexpected_error_occurred'.tr, isError: true);
+      debugPrint('Order cancel error: $e');
     } finally {
       _isLoading = false;
       update();
@@ -590,7 +700,7 @@ class OrderController extends GetxController implements GetxService {
       if (order.createdAt == null || order.createdAt!.isEmpty) return false;
 
       try {
-        final orderDate = DateTime.parse(order.createdAt!);
+        final orderDate = DateTime.parse(order.createdAt!).toLocal();
         final orderDay =
             DateTime(orderDate.year, orderDate.month, orderDate.day);
         return orderDay.isAtSameMomentAs(today);
@@ -615,7 +725,7 @@ class OrderController extends GetxController implements GetxService {
       if (order.createdAt == null || order.createdAt!.isEmpty) return false;
 
       try {
-        final orderDate = DateTime.parse(order.createdAt!);
+        final orderDate = DateTime.parse(order.createdAt!).toLocal();
         return orderDate.isAfter(startDate.subtract(const Duration(days: 1))) &&
             orderDate.isBefore(now.add(const Duration(days: 1)));
       } catch (e) {

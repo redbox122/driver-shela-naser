@@ -13,6 +13,7 @@ abstract class OrderRepositoryInterface implements RepositoryInterface {
   Future<bool> setPriceService(int orderId, double price);
 
   Future<dynamic> acceptOrder(int? orderID);
+  Future<dynamic> cancelOrder(int? orderID, {String? reason});
   List<IgnoreModel> getIgnoreList();
   void setIgnoreList(List<IgnoreModel> ignoreList);
 }

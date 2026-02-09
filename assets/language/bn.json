@@ -410,5 +410,10 @@
   "upload": "আপলোড",
   "please_select_at_least_one_photo": "অনুগ্রহ করে কমপক্ষে একটি ছবি নির্বাচন করুন",
   "upload_failed": "আপলোড ব্যর্থ",
-  "maximum_5_photos_allowed": "সর্বোচ্চ ৫টি ছবি অনুমোদিত"
+  "maximum_5_photos_allowed": "সর্বোচ্চ ৫টি ছবি অনুমোদিত",
+  "pickup_photos": "পিকআপ ছবি",
+  "please_take_pickup_photo_first": "পিকআপের সময় অর্ডারের ছবি তুলুন",
+  "pickup_photo_instruction": "অবস্থান থেকে পিক আপ করার সময় আইটেমগুলির একটি স্পষ্ট ছবি নিন",
+  "please_take_delivery_photo_first": "অনুগ্রহ করে প্রথমে ডেলিভারি ছবি নিন",
+  "delivery_requires_photo_proof": "ডেলিভারি সম্পূর্ণ করতে ছবির প্রমাণ প্রয়োজন"
 }

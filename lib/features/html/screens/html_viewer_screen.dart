@@ -1,7 +1,9 @@
 import 'package:flutter_html/flutter_html.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter/material.dart';
 import 'package:shellafood_delivery/features/html/controllers/html_controller.dart';
 import 'package:shellafood_delivery/util/dimensions.dart';
+import 'package:shellafood_delivery/util/app_constants.dart';
 import 'package:shellafood_delivery/common/widgets/custom_app_bar_widget.dart';
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher_string.dart';
@@ -35,26 +37,44 @@ class _HtmlViewerScreenState extends State<HtmlViewerScreen> {
           width: MediaQuery.of(context).size.width,
           color: Theme.of(context).cardColor,
           child: htmlController.htmlText != null
-              ? SingleChildScrollView(
-                  padding: const EdgeInsets.all(Dimensions.paddingSizeSmall),
-                  physics: const BouncingScrollPhysics(),
-                  child: Html(
-                    data: htmlController.htmlText ?? '',
-                    key: Key(widget.isPrivacyPolicy
-                        ? 'privacy_policy'
-                        : 'terms_condition'),
-                    onLinkTap: (url, attributes, element) {
-                      if (url!.startsWith('www.')) {
-                        url = 'https://$url';
-                      }
-                      launchUrlString(url,
-                          mode: LaunchMode.externalApplication);
-                    },
-                  ),
-                )
+              ? _buildHtmlOrWebView(htmlController.htmlText ?? '')
               : const Center(child: CircularProgressIndicator()),
         );
       }),
+    );
+  }
+
+  Widget _buildHtmlOrWebView(String html) {
+    final bool looksLikeFullDoc = html.contains('<html') &&
+        html.contains('<body') &&
+        html.contains('id="root"');
+
+    if (looksLikeFullDoc) {
+      final String url = AppConstants.baseUrl +
+          (widget.isPrivacyPolicy
+              ? AppConstants.privacyPolicyUri
+              : AppConstants.tramsAndConditionUri);
+      return InAppWebView(
+        initialUrlRequest: URLRequest(url: WebUri(url)),
+      );
+    }
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(Dimensions.paddingSizeSmall),
+      physics: const BouncingScrollPhysics(),
+      child: Html(
+        data: html,
+        key: Key(
+            widget.isPrivacyPolicy ? 'privacy_policy' : 'terms_condition'),
+        onLinkTap: (url, attributes, element) {
+          if (url == null) return;
+          String safeUrl = url;
+          if (safeUrl.startsWith('www.')) {
+            safeUrl = 'https://$safeUrl';
+          }
+          launchUrlString(safeUrl, mode: LaunchMode.externalApplication);
+        },
+      ),
     );
   }
 }

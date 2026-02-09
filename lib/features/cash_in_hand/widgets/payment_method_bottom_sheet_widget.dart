@@ -6,6 +6,7 @@ import 'package:shellafood_delivery/features/cash_in_hand/controllers/cash_in_ha
 import 'package:shellafood_delivery/util/dimensions.dart';
 import 'package:shellafood_delivery/util/styles.dart';
 import 'package:shellafood_delivery/common/widgets/custom_button_widget.dart';
+import 'package:shellafood_delivery/common/widgets/custom_snackbar_widget.dart';
 import 'package:shellafood_delivery/common/widgets/custom_image_widget.dart';
 
 class PaymentMethodBottomSheetWidget extends StatefulWidget {
@@ -18,6 +19,24 @@ class PaymentMethodBottomSheetWidget extends StatefulWidget {
 
 class _PaymentMethodBottomSheetWidgetState
     extends State<PaymentMethodBottomSheetWidget> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final methods = Get.find<SplashController>()
+          .configModel
+          ?.activePaymentMethodList;
+      debugPrint(
+          '\x1B[34m[PAYMENT_METHODS] count=${methods?.length ?? 0}\x1B[0m');
+      final cash = Get.find<CashInHandController>();
+      if ((methods != null && methods.isNotEmpty) &&
+          cash.digitalPaymentName == null) {
+        cash.setPaymentIndex(1);
+        cash.changeDigitalPaymentName(methods.first.getWay);
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -72,17 +91,18 @@ class _PaymentMethodBottomSheetWidgetState
               physics: const BouncingScrollPhysics(),
               child: ListView.builder(
                 itemCount: Get.find<SplashController>()
-                    .configModel!
-                    .activePaymentMethodList!
-                    .length,
+                        .configModel
+                        ?.activePaymentMethodList
+                        ?.length ??
+                    0,
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemBuilder: (context, index) {
                   bool isSelected = cashInHandController.paymentIndex == 1 &&
                       Get.find<SplashController>()
-                              .configModel!
-                              .activePaymentMethodList![index]
-                              .getWay! ==
+                              .configModel
+                              ?.activePaymentMethodList?[index]
+                              .getWay ==
                           cashInHandController.digitalPaymentName;
 
                   return InkWell(
@@ -90,9 +110,9 @@ class _PaymentMethodBottomSheetWidgetState
                       cashInHandController.setPaymentIndex(1);
                       cashInHandController.changeDigitalPaymentName(
                           Get.find<SplashController>()
-                              .configModel!
-                              .activePaymentMethodList![index]
-                              .getWay!);
+                              .configModel
+                              ?.activePaymentMethodList?[index]
+                              .getWay);
                     },
                     child: Container(
                       margin: const EdgeInsets.only(
@@ -127,9 +147,10 @@ class _PaymentMethodBottomSheetWidgetState
                         const SizedBox(width: Dimensions.paddingSizeDefault),
                         Text(
                           Get.find<SplashController>()
-                              .configModel!
-                              .activePaymentMethodList![index]
-                              .getWayTitle!,
+                              .configModel
+                              ?.activePaymentMethodList?[index]
+                              .getWayTitle ??
+                              '',
                           style: robotoMedium.copyWith(
                               fontSize: Dimensions.fontSizeDefault),
                         ),
@@ -138,7 +159,7 @@ class _PaymentMethodBottomSheetWidgetState
                           height: 20,
                           fit: BoxFit.contain,
                           image:
-                              '${Get.find<SplashController>().configModel!.activePaymentMethodList![index].getWayImageFullUrl}',
+                              '${Get.find<SplashController>().configModel?.activePaymentMethodList?[index].getWayImageFullUrl ?? ''}',
                         ),
                       ]),
                     ),
@@ -147,6 +168,24 @@ class _PaymentMethodBottomSheetWidgetState
               ),
             ),
           ),
+          if ((Get.find<SplashController>()
+                      .configModel
+                      ?.activePaymentMethodList
+                      ?.isEmpty ??
+                  true))
+            Padding(
+              padding: const EdgeInsets.only(
+                  top: Dimensions.paddingSizeDefault,
+                  bottom: Dimensions.paddingSizeSmall),
+              child: Text(
+                'no_payment_method_available'.tr,
+                style: robotoRegular.copyWith(
+                  fontSize: Dimensions.fontSizeSmall,
+                  color: Theme.of(context).hintColor,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(
@@ -154,12 +193,26 @@ class _PaymentMethodBottomSheetWidgetState
               child: CustomButtonWidget(
                   radius: Dimensions.radiusDefault,
                   buttonText: 'select'.tr,
-                  onPressed: () {
-                    double amount = Get.find<ProfileController>()
-                        .profileModel!
-                        .payableBalance!;
-                    cashInHandController.makeCollectCashPayment(
-                        amount, cashInHandController.digitalPaymentName!);
+                  onPressed: () async {
+                    final double amount = Get.find<ProfileController>()
+                            .profileModel
+                            ?.payableBalance ??
+                        0;
+                    if (cashInHandController.digitalPaymentName != null) {
+                      final response =
+                          await cashInHandController.makeCollectCashPayment(
+                              amount,
+                              cashInHandController.digitalPaymentName!);
+                      if (response.isSuccess) {
+                        Get.back();
+                        showCustomSnackBar(response.message, isError: false);
+                      } else {
+                        showCustomSnackBar(response.message, isError: true);
+                      }
+                    } else {
+                      showCustomSnackBar('select_payment_method'.tr,
+                          isError: true);
+                    }
                   }),
             ),
           ),

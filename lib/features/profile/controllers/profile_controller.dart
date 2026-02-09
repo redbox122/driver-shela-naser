@@ -37,6 +37,7 @@ class ProfileController extends GetxController implements GetxService {
   bool _hasShownLocationDialog = false;
   bool _isCheckingLocationPermission = false;
   LocationPermission? _lastKnownPermission;
+  bool _hasRecordedFallbackLocation = false;
 
   Future<void> getProfile() async {
     try {
@@ -148,14 +149,21 @@ class ProfileController extends GetxController implements GetxService {
       // Check if we need to show the dialog
       bool shouldShowDialog = _shouldShowLocationDialog(permission);
 
+      final bool isGranted = permission == LocationPermission.whileInUse ||
+          permission == LocationPermission.always;
+
       if (shouldShowDialog) {
         debugPrint('Showing location permission dialog');
         _hasShownLocationDialog = true;
         await _showLocationPermissionDialog();
-      } else {
-        debugPrint(
-            'Permission granted or dialog already shown, starting location recording');
+        await _recordFallbackLocationIfNeeded(permission);
+      } else if (isGranted) {
+        debugPrint('Permission granted, starting location recording');
         startLocationRecord();
+      } else {
+        debugPrint('Permission not granted, stopping location recording');
+        stopLocationRecord();
+        await _recordFallbackLocationIfNeeded(permission);
       }
     } catch (e) {
       debugPrint('Error in location permission check: $e');
@@ -289,23 +297,45 @@ class ProfileController extends GetxController implements GetxService {
       debugPrint('Error recording location: $e');
 
       // Use fallback location if GPS fails
-      _recordLocation = RecordLocationBodyModel(
-        location: 'Location unavailable',
-        latitude: 24.700531572620886,
-        longitude: 46.7287762170735,
-      );
+      await _recordFallbackLocationIfNeeded(null);
+    }
+  }
 
-      try {
-        if (Get.find<SplashController>().configModel!.webSocketStatus!) {
-          await profileServiceInterface
-              .recordWebSocketLocation(_recordLocation!);
-        } else {
-          await profileServiceInterface.recordLocation(_recordLocation!);
-        }
-        debugPrint('Fallback location recorded');
-      } catch (fallbackError) {
-        debugPrint('Error recording fallback location: $fallbackError');
+  Future<void> _recordFallbackLocationIfNeeded(
+      LocationPermission? permission) async {
+    if (_hasRecordedFallbackLocation) {
+      return;
+    }
+
+    if (permission != null &&
+        permission != LocationPermission.denied &&
+        permission != LocationPermission.deniedForever) {
+      return;
+    }
+
+    final defaultLocation =
+        Get.find<SplashController>().configModel?.defaultLocation;
+    final double fallbackLat =
+        double.tryParse(defaultLocation?.lat ?? '') ?? 24.700531572620886;
+    final double fallbackLng =
+        double.tryParse(defaultLocation?.lng ?? '') ?? 46.7287762170735;
+
+    _recordLocation = RecordLocationBodyModel(
+      location: 'Location unavailable',
+      latitude: fallbackLat,
+      longitude: fallbackLng,
+    );
+
+    try {
+      if (Get.find<SplashController>().configModel!.webSocketStatus!) {
+        await profileServiceInterface.recordWebSocketLocation(_recordLocation!);
+      } else {
+        await profileServiceInterface.recordLocation(_recordLocation!);
       }
+      _hasRecordedFallbackLocation = true;
+      debugPrint('Fallback location recorded');
+    } catch (fallbackError) {
+      debugPrint('Error recording fallback location: $fallbackError');
     }
   }
 }

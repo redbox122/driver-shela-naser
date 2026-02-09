@@ -235,6 +235,10 @@ class OrderModel {
           jsonDecode(json['order_attachment_full_url']).forEach((v) {
             orderAttachmentFullUrl!.add(v);
           });
+        } else if (json['order_attachment_full_url'] is Map) {
+          json['order_attachment_full_url'].values.forEach((v) {
+            orderAttachmentFullUrl!.add(v);
+          });
         } else {
           json['order_attachment_full_url'].forEach((v) {
             orderAttachmentFullUrl!.add(v);
@@ -269,6 +273,10 @@ class OrderModel {
           jsonDecode(json['order_proof_full_url']).forEach((v) {
             orderProofFullUrl!.add(v);
           });
+        } else if (json['order_proof_full_url'] is Map) {
+          json['order_proof_full_url'].values.forEach((v) {
+            orderProofFullUrl!.add(v);
+          });
         } else {
           json['order_proof_full_url'].forEach((v) {
             orderProofFullUrl!.add(v);
@@ -283,9 +291,15 @@ class OrderModel {
     }
     if (json['payments'] != null) {
       payments = <Payments>[];
-      json['payments'].forEach((v) {
-        payments!.add(Payments.fromJson(v));
-      });
+      if (json['payments'] is Map) {
+        json['payments'].values.forEach((v) {
+          payments!.add(Payments.fromJson(v));
+        });
+      } else {
+        json['payments'].forEach((v) {
+          payments!.add(Payments.fromJson(v));
+        });
+      }
     }
     storeDiscountAmount = json['store_discount_amount']?.toDouble();
     taxStatus = json['tax_status'] == 'included' ? true : false;
@@ -305,6 +319,7 @@ class OrderModel {
     print('🔧 OrderModel.fromJson DEBUG:');
     print('   Raw json[otp]: ${json['otp']}');
     print('   Raw json[otp_store]: ${json['otp_store']}');
+    print('   Order ID: ${json['id']} - CreatedAt: ${json['created_at']} - ServerTime: ${json['server_time']}');
 
     // ✅ FIX: Correct the backwards parsing based on backend team findings
     otp = json['otp']; // Customer OTP (for delivery)

@@ -400,6 +400,11 @@
   "upload_failed": "فشل التحميل",
   "maximum_5_photos_allowed": "الحد الأقصى 5 صور",
   "unexpected_error_occurred": "حدث خطأ غير متوقع",
+  "pickup_photos": "صور الاستلام",
+  "please_take_pickup_photo_first": "يرجى تصوير الطلب عند الاستلام",
+  "pickup_photo_instruction": "التقط صورة واضحة للمنتجات عند الاستلام من النقطة",
+  "please_take_delivery_photo_first": "من فضلك التقط صورة التسليم أولاً",
+  "delivery_requires_photo_proof": "التسليم يتطلب صورة كدليل توثيق",
   "this_order_is_not_in_your_delivery_zone": "هذا الطلب ليس في منطقتك التسليمية",
   "store_does_not_serve_your_zone": "هذا المتجر لا يخدم منطقتك",
   "order_not_from_your_assigned_store": "هذا الطلب ليس من متجرك المخصص",
@@ -444,5 +449,13 @@
   "messages.Proceed_for_cooking": "المتابعة للمعالجة",
   "messages.ready_for_delivery": "جاهز للتسليم",
   "messages.message": "رسالة",
-  "messages.message_description": "وصف الرسالة"
+  "messages.message_description": "وصف الرسالة",
+  "order_reminder_title": "????? ?????",
+  "order_reminder_body": "????? ?? ??? ??? ???????? ??? 5 ?????",
+  "secs_ago": "????? ???",
+  "hours_short": "?",
+  "mins_short": "?",
+  "ago": "???",
+  "hours_mins_ago": "??? @h ? @m ?",
+  "just_now": "????"
 }

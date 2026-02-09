@@ -20,13 +20,34 @@ class SplashController extends GetxController implements GetxService {
 
   Map<String, dynamic>? _data = {};
 
-  DateTime get currentTime => DateTime.now();
+  Duration _serverTimeOffset = Duration.zero;
+
+  DateTime get currentTime => DateTime.now().add(_serverTimeOffset);
+
+  void updateServerTime(DateTime serverTime) {
+    _serverTimeOffset = serverTime.difference(DateTime.now());
+  }
 
   Module getModuleConfig(String? moduleType) {
-    Module module = Module.fromJson(_data!['module_config'][moduleType]);
-    moduleType == 'food'
-        ? module.newVariation = true
-        : module.newVariation = false;
+    final Map<String, dynamic>? moduleConfig = _data?['module_config'];
+    dynamic rawModule;
+    if (moduleType != null &&
+        moduleConfig != null &&
+        moduleConfig.containsKey(moduleType)) {
+      rawModule = moduleConfig[moduleType];
+    } else {
+      rawModule = null;
+    }
+
+    if (rawModule is Map<String, dynamic>) {
+      Module module = Module.fromJson(rawModule);
+      module.newVariation = moduleType == 'food';
+      return module;
+    }
+
+    // Fallback to empty module when config missing to avoid crashes.
+    Module module = Module();
+    module.newVariation = moduleType == 'food';
     return module;
   }
 
@@ -44,8 +65,21 @@ class SplashController extends GetxController implements GetxService {
     return isSuccess;
   }
 
-  Module getModule(String? moduleType) =>
-      Module.fromJson(_data!['module_config'][moduleType]);
+  Module getModule(String? moduleType) {
+    final Map<String, dynamic>? moduleConfig = _data?['module_config'];
+    dynamic rawModule;
+    if (moduleType != null &&
+        moduleConfig != null &&
+        moduleConfig.containsKey(moduleType)) {
+      rawModule = moduleConfig[moduleType];
+    } else {
+      rawModule = null;
+    }
+    if (rawModule is Map<String, dynamic>) {
+      return Module.fromJson(rawModule);
+    }
+    return Module();
+  }
 
   Future<bool> initSharedData() {
     return splashServiceInterface.initSharedData();

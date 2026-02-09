@@ -21,8 +21,17 @@ class CustomImageWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final String safeImage = image.trim();
+    if (safeImage.isEmpty || safeImage == 'null' || !safeImage.startsWith('http')) {
+      return Image.asset(
+        isNotification ? Images.notificationPlaceholder : Images.placeholder,
+        height: height,
+        width: width,
+        fit: fit,
+      );
+    }
     return CachedNetworkImage(
-      imageUrl: image,
+      imageUrl: safeImage,
       height: height,
       width: width,
       fit: fit,
@@ -31,8 +40,11 @@ class CustomImageWidget extends StatelessWidget {
           height: height,
           width: width,
           fit: fit),
-      errorWidget: (context, url, error) => VideoApp(
-        videoPath: image,
+      errorWidget: (context, url, error) => Image.asset(
+        isNotification ? Images.notificationPlaceholder : Images.placeholder,
+        height: height,
+        width: width,
+        fit: fit,
       ),
     );
   }

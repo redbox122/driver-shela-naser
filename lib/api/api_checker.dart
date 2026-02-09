@@ -11,7 +11,12 @@ class ApiChecker {
       Get.find<ProfileController>().stopLocationRecord();
       Get.offAllNamed(RouteHelper.getSignInRoute());
     } else {
-      showCustomSnackBar(response.statusText);
+      final message = response.statusText ?? 'request_failed'.tr;
+      if (Get.context != null) {
+        showCustomSnackBar(message);
+      } else {
+        Get.rawSnackbar(message: message);
+      }
     }
   }
 }

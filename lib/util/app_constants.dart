@@ -5,7 +5,7 @@ class AppConstants {
   static const String appName = 'منفذي الخدمات';
   static const double appVersion = 2.8; // web version: 2.8
 
-  static const String baseUrl = 'https://shellafood.com';
+  static const String baseUrl = 'https://dev.shelafood.com';
 
   static const String configUri = '/api/v1/config';
   static const String forgetPasswordUri =
@@ -30,6 +30,7 @@ class AppConstants {
   static const String orderDetailsUri =
       '/api/v1/delivery-man/order-details?token=';
   static const String acceptOrderUri = '/api/v1/delivery-man/accept-order';
+  static const String cancelOrderUri = '/api/v1/delivery-man/cancel-order';
   static const String activeStatusUri =
       '/api/v1/delivery-man/update-active-status';
   static const String updateProfileUri = '/api/v1/delivery-man/update-profile';

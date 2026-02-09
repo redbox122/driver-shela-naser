@@ -416,6 +416,11 @@
   "upload_failed": "Upload failed",
   "maximum_5_photos_allowed": "Maximum 5 photos allowed",
   "unexpected_error_occurred": "An unexpected error occurred",
+  "pickup_photos": "Pickup Photos",
+  "please_take_pickup_photo_first": "Please photograph the order at pickup",
+  "pickup_photo_instruction": "Take a clear photo of the items when picking up from the location",
+  "please_take_delivery_photo_first": "Please take a delivery photo first",
+  "delivery_requires_photo_proof": "Delivery requires photo proof to complete",
   "this_order_is_not_in_your_delivery_zone": "This order is not in your delivery zone",
   "store_does_not_serve_your_zone": "This store does not serve your zone",
   "order_not_from_your_assigned_store": "This order is not from your assigned store",
@@ -460,5 +465,13 @@
   "messages.Proceed_for_cooking": "Proceed for processing",
   "messages.ready_for_delivery": "Ready for delivery",
   "messages.message": "Message",
-  "messages.message_description": "Message Description"
+  "messages.message_description": "Message Description",
+  "order_reminder_title": "Order reminder",
+  "order_reminder_body": "Order still waiting after 5 minutes",
+  "secs_ago": "secs ago",
+  "hours_short": "h",
+  "mins_short": "m",
+  "ago": "ago",
+  "hours_mins_ago": "@h h @m m ago",
+  "just_now": "just now"
 }

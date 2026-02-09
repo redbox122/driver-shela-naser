@@ -8,6 +8,8 @@ import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:shellafood_delivery/features/order/controllers/order_controller.dart';
 import 'package:shellafood_delivery/features/order/domain/models/order_model.dart';
+import 'package:shellafood_delivery/features/address/controllers/address_controller.dart';
+import 'package:shellafood_delivery/features/address/domain/models/zone_model.dart';
 import 'package:shellafood_delivery/features/profile/controllers/profile_controller.dart';
 import 'package:shellafood_delivery/util/dimensions.dart';
 import 'package:shellafood_delivery/util/images.dart';
@@ -33,6 +35,13 @@ class OrderLocationScreen extends StatefulWidget {
 class _OrderLocationScreenState extends State<OrderLocationScreen> {
   GoogleMapController? _controller;
   final Set<Marker> _markers = HashSet<Marker>();
+  final Set<Polygon> _polygons = HashSet<Polygon>();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadZonePolygon();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,6 +64,7 @@ class _OrderLocationScreenState extends State<OrderLocationScreen> {
           minMaxZoomPreference: const MinMaxZoomPreference(0, 16),
           zoomControlsEnabled: false,
           markers: _markers,
+          polygons: _polygons,
           onMapCreated: (GoogleMapController controller) {
             _controller = controller;
             setMarker(widget.orderModel, parcel);
@@ -217,6 +227,51 @@ class _OrderLocationScreenState extends State<OrderLocationScreen> {
       }
     }
     setState(() {});
+  }
+
+  Future<void> _loadZonePolygon() async {
+    try {
+      final addressController = Get.find<AddressController>();
+      if (addressController.zoneList == null) {
+        await addressController.getZoneList();
+      }
+
+      final int? zoneId = widget.orderModel.deliveryAddress?.zoneId;
+
+      if (zoneId == null || addressController.zoneList == null) {
+        return;
+      }
+
+      ZoneModel? zone;
+      for (final zoneItem in addressController.zoneList!) {
+        if (zoneItem.id == zoneId) {
+          zone = zoneItem;
+          break;
+        }
+      }
+
+      final List<LatLng>? points = zone?.coordinates?.coordinates;
+      if (points == null || points.isEmpty) {
+        return;
+      }
+
+      _polygons.clear();
+      _polygons.add(Polygon(
+        polygonId: PolygonId('zone_$zoneId'),
+        points: points,
+        strokeColor: Colors.green,
+        strokeWidth: 2,
+        fillColor: Colors.green.withOpacity(0.2),
+      ));
+
+      if (mounted) {
+        setState(() {});
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error loading zone polygon: $e');
+      }
+    }
   }
 
   Future<Uint8List> convertAssetToUnit8List(String imagePath,

@@ -81,8 +81,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
             SizedBox(
                 height: (conversation0 != null &&
                         conversation0.conversations != null &&
-                        chatController
-                            .conversationModel!.conversations!.isNotEmpty)
+                        conversation0.conversations!.isNotEmpty)
                     ? Dimensions.paddingSizeSmall
                     : 0),
             Expanded(
@@ -130,6 +129,8 @@ class _ConversationScreenState extends State<ConversationScreen> {
                                             user = conversation.sender;
                                             type = conversation.senderType;
                                           }
+                                          final String typeLabel =
+                                              type != null ? type.tr : '';
 
                                           // String? baseUrl = '';
                                           // if(type == AppConstants.customer) {
@@ -190,7 +191,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
                                                               1));
                                                 } else {
                                                   showCustomSnackBar(
-                                                      '${'sorry_cannot_view_this_conversation'.tr} ${type!.tr} ${'may_have_been_removed_from'.tr} ${AppConstants.appName}');
+                                                      '${'sorry_cannot_view_this_conversation'.tr} $typeLabel ${'may_have_been_removed_from'.tr} ${AppConstants.appName}');
                                                 }
                                               },
                                               highlightColor: Theme.of(context)
@@ -231,14 +232,14 @@ class _ConversationScreenState extends State<ConversationScreen> {
                                                                   style:
                                                                       robotoMedium)
                                                               : Text(
-                                                                  '${type!.tr} ${'deleted'.tr}',
+                                                                  '$typeLabel ${'deleted'.tr}',
                                                                   style:
                                                                       robotoMedium),
                                                           const SizedBox(
                                                               height: Dimensions
                                                                   .paddingSizeExtraSmall),
                                                           Text(
-                                                            type!.tr,
+                                                            typeLabel,
                                                             style: robotoRegular.copyWith(
                                                                 fontSize: Dimensions
                                                                     .fontSizeSmall,
@@ -253,12 +254,15 @@ class _ConversationScreenState extends State<ConversationScreen> {
                                                   right: 5,
                                                   bottom: 5,
                                                   child: Text(
-                                                    DateConverterHelper
-                                                        .localDateToIsoStringAMPM(
-                                                            DateConverterHelper
-                                                                .dateTimeStringToDate(
-                                                                    conversation
-                                                                        .lastMessageTime!)),
+                                                    conversation.lastMessageTime !=
+                                                            null
+                                                        ? DateConverterHelper
+                                                            .localDateToIsoStringAMPM(
+                                                                DateConverterHelper
+                                                                    .dateTimeStringToDate(
+                                                                        conversation
+                                                                            .lastMessageTime!))
+                                                        : '',
                                                     style: robotoRegular.copyWith(
                                                         color: Theme.of(context)
                                                             .hintColor,
@@ -266,15 +270,16 @@ class _ConversationScreenState extends State<ConversationScreen> {
                                                             .fontSizeExtraSmall),
                                                   ),
                                                 ),
-                                                conversation.unreadMessageCount! >
+                                                (conversation.unreadMessageCount ??
+                                                            0) >
                                                         0
                                                     ? Positioned(
                                                         right: 5,
                                                         top: 5,
                                                         child: Container(
                                                             padding: EdgeInsets.all((conversation
-                                                                        .lastMessage!
-                                                                        .senderId ==
+                                                                        .lastMessage
+                                                                        ?.senderId ==
                                                                     user?.id)
                                                                 ? Dimensions
                                                                     .paddingSizeExtraSmall
@@ -297,8 +302,9 @@ class _ConversationScreenState extends State<ConversationScreen> {
                                                                           .unreadMessageCount
                                                                           .toString()
                                                                       : ''
-                                                                  : conversation
-                                                                      .unreadMessageCount
+                                                                  : (conversation
+                                                                              .unreadMessageCount ??
+                                                                          0)
                                                                       .toString(),
                                                               style: robotoMedium.copyWith(
                                                                   color: Theme.of(

@@ -169,11 +169,15 @@ class OrderItemWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final itemDetails = orderDetails.itemDetails;
+    if (itemDetails == null) {
+      return const SizedBox();
+    }
     List<Widget> variationChips = _buildVariationChips(context);
     List<Widget> addOnChips = _buildAddOnChips(context);
     bool hasVariations = variationChips.isNotEmpty;
     bool hasAddOns = addOnChips.isNotEmpty &&
-        Get.find<SplashController>().getModule(order.moduleType).addOn!;
+        Get.find<SplashController>().getModule(order.moduleType).addOn == true;
 
     return Container(
       margin: const EdgeInsets.only(bottom: Dimensions.paddingSizeSmall),
@@ -196,7 +200,7 @@ class OrderItemWidget extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                orderDetails.itemDetails!.imageFullUrl != null
+                itemDetails.imageFullUrl != null
                     ? ClipRRect(
                         borderRadius:
                             BorderRadius.circular(Dimensions.radiusDefault),
@@ -204,12 +208,12 @@ class OrderItemWidget extends StatelessWidget {
                           height: 80,
                           width: 80,
                           fit: BoxFit.cover,
-                          image: '${orderDetails.itemDetails!.imageFullUrl}',
+                          image: '${itemDetails.imageFullUrl}',
                         ),
                       )
                     : const SizedBox(),
                 SizedBox(
-                  width: orderDetails.itemDetails!.imageFullUrl != null
+                  width: itemDetails.imageFullUrl != null
                       ? Dimensions.paddingSizeSmall
                       : 0,
                 ),
@@ -221,7 +225,7 @@ class OrderItemWidget extends StatelessWidget {
                         children: [
                           Expanded(
                             child: Text(
-                              orderDetails.itemDetails!.name!,
+                              itemDetails.name ?? '',
                               style: robotoMedium.copyWith(
                                 fontSize: Dimensions.fontSizeDefault,
                               ),
@@ -229,7 +233,8 @@ class OrderItemWidget extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          _buildQuantityBadge(context, orderDetails.quantity!),
+                          _buildQuantityBadge(
+                              context, orderDetails.quantity ?? 0),
                         ],
                       ),
                       const SizedBox(
@@ -238,15 +243,15 @@ class OrderItemWidget extends StatelessWidget {
                         children: [
                           Text(
                             PriceConverterHelper.convertPrice(
-                                orderDetails.price! -
-                                    orderDetails.discountOnItem!),
+                                (orderDetails.price ?? 0) -
+                                    (orderDetails.discountOnItem ?? 0)),
                             style: robotoMedium.copyWith(
                               fontSize: Dimensions.fontSizeDefault,
                               color: Theme.of(context).primaryColor,
                             ),
                           ),
                           const SizedBox(width: 5),
-                          orderDetails.discountOnItem! > 0
+                          (orderDetails.discountOnItem ?? 0) > 0
                               ? Expanded(
                                   child: Text(
                                     PriceConverterHelper.convertPrice(
@@ -262,15 +267,18 @@ class OrderItemWidget extends StatelessWidget {
                               : const Expanded(child: SizedBox()),
                           ((Get.find<SplashController>()
                                       .getModule(order.moduleType)
-                                      .unit! &&
-                                  orderDetails.itemDetails!.unitType !=
+                                      .unit ==
+                                  true &&
+                                  itemDetails.unitType !=
                                       null) ||
                               (Get.find<SplashController>()
-                                      .configModel!
-                                      .toggleVegNonVeg! &&
+                                      .configModel
+                                      ?.toggleVegNonVeg ==
+                                  true &&
                                   Get.find<SplashController>()
-                                      .getModule(order.moduleType)
-                                      .vegNonVeg!))
+                                          .getModule(order.moduleType)
+                                          .vegNonVeg ==
+                                      true))
                               ? Container(
                                   padding: const EdgeInsets.symmetric(
                                     vertical:
@@ -287,10 +295,11 @@ class OrderItemWidget extends StatelessWidget {
                                   child: Text(
                                     Get.find<SplashController>()
                                             .getModule(order.moduleType)
-                                            .unit!
-                                        ? orderDetails.itemDetails!.unitType ??
+                                            .unit ==
+                                        true
+                                        ? itemDetails.unitType ??
                                             ''
-                                        : orderDetails.itemDetails!.veg == 0
+                                        : itemDetails.veg == 0
                                             ? 'non_veg'.tr
                                             : 'veg'.tr,
                                     style: robotoRegular.copyWith(

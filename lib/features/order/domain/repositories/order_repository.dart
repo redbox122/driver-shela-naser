@@ -71,8 +71,10 @@ class OrderRepository implements OrderRepositoryInterface {
         await apiClient.getData(AppConstants.latestOrdersUri + _getUserToken());
     if (response.statusCode == 200) {
       latestOrderList = [];
-      response.body
-          .forEach((order) => latestOrderList!.add(OrderModel.fromJson(order)));
+      final List<dynamic> orders = _extractOrderList(response.body);
+      for (final order in orders) {
+        latestOrderList.add(OrderModel.fromJson(order));
+      }
     }
     return latestOrderList;
   }
@@ -123,6 +125,31 @@ class OrderRepository implements OrderRepositoryInterface {
       responseModel = ResponseModel(false, errorMessage);
 
       // Store the full error response for detailed error handling
+      responseModel.errorResponse = response.body;
+    }
+    return responseModel;
+  }
+
+  @override
+  Future<ResponseModel> cancelOrder(int? orderID, {String? reason}) async {
+    ResponseModel responseModel;
+    final Map<String, dynamic> payload = {
+      "_method": "put",
+      'token': _getUserToken(),
+      'order_id': orderID,
+    };
+    if (reason != null && reason.isNotEmpty) {
+      payload['reason'] = reason;
+    }
+
+    Response response = await apiClient.postData(
+        AppConstants.cancelOrderUri, payload,
+        handleError: false);
+    if (response.statusCode == 200) {
+      responseModel = ResponseModel(true, response.body['message']);
+    } else {
+      String errorMessage = _extractErrorMessage(response);
+      responseModel = ResponseModel(false, errorMessage);
       responseModel.errorResponse = response.body;
     }
     return responseModel;
@@ -181,6 +208,16 @@ class OrderRepository implements OrderRepositoryInterface {
 
   String _getUserToken() {
     return sharedPreferences.getString(AppConstants.token) ?? "";
+  }
+
+  List<dynamic> _extractOrderList(dynamic body) {
+    if (body == null) return [];
+    if (body is List) return body;
+    if (body is Map<String, dynamic>) {
+      if (body['orders'] is List) return body['orders'] as List;
+      if (body['data'] is List) return body['data'] as List;
+    }
+    return [];
   }
 
   @override

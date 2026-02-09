@@ -19,6 +19,7 @@ abstract class OrderServiceInterface {
       List<MultipartBody> proofAttachment);
   Future<List<OrderDetailsModel>?> getOrderDetails(int? orderID);
   Future<ResponseModel> acceptOrder(int? orderID);
+  Future<ResponseModel> cancelOrder(int? orderID, {String? reason});
   List<IgnoreModel> getIgnoreList();
   void setIgnoreList(List<IgnoreModel> ignoreList);
   Future<bool> setPriceService(int orderId, double price);
