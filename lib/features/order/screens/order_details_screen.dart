@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:dotted_border/dotted_border.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:shellafood_delivery/features/notification/controllers/notification_controller.dart';
@@ -11,7 +10,6 @@ import 'package:shellafood_delivery/features/notification/domain/models/notifica
 import 'package:shellafood_delivery/features/chat/domain/models/conversation_model.dart';
 import 'package:shellafood_delivery/features/order/domain/models/order_details_model.dart';
 import 'package:shellafood_delivery/features/order/domain/models/order_model.dart';
-import 'package:shellafood_delivery/helper/price_converter_helper.dart';
 import 'package:shellafood_delivery/helper/responsive_helper.dart';
 import 'package:shellafood_delivery/helper/route_helper.dart';
 import 'package:shellafood_delivery/util/app_constants.dart';
@@ -32,6 +30,7 @@ import 'package:shellafood_delivery/features/order/widgets/info_card_widget.dart
 import 'package:shellafood_delivery/features/order/widgets/slider_button_widget.dart';
 import 'package:shellafood_delivery/features/order/screens/order_debug_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 
 class OrderDetailsScreen extends StatefulWidget {
@@ -55,6 +54,12 @@ class OrderDetailsScreen extends StatefulWidget {
 class _OrderDetailsScreenState extends State<OrderDetailsScreen>
     with WidgetsBindingObserver {
   Timer? _timer;
+
+  String _normalizeStatus(String? status) =>
+      (status ?? '').toLowerCase().trim();
+
+  bool _isStatus(String? status, String target) =>
+      _normalizeStatus(status) == _normalizeStatus(target);
 
   void _startApiCalling() {
     _timer?.cancel();
@@ -122,9 +127,12 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
     // Only show OTPs after they've been successfully verified
     // Store OTP: Show only after pickup is complete (status = 'picked_up')
     // Customer OTP: Show only after delivery is complete (status = 'delivered')
+    final status = _normalizeStatus(order.orderStatus);
     bool shouldShowStoreOtp =
-        order.orderStatus == 'picked_up' || order.orderStatus == 'delivered';
-    bool shouldShowCustomerOtp = order.orderStatus == 'delivered';
+        status == _normalizeStatus(AppConstants.pickedUp) ||
+            status == _normalizeStatus(AppConstants.delivered);
+    bool shouldShowCustomerOtp =
+        status == _normalizeStatus(AppConstants.delivered);
 
     // If no OTPs should be shown, return empty widget
     if (!shouldShowStoreOtp && !shouldShowCustomerOtp) {
@@ -169,66 +177,31 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
   }
 
   Widget _buildOrderProofUploadSection(OrderModel order) {
-    // ✅ PICKUP PHOTOS: Show for ANY order pickup as long as status is accepted/confirmed
-    // بدون قيد GPS - تظهر من جول ما يقبل الطلب
-    // كل طلب فيها استلام من نقطة تحتاج تصوير - مو متعلق بـ module type
+    // PICKUP PHOTOS: show for delivery orders assigned to this driver
     
     // Hide if already picked up
-    if (order.orderStatus == AppConstants.pickedUp) {
+    if (_isStatus(order.orderStatus, AppConstants.pickedUp)) {
       return const SizedBox.shrink();
     }
 
-    // Show only for accepted, confirmed, or handover status
-    if (![AppConstants.accepted, AppConstants.confirmed, AppConstants.handover]
-        .contains(order.orderStatus)) {
-      return const SizedBox.shrink();
-    }
+    assert(() {
+      debugPrint('ORDER STATUS RAW = ${order.orderStatus}');
+      debugPrint(
+          'ORDER STATUS NORMALIZED = ${_normalizeStatus(order.orderStatus)}');
+      return true;
+    }());
 
     return GetBuilder<OrderController>(builder: (orderController) {
+      final shouldShowPhotos =
+          orderController.canShowPickupPhotos(order);
+      if (!shouldShowPhotos) {
+        return const SizedBox.shrink();
+      }
       final hasUploadedPhotos = order.orderProofFullUrl != null &&
           order.orderProofFullUrl!.isNotEmpty;
       final hasSelectedPhotos = orderController.pickedOrderProofImages.isNotEmpty;
       
-      // Show helper message if no photos uploaded yet
-      if (!hasUploadedPhotos && !hasSelectedPhotos) {
-        return Container(
-          margin: const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeDefault),
-          padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
-          decoration: BoxDecoration(
-            color: Colors.blue[50],
-            border: Border.all(color: Colors.blue[300]!, width: 1),
-            borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-          ),
-          child: Row(
-            children: [
-              Icon(Icons.camera_alt_rounded, color: Colors.blue[600], size: 28),
-              const SizedBox(width: Dimensions.paddingSizeDefault),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'please_take_pickup_photo_first'.tr,
-                      style: robotoBold.copyWith(
-                        color: Colors.blue[700],
-                        fontSize: Dimensions.fontSizeMedium,
-                      ),
-                    ),
-                    const SizedBox(height: Dimensions.paddingSizeExtraSmall),
-                    Text(
-                      'pickup_photo_instruction'.tr,
-                      style: robotoRegular.copyWith(
-                        color: Colors.blue[600],
-                        fontSize: Dimensions.fontSizeSmall,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      }
+      final showHelper = !hasUploadedPhotos && !hasSelectedPhotos;
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeDefault),
@@ -241,6 +214,46 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (showHelper)
+            Container(
+              margin:
+                  const EdgeInsets.only(bottom: Dimensions.paddingSizeSmall),
+              padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
+              decoration: BoxDecoration(
+                color: Colors.blue[50],
+                border: Border.all(color: Colors.blue[300]!, width: 1),
+                borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.camera_alt_rounded,
+                      color: Colors.blue[600], size: 28),
+                  const SizedBox(width: Dimensions.paddingSizeDefault),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'please_take_pickup_photo_first'.tr,
+                          style: robotoBold.copyWith(
+                            color: Colors.blue[700],
+                            fontSize: Dimensions.fontSizeDefault,
+                          ),
+                        ),
+                        const SizedBox(height: Dimensions.paddingSizeExtraSmall),
+                        Text(
+                          'pickup_photo_instruction'.tr,
+                          style: robotoRegular.copyWith(
+                            color: Colors.blue[600],
+                            fontSize: Dimensions.fontSizeSmall,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
           Row(
             children: [
               Icon(Icons.camera_alt_rounded,
@@ -357,44 +370,54 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
           Row(
             children: [
               Expanded(
-                child: InkWell(
-                  onTap: () {
-                    Get.bottomSheet(
-                      CameraButtonSheetWidget(
-                        isOrderProof: true,
-                        onCameraTap: () {
-                          orderController.pickOrderProofImages(
-                              isRemove: false, isCamera: true);
-                          Get.back();
-                        },
-                        onGalleryTap: () {
-                          orderController.pickOrderProofImages(
-                              isRemove: false, isCamera: false);
-                          Get.back();
-                        },
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () {
+                      assert(() {
+                        debugPrint('PICKUP PHOTO BUTTON TAP');
+                        return true;
+                      }());
+                      Get.bottomSheet(
+                        CameraButtonSheetWidget(
+                          isOrderProof: true,
+                          onCameraTap: () {
+                            orderController.pickOrderProofImages(
+                                isRemove: false, isCamera: true);
+                            Get.back();
+                          },
+                          onGalleryTap: () {
+                            orderController.pickOrderProofImages(
+                                isRemove: false, isCamera: false);
+                            Get.back();
+                          },
+                        ),
+                        backgroundColor: Colors.transparent,
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          vertical: Dimensions.paddingSizeDefault),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context)
+                            .primaryColor
+                            .withValues(alpha: 0.1),
+                        borderRadius:
+                            BorderRadius.circular(Dimensions.radiusDefault),
+                        border: Border.all(
+                            color: Theme.of(context).primaryColor, width: 1),
                       ),
-                      backgroundColor: Colors.transparent,
-                    );
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        vertical: Dimensions.paddingSizeDefault),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).primaryColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-                      border: Border.all(
-                          color: Theme.of(context).primaryColor, width: 1),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.add_photo_alternate,
-                            color: Theme.of(context).primaryColor),
-                        const SizedBox(width: Dimensions.paddingSizeSmall),
-                        Text('select_photos'.tr,
-                            style: robotoMedium.copyWith(
-                                color: Theme.of(context).primaryColor)),
-                      ],
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.add_photo_alternate,
+                              color: Theme.of(context).primaryColor),
+                          const SizedBox(width: Dimensions.paddingSizeSmall),
+                          Text('select_photos'.tr,
+                              style: robotoMedium.copyWith(
+                                  color: Theme.of(context).primaryColor)),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -420,7 +443,6 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
               ],
             ],
           ),
-          
           if (hasSelectedPhotos)
             Padding(
               padding: const EdgeInsets.only(top: Dimensions.paddingSizeSmall),
@@ -568,7 +590,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
         Container(
           padding: const EdgeInsets.all(Dimensions.paddingSizeSmall),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
           ),
           child: Icon(icon, color: color, size: 28),
@@ -613,7 +635,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
 
     return PopScope(
       canPop: true,
-      onPopInvoked: (didPop) async {
+      onPopInvokedWithResult: (didPop, result) async {
         if ((widget.fromNotification || widget.fromLocationScreen)) {
           Future.delayed(const Duration(milliseconds: 0), () async {
             await Get.offAllNamed(RouteHelper.getInitialRoute());
@@ -657,54 +679,11 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
 
               late bool showBottomView;
               late bool showSlider;
-              bool showDeliveryConfirmImage = false;
               bool isUnassignedOrder = false;
 
-              double? deliveryCharge = 0;
-              double itemsPrice = 0;
-              double? discount = 0;
-              double? couponDiscount = 0;
-              double? tax = 0;
-              double addOns = 0;
-              double? dmTips = 0;
-              double additionalCharge = 0;
-              double extraPackagingAmount = 0;
-              double referrerBonusAmount = 0;
-              bool? isPrescriptionOrder = false;
-              bool? taxIncluded = false;
               bool showChatPermission = true;
               OrderModel? order = controllerOrderModel;
               if (order != null && orderController.orderDetailsModel != null) {
-                deliveryCharge = order.deliveryCharge;
-                dmTips = order.dmTips;
-                isPrescriptionOrder = order.prescriptionOrder;
-                discount = order.storeDiscountAmount! +
-                    order.flashAdminDiscountAmount! +
-                    order.flashStoreDiscountAmount!;
-                tax = order.totalTaxAmount;
-                taxIncluded = order.taxStatus;
-                additionalCharge = order.additionalCharge!;
-                extraPackagingAmount = order.extraPackagingAmount!;
-                referrerBonusAmount = order.referrerBonusAmount!;
-                couponDiscount = order.couponDiscountAmount;
-                if (isPrescriptionOrder!) {
-                  double orderAmount = order.orderAmount ?? 0;
-                  itemsPrice = (orderAmount + discount) -
-                      ((taxIncluded! ? 0 : tax!) +
-                          deliveryCharge! +
-                          additionalCharge) -
-                      dmTips!;
-                } else {
-                  for (OrderDetailsModel orderDetails
-                      in orderController.orderDetailsModel!) {
-                    for (AddOn addOn in orderDetails.addOns!) {
-                      addOns = addOns + (addOn.price! * addOn.quantity!);
-                    }
-                    itemsPrice = itemsPrice +
-                        (orderDetails.price! * orderDetails.quantity!);
-                  }
-                }
-
                 if (order.storeBusinessModel == 'commission') {
                   showChatPermission = true;
                 } else if (order.storeBusinessModel == 'subscription') {
@@ -713,30 +692,21 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                   showChatPermission = true;
                 }
               }
-              double subTotal = itemsPrice + addOns;
-              double total = itemsPrice +
-                  addOns -
-                  discount +
-                  (taxIncluded! ? 0 : tax!) +
-                  deliveryCharge! -
-                  couponDiscount! +
-                  dmTips! +
-                  additionalCharge +
-                  extraPackagingAmount -
-                  referrerBonusAmount;
 
               if (controllerOrderModel != null) {
                 parcel = controllerOrderModel.orderType == 'parcel';
+                final status =
+                    _normalizeStatus(controllerOrderModel.orderStatus);
                 processing =
-                    controllerOrderModel.orderStatus == AppConstants.processing;
+                    status == _normalizeStatus(AppConstants.processing);
                 accepted =
-                    controllerOrderModel.orderStatus == AppConstants.accepted;
+                    status == _normalizeStatus(AppConstants.accepted);
                 confirmed =
-                    controllerOrderModel.orderStatus == AppConstants.confirmed;
+                    status == _normalizeStatus(AppConstants.confirmed);
                 handover =
-                    controllerOrderModel.orderStatus == AppConstants.handover;
+                    status == _normalizeStatus(AppConstants.handover);
                 pickedUp =
-                    controllerOrderModel.orderStatus == AppConstants.pickedUp;
+                    status == _normalizeStatus(AppConstants.pickedUp);
                 cod = controllerOrderModel.paymentMethod == 'cash_on_delivery';
                 wallet = controllerOrderModel.paymentMethod == 'wallet';
                 partialPay =
@@ -744,10 +714,6 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                 offlinePay =
                     controllerOrderModel.paymentMethod == 'offline_payment';
 
-                showDeliveryConfirmImage = pickedUp &&
-                    Get.find<SplashController>()
-                        .configModel!
-                        .dmPictureUploadStatus!;
                 bool restConfModel = Get.find<SplashController>()
                         .configModel!
                         .orderConfirmationModel !=
@@ -764,9 +730,8 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                     pickedUp ||
                     isUnassignedOrder ||
                     (widget.isRunningOrder ?? true);
-                // For modules 6/7/8/9: Show slider when confirmed AND photos uploaded
-                bool modules6789ReadyForPickup = confirmed &&
-                    [6, 7, 8, 9].contains(controllerOrderModel.module_id) &&
+                // Show slider when confirmed AND photos uploaded (any delivery order)
+                bool readyForPickupWithPhotos = confirmed &&
                     controllerOrderModel.orderProofFullUrl != null &&
                     controllerOrderModel.orderProofFullUrl!.isNotEmpty;
                 showSlider =
@@ -774,7 +739,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                         handover ||
                         pickedUp ||
                         (parcel && accepted) ||
-                        modules6789ReadyForPickup;
+                        readyForPickupWithPhotos;
               }
 
               return (orderController.orderDetailsModel != null &&
@@ -784,9 +749,10 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                           child: SingleChildScrollView(
                         physics: const BouncingScrollPhysics(),
                         child: Column(children: [
-                          // 🔍 DEBUG WIDGET - Remove in production
-                          if (controllerOrderModel != null)
-                            OrderDebugWidget(order: controllerOrderModel),
+                          // 🔍 DEBUG WIDGET - Debug only
+                          kDebugMode
+                              ? OrderDebugWidget(order: controllerOrderModel)
+                              : const SizedBox.shrink(),
                           
                           Row(children: [
                             Text(
@@ -834,7 +800,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                               decoration: BoxDecoration(
                                   color: Theme.of(context)
                                       .primaryColor
-                                      .withOpacity(0.1),
+                                      .withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(5)),
                               child: Text(
                                 cod!
@@ -953,12 +919,15 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                 ? controllerOrderModel
                                     .deliveryAddress!.longitude
                                 : controllerOrderModel.storeLng,
-                            showButton: (controllerOrderModel.orderStatus !=
-                                    'delivered' &&
-                                controllerOrderModel.orderStatus != 'failed' &&
-                                controllerOrderModel.orderStatus !=
-                                    'canceled' &&
-                                controllerOrderModel.orderStatus != 'refunded'),
+                            showButton: (!_isStatus(
+                                    controllerOrderModel.orderStatus,
+                                    AppConstants.delivered) &&
+                                !_isStatus(controllerOrderModel.orderStatus,
+                                    AppConstants.failed) &&
+                                !_isStatus(controllerOrderModel.orderStatus,
+                                    AppConstants.canceled) &&
+                                !_isStatus(controllerOrderModel.orderStatus,
+                                    AppConstants.refunded)),
                             isStore: true,
                             isChatAllow: showChatPermission,
                             messageOnTap: () =>
@@ -1009,12 +978,15 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                     .receiverDetails!.longitude
                                 : controllerOrderModel
                                     .deliveryAddress!.longitude,
-                            showButton: controllerOrderModel.orderStatus !=
-                                    'delivered' &&
-                                controllerOrderModel.orderStatus != 'failed' &&
-                                controllerOrderModel.orderStatus !=
-                                    'canceled' &&
-                                controllerOrderModel.orderStatus != 'refunded',
+                            showButton: !_isStatus(
+                                    controllerOrderModel.orderStatus,
+                                    AppConstants.delivered) &&
+                                !_isStatus(controllerOrderModel.orderStatus,
+                                    AppConstants.failed) &&
+                                !_isStatus(controllerOrderModel.orderStatus,
+                                    AppConstants.canceled) &&
+                                !_isStatus(controllerOrderModel.orderStatus,
+                                    AppConstants.refunded),
                             isStore: parcel ? false : true,
                             isChatAllow: showChatPermission,
                             messageOnTap: () =>
@@ -1136,7 +1108,8 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                     return OrderItemWidget(
                                         order: controllerOrderModel,
                                         orderDetails: orderController
-                                            .orderDetailsModel![index]);
+                                            .orderDetailsModel![index],
+                                        showPrice: false);
                                   },
                                 ),
                           Column(
@@ -1212,7 +1185,8 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                               ]),
                           // Order Proof Upload Section (Modules 6/7/8/9 when status is confirmed)
                           _buildOrderProofUploadSection(controllerOrderModel),
-                          (controllerOrderModel.orderStatus == 'delivered' &&
+                          (_isStatus(controllerOrderModel.orderStatus,
+                                  AppConstants.delivered) &&
                                   controllerOrderModel.orderProofFullUrl !=
                                       null &&
                                   controllerOrderModel
@@ -1276,307 +1250,20 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                               : const SizedBox(),
                           const SizedBox(
                               height: Dimensions.paddingSizeExtraLarge),
-                          !parcel
-                              ? Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                      Text('item_price'.tr,
-                                          style: robotoRegular),
-                                      Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Text(
-                                                PriceConverterHelper
-                                                    .convertPrice(itemsPrice),
-                                                style: robotoRegular),
-                                          ]),
-                                    ])
-                              : const SizedBox(),
-                          SizedBox(height: !parcel ? 10 : 0),
-                          Get.find<SplashController>()
-                                  .getModuleConfig(order.moduleType)
-                                  .addOn ==
-                              true
-                              ? Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text('addons'.tr, style: robotoRegular),
-                                    Text(
-                                        '(+) ${PriceConverterHelper.convertPrice(addOns)}',
-                                        style: robotoRegular),
-                                  ],
-                                )
-                              : const SizedBox(),
-                          Get.find<SplashController>()
-                                  .getModuleConfig(order.moduleType)
-                                  .addOn ==
-                              true
-                              ? Divider(
-                                  thickness: 1,
-                                  color: Theme.of(context)
-                                      .hintColor
-                                      .withOpacity(0.5),
-                                )
-                              : const SizedBox(),
-                          Get.find<SplashController>()
-                                  .getModuleConfig(order.moduleType)
-                                  .addOn ==
-                              true
-                              ? Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                        '${'subtotal'.tr} ${taxIncluded ? '(${'tax_included'.tr})' : ''}',
-                                        style: robotoMedium),
-                                    Text(
-                                        PriceConverterHelper.convertPrice(
-                                            subTotal),
-                                        style: robotoMedium),
-                                  ],
-                                )
-                              : const SizedBox(),
-                          SizedBox(
-                              height: Get.find<SplashController>()
-                                      .getModuleConfig(order.moduleType)
-                                      .addOn ==
-                                  true
-                                  ? 10
-                                  : 0),
-                          !parcel
-                              ? Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                      Text('discount'.tr, style: robotoRegular),
-                                      Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Text(
-                                                '(-) ${PriceConverterHelper.convertPrice(discount)}',
-                                                style: robotoRegular),
-                                          ]),
-                                    ])
-                              : const SizedBox(),
-                          SizedBox(height: !parcel ? 10 : 0),
-                          couponDiscount > 0
-                              ? Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                      Text('coupon_discount'.tr,
-                                          style: robotoRegular),
-                                      Text(
-                                        '(-) ${PriceConverterHelper.convertPrice(couponDiscount)}',
-                                        style: robotoRegular,
-                                      ),
-                                    ])
-                              : const SizedBox(),
-                          SizedBox(height: couponDiscount > 0 ? 10 : 0),
-                          (referrerBonusAmount > 0)
-                              ? Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text('referral_discount'.tr,
-                                        style: robotoRegular),
-                                    Text(
-                                        '(-) ${PriceConverterHelper.convertPrice(referrerBonusAmount)}',
-                                        style: robotoRegular),
-                                  ],
-                                )
-                              : const SizedBox(),
-                          SizedBox(height: referrerBonusAmount > 0 ? 10 : 0),
-                          !taxIncluded && !parcel
-                              ? Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                      Text('vat_tax'.tr, style: robotoRegular),
-                                      Text(
-                                          '(+) ${PriceConverterHelper.convertPrice(tax)}',
-                                          style: robotoRegular),
-                                    ])
-                              : const SizedBox(),
-                          SizedBox(height: taxIncluded ? 0 : 10),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text('delivery_man_tips'.tr,
-                                  style: robotoRegular),
-                              Text(
-                                  '(+) ${PriceConverterHelper.convertPrice(dmTips)}',
-                                  style: robotoRegular),
-                            ],
-                          ),
-                          const SizedBox(height: 10),
-                          (extraPackagingAmount > 0)
-                              ? Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text('extra_packaging'.tr,
-                                        style: robotoRegular),
-                                    Text(
-                                        '(+) ${PriceConverterHelper.convertPrice(extraPackagingAmount)}',
-                                        style: robotoRegular),
-                                  ],
-                                )
-                              : const SizedBox(),
-                          SizedBox(height: extraPackagingAmount > 0 ? 10 : 0),
-                          (order.additionalCharge != null &&
-                                  order.additionalCharge! > 0)
-                              ? Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                      Text(
-                                          Get.find<SplashController>()
-                                              .configModel!
-                                              .additionalChargeName!,
-                                          style: robotoRegular),
-                                      Text(
-                                          '(+) ${PriceConverterHelper.convertPrice(order.additionalCharge)}',
-                                          style: robotoRegular,
-                                          textDirection: TextDirection.ltr),
-                                    ])
-                              : const SizedBox(),
-                          (order.additionalCharge != null &&
-                                  order.additionalCharge! > 0)
-                              ? const SizedBox(height: 10)
-                              : const SizedBox(),
-                          Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text('delivery_fee'.tr, style: robotoRegular),
-                                Text(
-                                    '(+) ${PriceConverterHelper.convertPrice(deliveryCharge)}',
-                                    style: robotoRegular),
-                              ]),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                                vertical: Dimensions.paddingSizeSmall),
-                            child: Divider(
-                                thickness: 1,
-                                color: Theme.of(context)
-                                    .hintColor
-                                    .withOpacity(0.5)),
-                          ),
-                          partialPay!
-                              ? DottedBorder(
-                                  options: RoundedRectDottedBorderOptions(
-                                    radius: const Radius.circular(
-                                        Dimensions.radiusDefault),
-                                    color: Theme.of(context).primaryColor,
-                                    strokeWidth: 1,
-                                    strokeCap: StrokeCap.butt,
-                                    dashPattern: const [8, 5],
-                                    padding: const EdgeInsets.all(0),
-                                  ),
-                                  child: Ink(
-                                    padding: const EdgeInsets.all(
-                                        Dimensions.paddingSizeSmall),
-                                    color: !restConfModel
-                                        ? Theme.of(context)
-                                            .primaryColor
-                                            .withOpacity(0.05)
-                                        : Colors.transparent,
-                                    child: Column(children: [
-                                      Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Text('total_amount'.tr,
-                                                style: robotoMedium.copyWith(
-                                                  fontSize:
-                                                      Dimensions.fontSizeLarge,
-                                                  color: Theme.of(context)
-                                                      .primaryColor,
-                                                )),
-                                            Text(
-                                              PriceConverterHelper.convertPrice(
-                                                  total),
-                                              style: robotoMedium.copyWith(
-                                                  fontSize:
-                                                      Dimensions.fontSizeLarge,
-                                                  color: Theme.of(context)
-                                                      .primaryColor),
-                                            ),
-                                          ]),
-                                      const SizedBox(height: 10),
-                                      Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Text('paid_by_wallet'.tr,
-                                                style: !restConfModel
-                                                    ? robotoMedium
-                                                    : robotoRegular),
-                                            Text(
-                                              PriceConverterHelper.convertPrice(
-                                                  order.payments![0].amount),
-                                              style: !restConfModel
-                                                  ? robotoMedium
-                                                  : robotoRegular,
-                                            ),
-                                          ]),
-                                      const SizedBox(height: 10),
-                                      Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Text(
-                                                '${order.payments?[1].paymentStatus == 'paid' ? 'paid_by'.tr : 'due_amount'.tr} (${order.payments![1].paymentMethod?.tr})',
-                                                style: !restConfModel
-                                                    ? robotoMedium
-                                                    : robotoRegular),
-                                            Text(
-                                              PriceConverterHelper.convertPrice(
-                                                  order.payments![1].amount),
-                                              style: !restConfModel
-                                                  ? robotoMedium
-                                                  : robotoRegular,
-                                            ),
-                                          ]),
-                                    ]),
-                                  ),
-                                )
-                              : const SizedBox(),
-                          SizedBox(height: partialPay ? 20 : 0),
-                          !partialPay
-                              ? Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                      Text('total_amount'.tr,
-                                          style: robotoMedium.copyWith(
-                                            fontSize: Dimensions.fontSizeLarge,
-                                            color:
-                                                Theme.of(context).primaryColor,
-                                          )),
-                                      Text(
-                                        PriceConverterHelper.convertPrice(
-                                            total),
-                                        style: robotoMedium.copyWith(
-                                            fontSize: Dimensions.fontSizeLarge,
-                                            color:
-                                                Theme.of(context).primaryColor),
-                                      ),
-                                    ])
-                              : const SizedBox(),
+                          const SizedBox.shrink(),
                         ]),
                       )),
-                      showDeliveryConfirmImage &&
-                              controllerOrderModel.orderStatus != 'delivered'
+                      (_isStatus(controllerOrderModel.orderStatus,
+                                  AppConstants.pickedUp) ||
+                              _isStatus(controllerOrderModel.orderStatus,
+                                  AppConstants.handover))
                           ? Container(
                               padding: const EdgeInsets.all(
                                   Dimensions.paddingSizeSmall),
                               decoration: BoxDecoration(
                                 color: Theme.of(context)
                                     .primaryColor
-                                    .withOpacity(0.05),
+                                    .withValues(alpha: 0.05),
                                 borderRadius: const BorderRadius.vertical(
                                     top: Radius.circular(
                                         Dimensions.radiusDefault)),
@@ -1635,7 +1322,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                                               .radiusDefault),
                                                   color: Theme.of(context)
                                                       .primaryColor
-                                                      .withOpacity(0.1),
+                                                      .withValues(alpha: 0.1),
                                                 ),
                                                 child: Icon(
                                                     Icons.camera_alt_sharp,
@@ -1700,9 +1387,10 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                 ),
                               )
                             : const SizedBox(),
-                        showDeliveryConfirmImage &&
-                              controllerOrderModel.orderStatus != 'delivered' &&
-                              !parcel
+                        (_isStatus(controllerOrderModel.orderStatus,
+                                AppConstants.pickedUp) ||
+                            _isStatus(controllerOrderModel.orderStatus,
+                                AppConstants.handover))
                           ? Column(children: [
                               // ✅ MANDATORY INSTRUCTION
                               if (!orderController.hasPickedDeliveryPhotos())
@@ -1758,10 +1446,28 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                               CustomButtonWidget(
                                 buttonText: 'complete_delivery'.tr,
                                 // MANDATORY: Disable if no delivery photo
-                                backgroundColor: orderController.hasPickedDeliveryPhotos()
+                                backgroundColor: (orderController
+                                            .hasPickedDeliveryPhotos() &&
+                                        (_isStatus(
+                                                controllerOrderModel
+                                                    .orderStatus,
+                                                AppConstants.pickedUp) ||
+                                            _isStatus(
+                                                controllerOrderModel
+                                                    .orderStatus,
+                                                AppConstants.handover)))
                                     ? Theme.of(context).primaryColor
                                     : Colors.grey[400],
-                                onPressed: orderController.hasPickedDeliveryPhotos()
+                                onPressed: (orderController
+                                            .hasPickedDeliveryPhotos() &&
+                                        (_isStatus(
+                                                controllerOrderModel
+                                                    .orderStatus,
+                                                AppConstants.pickedUp) ||
+                                            _isStatus(
+                                                controllerOrderModel
+                                                    .orderStatus,
+                                                AppConstants.handover)))
                                     ? () {
                                         if (Get.find<SplashController>()
                                             .configModel!
@@ -2134,7 +1840,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                                           controllerOrderModel
                                                                   .chargePayer !=
                                                               'sender') {
-                                                        print(
+                                                        debugPrint(
                                                             '🔧 DELIVERY FLOW: Opening VerifyDeliverySheetWidget for parcel COD delivery');
                                                         Get.bottomSheet(
                                                                 VerifyDeliverySheetWidget(
@@ -2184,12 +1890,12 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                                                   .orderDeliveryVerification! ||
                                                               cod) &&
                                                           !parcel) {
-                                                        print(
+                                                        debugPrint(
                                                             '🔧 DELIVERY FLOW: Opening VerifyDeliverySheetWidget for delivery');
-                                                        print(
+                                                        debugPrint(
                                                             '   Order Status: ${controllerOrderModel.orderStatus}');
-                                                        print('   COD: $cod');
-                                                        print(
+                                                        debugPrint('   COD: $cod');
+                                                        debugPrint(
                                                             '   Parcel: $parcel');
                                                         Get.bottomSheet(
                                                             VerifyDeliverySheetWidget(
@@ -2214,7 +1920,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                                           controllerOrderModel
                                                                   .chargePayer ==
                                                               'sender') {
-                                                        print(
+                                                        debugPrint(
                                                             '🔧 DELIVERY FLOW: Opening VerifyDeliverySheetWidget for parcel delivery');
                                                         Get.bottomSheet(
                                                             VerifyDeliverySheetWidget(
@@ -2296,7 +2002,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                                         }
                                                       });
                                                     } else if ((confirmed! || handover!) &&
-                                                        ![AppConstants.acceptanceRejected, AppConstants.delivered, AppConstants.pickedUp]
+                                                        ![AppConstants.canceled, AppConstants.delivered, AppConstants.pickedUp]
                                                             .contains(controllerOrderModel.orderStatus)) {
                                                       // ✅ GENERAL PICKUP LOGIC - applies to ALL orders
                                                       // بدون قيد module - لأي طلب في حالة confirmed أو handover
@@ -2335,14 +2041,14 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                                         // Step 2: Check if pickup photos are uploaded
                                                         // ✅ Apply to ALL orders, check status not module
                                                         if (!Get.find<OrderController>().hasUploadedRestaurantPhotos(controllerOrderModel)) {
-                                                          print(' ❌ PICKUP BLOCKED: No pickup photos uploaded');
+                                                          debugPrint(' ❌ PICKUP BLOCKED: No pickup photos uploaded');
                                                           showCustomSnackBar(
                                                               'please_upload_order_proof_photos_first'.tr,
                                                               isError: true);
                                                           return;
                                                         }
                                                         
-                                                        print('✅ PICKUP ALLOWED: All validations passed');
+                                                        debugPrint('✅ PICKUP ALLOWED: All validations passed');
                                                         // Step 3: Update status to 'picked_up'
                                                         Get.find<
                                                                 OrderController>()

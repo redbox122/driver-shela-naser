@@ -209,9 +209,12 @@ class HomeScreen extends StatelessWidget {
                   },
                   child: SingleChildScrollView(
                     physics: const AlwaysScrollableScrollPhysics(),
-                    child: GetBuilder<ProfileController>(
-                        builder: (profileController) {
-                      return Column(children: [
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: Dimensions.paddingSizeSmall),
+                      child: GetBuilder<ProfileController>(
+                          builder: (profileController) {
+                        return Column(children: [
                         // Active Orders Section: Hero card + expandable list
                         GetBuilder<OrderController>(builder: (orderController) {
                           return CurrentOrdersListWidget(
@@ -296,6 +299,7 @@ class HomeScreen extends StatelessWidget {
                     }),
                   ),
                 ),
+              ),
               ),
             ],
           ),

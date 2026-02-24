@@ -129,11 +129,36 @@ class OrderController extends GetxController implements GetxService {
   bool _showDeliveryImageField = false;
   bool get showDeliveryImageField => _showDeliveryImageField;
 
+
   List<XFile> _pickedPrescriptions = [];
   List<XFile> get pickedPrescriptions => _pickedPrescriptions;
 
   List<XFile> _pickedOrderProofImages = [];
   List<XFile> get pickedOrderProofImages => _pickedOrderProofImages;
+
+  String _normalizeStatus(String? status) =>
+      (status ?? '').toLowerCase().trim();
+
+  bool canShowPickupPhotos(OrderModel? order) {
+    final currentDriverId = Get.find<ProfileController>().profileModel?.id;
+    assert(() {
+      debugPrint(
+          'PICKUP PHOTOS CHECK: orderType=${order?.orderType}, '
+          'orderStatus=${order?.orderStatus}, '
+          'deliveryManId=${order?.deliveryManId}, '
+          'currentDriverId=$currentDriverId');
+      return true;
+    }());
+    return order != null &&
+        order.orderType == 'delivery' &&
+        _normalizeStatus(order.orderStatus) ==
+            _normalizeStatus(AppConstants.accepted) &&
+        order.deliveryManId != null &&
+        currentDriverId != null &&
+        order.deliveryManId == currentDriverId;
+  }
+
+  bool get showDeliveryPhotos => canShowPickupPhotos(_orderModel);
 
   /// ✅ دالة محسنة للتحقق من وجود صور المطعم المرفوعة
   /// تتعامل مع null و empty string معاً
@@ -152,9 +177,8 @@ class OrderController extends GetxController implements GetxService {
     }
     
     // التحقق من أن جميع الصور ليست فارغة
-    final hasValidPhotos = order.orderProofFullUrl!
-        .where((url) => url != null && url.isNotEmpty)
-        .isNotEmpty;
+    final hasValidPhotos =
+        order.orderProofFullUrl!.where((url) => url.isNotEmpty).isNotEmpty;
     
     debugPrint('🔍 Restaurant photos check: $hasValidPhotos (${order.orderProofFullUrl!.length} photos)');
     return hasValidPhotos;
@@ -258,12 +282,17 @@ class OrderController extends GetxController implements GetxService {
       List<MultipartBody> multiParts =
           orderServiceInterface.prepareOrderProofImages(_pickedOrderProofImages);
       
-      // Status stays "confirmed" - photos are just documentation
+      // Upload pickup photos and move to picked_up
       UpdateStatusBodyModel updateStatusBody = UpdateStatusBodyModel(
         orderId: order.id,
-        status: AppConstants.confirmed,
+        status: AppConstants.pickedUp,
         moduleId: order.module_id,
       );
+      if (order.module_id == 3 &&
+          order.otpStore != null &&
+          order.otpStore!.isNotEmpty) {
+        updateStatusBody.otpStore = order.otpStore;
+      }
 
       print('📸 Sending upload request...');
       ResponseModel responseModel = await orderServiceInterface.updateOrderStatus(
@@ -467,6 +496,10 @@ class OrderController extends GetxController implements GetxService {
       Get.find<ProfileController>().getProfile();
       getCurrentOrders();
       currentOrder.orderStatus = status;
+      if (_isTerminalStatus(status)) {
+        _removeOrderFromCurrentList(currentOrder.id);
+        _removeOrderFromLatestList(currentOrder.id);
+      }
       showCustomSnackBar(responseModel.message, isError: false);
     } else {
       showCustomSnackBar(responseModel.message, isError: true);
@@ -602,6 +635,26 @@ class OrderController extends GetxController implements GetxService {
       _currentOrderList = [orderModel];
       debugPrint('Initialized current order list with order ${orderModel.id}');
     }
+  }
+
+  void _removeOrderFromCurrentList(int? orderID) {
+    if (_currentOrderList != null && orderID != null) {
+      try {
+        _currentOrderList!.removeWhere((order) => order.id == orderID);
+        debugPrint('Removed order $orderID from current order list');
+      } catch (e) {
+        debugPrint('Error removing order from current list: $e');
+        getCurrentOrders();
+      }
+    }
+  }
+
+  bool _isTerminalStatus(String status) {
+    final normalized = _normalizeStatus(status);
+    return normalized == _normalizeStatus(AppConstants.delivered) ||
+        normalized == _normalizeStatus(AppConstants.canceled) ||
+        normalized == _normalizeStatus(AppConstants.failed) ||
+        normalized == _normalizeStatus(AppConstants.refunded);
   }
 
   void getIgnoreList() {

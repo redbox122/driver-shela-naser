@@ -11,8 +11,12 @@ import 'package:shellafood_delivery/common/widgets/custom_image_widget.dart';
 class OrderItemWidget extends StatelessWidget {
   final OrderModel order;
   final OrderDetailsModel orderDetails;
+  final bool showPrice;
   const OrderItemWidget(
-      {super.key, required this.order, required this.orderDetails});
+      {super.key,
+      required this.order,
+      required this.orderDetails,
+      this.showPrice = true});
 
   Widget _buildQuantityBadge(BuildContext context, int quantity) {
     return Container(
@@ -25,9 +29,9 @@ class OrderItemWidget extends StatelessWidget {
         borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
       ),
       child: Text(
-        'Qty: $quantity',
+        '${'quantity'.tr}: $quantity',
         style: robotoBold.copyWith(
-          fontSize: Dimensions.fontSizeDefault,
+          fontSize: Dimensions.fontSizeSmall,
           color: Colors.white,
         ),
       ),
@@ -51,10 +55,10 @@ class OrderItemWidget extends StatelessWidget {
                   horizontal: Dimensions.paddingSizeSmall,
                 ),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).primaryColor.withOpacity(0.1),
+                  color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
                   border: Border.all(
-                    color: Theme.of(context).primaryColor.withOpacity(0.3),
+                    color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
                     width: 1,
                   ),
                 ),
@@ -109,10 +113,10 @@ class OrderItemWidget extends StatelessWidget {
                   horizontal: Dimensions.paddingSizeSmall,
                 ),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).primaryColor.withOpacity(0.1),
+                  color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
                   border: Border.all(
-                    color: Theme.of(context).primaryColor.withOpacity(0.3),
+                    color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
                     width: 1,
                   ),
                 ),
@@ -145,10 +149,10 @@ class OrderItemWidget extends StatelessWidget {
               horizontal: Dimensions.paddingSizeSmall,
             ),
             decoration: BoxDecoration(
-              color: Colors.green.withOpacity(0.1),
+              color: Colors.green.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
               border: Border.all(
-                color: Colors.green.withOpacity(0.3),
+                color: Colors.green.withValues(alpha: 0.3),
                 width: 1,
               ),
             ),
@@ -186,7 +190,7 @@ class OrderItemWidget extends StatelessWidget {
         borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: Dimensions.elevationLow,
             offset: const Offset(0, 2),
           ),
@@ -205,13 +209,28 @@ class OrderItemWidget extends StatelessWidget {
                         borderRadius:
                             BorderRadius.circular(Dimensions.radiusDefault),
                         child: CustomImageWidget(
-                          height: 80,
-                          width: 80,
+                          height: 84,
+                          width: 84,
                           fit: BoxFit.cover,
                           image: '${itemDetails.imageFullUrl}',
                         ),
                       )
-                    : const SizedBox(),
+                    : Container(
+                        height: 84,
+                        width: 84,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context)
+                              .primaryColor
+                              .withValues(alpha: 0.08),
+                          borderRadius:
+                              BorderRadius.circular(Dimensions.radiusDefault),
+                        ),
+                        child: Icon(Icons.image_not_supported_outlined,
+                            color: Theme.of(context)
+                                .primaryColor
+                                .withValues(alpha: 0.6)),
+                      ),
                 SizedBox(
                   width: itemDetails.imageFullUrl != null
                       ? Dimensions.paddingSizeSmall
@@ -226,7 +245,7 @@ class OrderItemWidget extends StatelessWidget {
                           Expanded(
                             child: Text(
                               itemDetails.name ?? '',
-                              style: robotoMedium.copyWith(
+                              style: robotoBold.copyWith(
                                 fontSize: Dimensions.fontSizeDefault,
                               ),
                               maxLines: 2,
@@ -241,19 +260,19 @@ class OrderItemWidget extends StatelessWidget {
                           height: Dimensions.paddingSizeExtraSmall),
                       Row(
                         children: [
-                          Text(
-                            PriceConverterHelper.convertPrice(
-                                (orderDetails.price ?? 0) -
-                                    (orderDetails.discountOnItem ?? 0)),
-                            style: robotoMedium.copyWith(
-                              fontSize: Dimensions.fontSizeDefault,
-                              color: Theme.of(context).primaryColor,
+                          if (showPrice) ...[
+                            Text(
+                              PriceConverterHelper.convertPrice(
+                                  (orderDetails.price ?? 0) -
+                                      (orderDetails.discountOnItem ?? 0)),
+                              style: robotoMedium.copyWith(
+                                fontSize: Dimensions.fontSizeDefault,
+                                color: Theme.of(context).primaryColor,
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 5),
-                          (orderDetails.discountOnItem ?? 0) > 0
-                              ? Expanded(
-                                  child: Text(
+                            const SizedBox(width: 5),
+                            (orderDetails.discountOnItem ?? 0) > 0
+                                ? Text(
                                     PriceConverterHelper.convertPrice(
                                         orderDetails.price),
                                     style: robotoMedium.copyWith(
@@ -262,15 +281,29 @@ class OrderItemWidget extends StatelessWidget {
                                       color:
                                           Theme.of(context).disabledColor,
                                     ),
-                                  ),
-                                )
-                              : const Expanded(child: SizedBox()),
+                                  )
+                                : const SizedBox(),
+                          ],
+                          if (showPrice &&
+                              ((Get.find<SplashController>()
+                                          .getModule(order.moduleType)
+                                          .unit ==
+                                      true &&
+                                  itemDetails.unitType != null) ||
+                                  (Get.find<SplashController>()
+                                          .configModel
+                                          ?.toggleVegNonVeg ==
+                                      true &&
+                                      Get.find<SplashController>()
+                                              .getModule(order.moduleType)
+                                              .vegNonVeg ==
+                                          true)))
+                            const Spacer(),
                           ((Get.find<SplashController>()
                                       .getModule(order.moduleType)
                                       .unit ==
                                   true &&
-                                  itemDetails.unitType !=
-                                      null) ||
+                                  itemDetails.unitType != null) ||
                               (Get.find<SplashController>()
                                       .configModel
                                       ?.toggleVegNonVeg ==
@@ -290,15 +323,14 @@ class OrderItemWidget extends StatelessWidget {
                                         Dimensions.radiusSmall),
                                     color: Theme.of(context)
                                         .primaryColor
-                                        .withOpacity(0.1),
+                                        .withValues(alpha: 0.1),
                                   ),
                                   child: Text(
                                     Get.find<SplashController>()
                                             .getModule(order.moduleType)
                                             .unit ==
                                         true
-                                        ? itemDetails.unitType ??
-                                            ''
+                                        ? itemDetails.unitType ?? ''
                                         : itemDetails.veg == 0
                                             ? 'non_veg'.tr
                                             : 'veg'.tr,
@@ -371,7 +403,9 @@ class OrderItemWidget extends StatelessWidget {
             const SizedBox(height: Dimensions.paddingSizeDefault),
             Divider(
               height: Dimensions.paddingSizeLarge,
-              color: Theme.of(context).disabledColor.withOpacity(0.3),
+              color: Theme.of(context)
+                  .disabledColor
+                  .withValues(alpha: 0.3),
             ),
             const SizedBox(height: Dimensions.paddingSizeSmall),
           ],

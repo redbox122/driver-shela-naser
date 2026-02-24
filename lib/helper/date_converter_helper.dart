@@ -101,12 +101,38 @@ class DateConverterHelper {
         difference = rangeTime.difference(currentTime);
       }
 
-      final int minutes = difference.inMinutes;
-      return '$minutes ${'mins_ago'.tr}';
+      int totalMinutes = difference.inMinutes.abs();
+      if (totalMinutes < 1) totalMinutes = 1;
+
+      const String lrm = '\u200E';
+      if (totalMinutes < 60) {
+        return '$lrm${totalMinutes} min';
+      }
+
+      if (totalMinutes >= 1440) {
+        final int days = totalMinutes ~/ 1440;
+        final int hours = (totalMinutes % 1440) ~/ 60;
+        final int minutes = totalMinutes % 60;
+        final List<String> parts = [
+          '$days DY',
+          if (hours > 0) '$hours hrs',
+          if (minutes > 0) '$minutes min',
+        ];
+        return '$lrm${parts.join(' ')}';
+      }
+
+      final int hours = totalMinutes ~/ 60;
+      final int minutes = totalMinutes % 60;
+      final List<String> parts = [
+        '$hours hrs',
+        if (minutes > 0) '$minutes min',
+      ];
+      return '$lrm${parts.join(' ')}';
     } catch (e) {
       // Fallback - show capped minutes
       int mins = timeDistanceInMin(time);
-      return '$mins ${'mins_ago'.tr}';
+      if (mins < 1) mins = 1;
+      return '${'\u200E'}$mins min';
     }
   }
 
