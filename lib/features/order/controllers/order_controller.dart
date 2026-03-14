@@ -348,21 +348,43 @@ class OrderController extends GetxController implements GetxService {
     update();
   }
 
-  Future<void> getOrderWithId(int? orderId) async {
+  Future<void> getOrderWithId(int? orderId, {bool closeOnError = true}) async {
+    if (orderId == null || orderId <= 0) {
+      debugPrint('[ORDER TAP] invalid order_id: $orderId');
+      showCustomSnackBar('invalid_order_id'.tr, isError: true);
+      return;
+    }
     _orderModel = null;
     Response response = await orderServiceInterface.getOrderWithId(orderId);
     if (response.statusCode == 200 && response.body != null) {
       _orderModel = OrderModel.fromJson(response.body);
     } else if (response.statusCode == 404) {
       showCustomSnackBar('order_not_found'.tr, isError: true);
-      Navigator.pop(Get.context!);
+      if (closeOnError && Get.context != null && Navigator.canPop(Get.context!)) {
+        Navigator.pop(Get.context!);
+      }
       await getCurrentOrders();
     } else {
       showCustomSnackBar('failed_to_load_order'.tr, isError: true);
-      Navigator.pop(Get.context!);
+      if (closeOnError && Get.context != null && Navigator.canPop(Get.context!)) {
+        Navigator.pop(Get.context!);
+      }
       await getCurrentOrders();
     }
     update();
+  }
+
+  Future<bool> fetchOrderDetailsOnTap(int? orderId) async {
+    if (orderId == null || orderId <= 0) {
+      debugPrint('[ORDER TAP] blocked - invalid order_id: $orderId');
+      showCustomSnackBar('invalid_order_id'.tr, isError: true);
+      return false;
+    }
+
+    debugPrint('[ORDER TAP] order_id=$orderId');
+    await getOrderWithId(orderId, closeOnError: false);
+    await getOrderDetails(orderId, _orderModel?.orderType == 'parcel');
+    return true;
   }
 
   Future<void> getCompletedOrders(int offset) async {
@@ -423,6 +445,8 @@ class OrderController extends GetxController implements GetxService {
             orderServiceInterface.prepareIgnoreIdList(_ignoredRequests);
         List<OrderModel> processedOrders = orderServiceInterface
             .processLatestOrders(latestOrderList, ignoredIdList);
+        final int ignoredCount =
+            latestOrderList.length - processedOrders.length;
 
         // Apply security filtering based on delivery man's profile
         final profileController = Get.find<ProfileController>();
@@ -433,7 +457,15 @@ class OrderController extends GetxController implements GetxService {
 
         // Log filtering results for debugging
         debugPrint(
-            'Orders filtered: ${processedOrders.length} -> ${filteredOrders.length}');
+            'Orders filtered: raw=${latestOrderList.length}, ignored=$ignoredCount, after_ignore=${processedOrders.length}, after_security=${filteredOrders.length}');
+        final ids = filteredOrders
+            .map((e) => e.id)
+            .whereType<int>()
+            .toList()
+          ..sort();
+        final int? maxId = ids.isNotEmpty ? ids.last : null;
+        final List<int> tail = ids.length > 5 ? ids.sublist(ids.length - 5) : ids;
+        debugPrint('[LATEST FINAL] count=${filteredOrders.length}, max_id=$maxId, last_ids=$tail');
       }
     } catch (e) {
       debugPrint('getLatestOrders error: $e');
@@ -510,6 +542,11 @@ class OrderController extends GetxController implements GetxService {
   }
 
   Future<void> getOrderDetails(int? orderID, bool parcel) async {
+    if (orderID == null || orderID <= 0) {
+      debugPrint('[ORDER TAP] getOrderDetails blocked - invalid order_id: $orderID');
+      showCustomSnackBar('invalid_order_id'.tr, isError: true);
+      return;
+    }
     if (parcel) {
       _orderDetailsModel = [];
     } else {

@@ -40,6 +40,8 @@ class ApiClient extends GetxService {
     };
   }
 
+  Map<String, String> get mainHeaders => Map<String, String>.from(_mainHeaders);
+
   Future<Response> getData(String uri,
       {Map<String, dynamic>? query,
       Map<String, String>? headers,

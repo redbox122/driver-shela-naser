@@ -5,6 +5,7 @@ import 'package:shellafood_delivery/util/images.dart';
 import 'package:shellafood_delivery/util/styles.dart';
 import 'package:shellafood_delivery/common/widgets/custom_button_widget.dart';
 import 'package:shellafood_delivery/common/widgets/custom_snackbar_widget.dart';
+import 'package:shellafood_delivery/features/order/controllers/order_controller.dart';
 import 'package:shellafood_delivery/features/order/screens/order_details_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -132,7 +133,12 @@ class OrderWidget extends StatelessWidget {
         Row(children: [
           Expanded(
               child: TextButton(
-            onPressed: () {
+            onPressed: () async {
+              final bool canOpen = await Get.find<OrderController>()
+                  .fetchOrderDetailsOnTap(orderModel.id);
+              if (!canOpen) {
+                return;
+              }
               Get.toNamed(
                 RouteHelper.getOrderDetailsRoute(orderModel.id),
                 arguments: OrderDetailsScreen(

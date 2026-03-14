@@ -35,8 +35,64 @@ class OrderRepository implements OrderRepositoryInterface {
 
   @override
   Future<Response> get(int? id) async {
-    Response response = await apiClient.getData(
-        '${AppConstants.currentOrderUri}${_getUserToken()}&order_id=$id');
+    if (id == null || id <= 0) {
+      print('[REQUEST] skipped /delivery-man/order بسبب order_id غير صالح: $id');
+      return Response(
+        statusCode: 400,
+        statusText: 'invalid_order_id',
+        body: {'message': 'Invalid order_id: $id'},
+      );
+    }
+
+    final String token = _getUserToken();
+    final Map<String, String> queryParams = {
+      'token': token,
+      'order_id': id.toString(),
+    };
+    final String primaryUri =
+        '${AppConstants.currentOrderUri}$token&order_id=$id';
+    final Map<String, String> noCacheHeaders = _orderNoCacheHeaders();
+
+    _logOrderRequest(
+      endpoint: '/api/v1/delivery-man/order',
+      uri: primaryUri,
+      method: 'GET',
+      headers: noCacheHeaders,
+      queryParams: queryParams,
+    );
+
+    final Response response = await apiClient.getData(
+      primaryUri,
+      headers: noCacheHeaders,
+      handleError: false,
+    );
+    _logOrderResponse(
+      endpoint: '/api/v1/delivery-man/order',
+      response: response,
+    );
+
+    if (response.statusCode == 404) {
+      final String fallbackUri =
+          '${AppConstants.orderDetailsUri}$token&order_id=$id';
+      _logOrderRequest(
+        endpoint: '/api/v1/delivery-man/order-details',
+        uri: fallbackUri,
+        method: 'GET',
+        headers: noCacheHeaders,
+        queryParams: queryParams,
+      );
+
+      final Response fallbackResponse = await apiClient.getData(
+        fallbackUri,
+        headers: noCacheHeaders,
+        handleError: false,
+      );
+      _logOrderResponse(
+        endpoint: '/api/v1/delivery-man/order-details',
+        response: fallbackResponse,
+      );
+    }
+
     return response;
   }
 
@@ -54,8 +110,11 @@ class OrderRepository implements OrderRepositoryInterface {
   @override
   Future<List<OrderModel>?> getList() async {
     List<OrderModel>? currentOrderList;
-    Response response = await apiClient
-        .getData(AppConstants.currentOrdersUri + _getUserToken());
+    final String uri = AppConstants.currentOrdersUri + _getUserToken();
+    Response response = await apiClient.getData(
+      uri,
+      headers: _orderNoCacheHeaders(),
+    );
     if (response.statusCode == 200) {
       currentOrderList = [];
       response.body.forEach(
@@ -67,14 +126,24 @@ class OrderRepository implements OrderRepositoryInterface {
   @override
   Future<List<OrderModel>?> getLatestOrders() async {
     List<OrderModel>? latestOrderList;
+    final String uri = AppConstants.latestOrdersUri + _getUserToken();
     Response response =
-        await apiClient.getData(AppConstants.latestOrdersUri + _getUserToken());
+        await apiClient.getData(uri, headers: _orderNoCacheHeaders());
     if (response.statusCode == 200) {
       latestOrderList = [];
       final List<dynamic> orders = _extractOrderList(response.body);
       for (final order in orders) {
         latestOrderList.add(OrderModel.fromJson(order));
       }
+      final ids = latestOrderList
+          .map((o) => o.id)
+          .whereType<int>()
+          .toList()
+        ..sort();
+      final int? maxId = ids.isNotEmpty ? ids.last : null;
+      final List<int> tail = ids.length > 5 ? ids.sublist(ids.length - 5) : ids;
+      print(
+          '[LATEST RAW] count=${latestOrderList.length}, max_id=$maxId, last_ids=$tail');
     }
     return latestOrderList;
   }
@@ -100,9 +169,38 @@ class OrderRepository implements OrderRepositoryInterface {
 
   @override
   Future<List<OrderDetailsModel>?> getOrderDetails(int? orderID) async {
+    if (orderID == null || orderID <= 0) {
+      print('[REQUEST] skipped /delivery-man/order-details بسبب order_id غير صالح: $orderID');
+      return null;
+    }
+
     List<OrderDetailsModel>? orderDetailsModel;
+    final String token = _getUserToken();
+    final String uri = '${AppConstants.orderDetailsUri}$token&order_id=$orderID';
+    final Map<String, String> queryParams = {
+      'token': token,
+      'order_id': orderID.toString(),
+    };
+    final Map<String, String> noCacheHeaders = _orderNoCacheHeaders();
+
+    _logOrderRequest(
+      endpoint: '/api/v1/delivery-man/order-details',
+      uri: uri,
+      method: 'GET',
+      headers: noCacheHeaders,
+      queryParams: queryParams,
+    );
+
     Response response = await apiClient.getData(
-        '${AppConstants.orderDetailsUri}${_getUserToken()}&order_id=$orderID');
+      uri,
+      headers: noCacheHeaders,
+      handleError: false,
+    );
+    _logOrderResponse(
+      endpoint: '/api/v1/delivery-man/order-details',
+      response: response,
+    );
+
     if (response.statusCode == 200) {
       orderDetailsModel = [];
       response.body.forEach((orderDetails) =>
@@ -208,6 +306,40 @@ class OrderRepository implements OrderRepositoryInterface {
 
   String _getUserToken() {
     return sharedPreferences.getString(AppConstants.token) ?? "";
+  }
+
+  Map<String, String> _orderNoCacheHeaders() {
+    final headers = apiClient.mainHeaders;
+    headers['Cache-Control'] = 'no-cache, no-store, must-revalidate';
+    headers['Pragma'] = 'no-cache';
+    headers['Expires'] = '0';
+    return headers;
+  }
+
+  void _logOrderRequest({
+    required String endpoint,
+    required String uri,
+    required String method,
+    required Map<String, String> headers,
+    required Map<String, String> queryParams,
+  }) {
+    final fullUrl = '${AppConstants.baseUrl}$uri';
+    print('[REQUEST] $fullUrl');
+    print('method: $method');
+    print('headers: $headers');
+    print('query: $queryParams');
+    print('endpoint: $endpoint');
+  }
+
+  void _logOrderResponse({
+    required String endpoint,
+    required Response response,
+  }) {
+    final body = response.bodyString?.isNotEmpty == true
+        ? response.bodyString
+        : response.body?.toString();
+    print('[RESPONSE] endpoint=$endpoint status=${response.statusCode}');
+    print('body: $body');
   }
 
   List<dynamic> _extractOrderList(dynamic body) {

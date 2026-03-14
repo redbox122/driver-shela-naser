@@ -3,6 +3,7 @@ import 'package:shellafood_delivery/helper/date_converter_helper.dart';
 import 'package:shellafood_delivery/util/dimensions.dart';
 import 'package:shellafood_delivery/util/styles.dart';
 import 'package:shellafood_delivery/common/widgets/custom_image_widget.dart';
+import 'package:shellafood_delivery/features/order/controllers/order_controller.dart';
 import 'package:shellafood_delivery/features/order/screens/order_details_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -22,13 +23,20 @@ class HistoryOrderWidget extends StatelessWidget {
     bool parcel = orderModel.orderType == 'parcel';
 
     return InkWell(
-      onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (context) => OrderDetailsScreen(
-                  orderId: orderModel.id,
-                  isRunningOrder: isRunning,
-                  orderIndex: index))),
+      onTap: () async {
+        final bool canOpen =
+            await Get.find<OrderController>().fetchOrderDetailsOnTap(orderModel.id);
+        if (!canOpen) {
+          return;
+        }
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => OrderDetailsScreen(
+                    orderId: orderModel.id,
+                    isRunningOrder: isRunning,
+                    orderIndex: index)));
+      },
       child: Container(
         padding: const EdgeInsets.all(Dimensions.paddingSizeSmall),
         margin: const EdgeInsets.only(bottom: Dimensions.paddingSizeSmall),

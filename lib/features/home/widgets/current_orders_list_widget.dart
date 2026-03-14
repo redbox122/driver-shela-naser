@@ -7,6 +7,7 @@ import 'package:shellafood_delivery/helper/order_helper.dart';
 import 'package:shellafood_delivery/features/home/widgets/hero_order_card_widget.dart';
 import 'package:shellafood_delivery/features/home/widgets/compact_order_card_widget.dart';
 import 'package:shellafood_delivery/features/order/screens/order_details_screen.dart';
+import 'package:shellafood_delivery/features/order/controllers/order_controller.dart';
 import 'package:shellafood_delivery/helper/route_helper.dart';
 import 'package:shellafood_delivery/common/services/quick_action_service.dart';
 import 'package:get/get.dart';
@@ -285,7 +286,12 @@ class _CurrentOrdersListWidgetState extends State<CurrentOrdersListWidget>
     QuickActionService.navigateToActiveOrder();
   }
 
-  void _viewOrderDetails(OrderModel order, int orderIndex) {
+  Future<void> _viewOrderDetails(OrderModel order, int orderIndex) async {
+    final bool canOpen =
+        await Get.find<OrderController>().fetchOrderDetailsOnTap(order.id);
+    if (!canOpen) {
+      return;
+    }
     Get.toNamed(
       RouteHelper.getOrderDetailsRoute(order.id),
       arguments: OrderDetailsScreen(

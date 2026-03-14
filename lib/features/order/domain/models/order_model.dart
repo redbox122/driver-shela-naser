@@ -315,19 +315,9 @@ class OrderModel {
     storeBusinessModel = json['store_business_model'];
     storeChatPermission = json['chat_permission'];
 
-    // 🔧 DEBUG: Log the raw OTP values from API
-    print('🔧 OrderModel.fromJson DEBUG:');
-    print('   Raw json[otp]: ${json['otp']}');
-    print('   Raw json[otp_store]: ${json['otp_store']}');
-    print('   Order ID: ${json['id']} - CreatedAt: ${json['created_at']} - ServerTime: ${json['server_time']}');
-
-    // ✅ FIX: Correct the backwards parsing based on backend team findings
+    // Parse OTP fields used by pickup/delivery verification flows.
     otp = json['otp']; // Customer OTP (for delivery)
     otpStore = json['otp_store']; // Store OTP (for pickup)
-
-    // 🔧 DEBUG: Log the parsed OTP values
-    print('   Parsed otp (customer): $otp');
-    print('   Parsed otpStore (store): $otpStore');
   }
 
   Map<String, dynamic> toJson() {
@@ -603,3 +593,4 @@ class Payments {
     return data;
   }
 }
+

@@ -47,13 +47,20 @@ class OrderRequestWidget extends StatelessWidget {
     );
 
     return InkWell(
-      onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (context) => OrderDetailsScreen(
-                  orderId: orderModel.id,
-                  isRunningOrder: true,
-                  orderIndex: index))),
+      onTap: () async {
+        final bool canOpen =
+            await Get.find<OrderController>().fetchOrderDetailsOnTap(orderModel.id);
+        if (!canOpen) {
+          return;
+        }
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => OrderDetailsScreen(
+                    orderId: orderModel.id,
+                    isRunningOrder: true,
+                    orderIndex: index)));
+      },
       child: Container(
         margin: const EdgeInsets.only(bottom: Dimensions.paddingSizeSmall),
         decoration: BoxDecoration(
@@ -452,21 +459,26 @@ class OrderRequestWidget extends StatelessWidget {
                                                     orderModel.mainOrder,
                                                     index,
                                                     orderModel)
-                                                .then((isSuccess) {
+                                                .then((isSuccess) async {
                                               if (isSuccess) {
                                                 // Controller already updates status correctly based on module_id
                                                 // No need to override it here
                                                 onTap();
-                                                Get.toNamed(
-                                                  RouteHelper.getOrderDetailsRoute(orderModel.id),
-                                                  arguments: OrderDetailsScreen(
-                                                    orderId: orderModel.id, 
-                                                    isRunningOrder: true, 
-                                                    orderIndex: orderController.currentOrderList != null 
-                                                        ? orderController.currentOrderList!.length - 1 
-                                                        : 0,
-                                                  ),
-                                                );
+                                                final bool canOpen =
+                                                    await Get.find<OrderController>()
+                                                        .fetchOrderDetailsOnTap(orderModel.id);
+                                                if (canOpen) {
+                                                  Get.toNamed(
+                                                    RouteHelper.getOrderDetailsRoute(orderModel.id),
+                                                    arguments: OrderDetailsScreen(
+                                                      orderId: orderModel.id,
+                                                      isRunningOrder: true,
+                                                      orderIndex: orderController.currentOrderList != null
+                                                          ? orderController.currentOrderList!.length - 1
+                                                          : 0,
+                                                    ),
+                                                  );
+                                                }
                                               } else {
                                                 Get.find<OrderController>()
                                                     .getLatestOrders();
@@ -476,23 +488,28 @@ class OrderRequestWidget extends StatelessWidget {
                                             orderController
                                                 .acceptOrder(orderModel.id,
                                                     index, orderModel)
-                                                .then((isSuccess) {
+                                                .then((isSuccess) async {
                                               if (isSuccess) {
                                                 // Controller already updates status correctly based on module_id
                                                 // No need to override it here
                                                 onTap();
-                                                Get.toNamed(
-                                                  RouteHelper
-                                                      .getOrderDetailsRoute(
-                                                          orderModel.id),
-                                                  arguments: OrderDetailsScreen(
-                                                    orderId: orderModel.id,
-                                                    isRunningOrder: true,
-                                                    orderIndex: orderController.currentOrderList != null
-                                                        ? orderController.currentOrderList!.length - 1
-                                                        : 0,
-                                                  ),
-                                                );
+                                                final bool canOpen =
+                                                    await Get.find<OrderController>()
+                                                        .fetchOrderDetailsOnTap(orderModel.id);
+                                                if (canOpen) {
+                                                  Get.toNamed(
+                                                    RouteHelper
+                                                        .getOrderDetailsRoute(
+                                                            orderModel.id),
+                                                    arguments: OrderDetailsScreen(
+                                                      orderId: orderModel.id,
+                                                      isRunningOrder: true,
+                                                      orderIndex: orderController.currentOrderList != null
+                                                          ? orderController.currentOrderList!.length - 1
+                                                          : 0,
+                                                    ),
+                                                  );
+                                                }
                                               } else {
                                                 Get.find<OrderController>()
                                                     .getLatestOrders();
