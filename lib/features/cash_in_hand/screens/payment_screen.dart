@@ -47,7 +47,7 @@ class PaymentScreenState extends State<PaymentScreen> {
       await serviceWorkerController.setServiceWorkerClient(ServiceWorkerClient(
         shouldInterceptRequest: (request) async {
           if (kDebugMode) {
-            debugPrint(request);
+            debugPrint(request as String?);
           }
           return null;
         },

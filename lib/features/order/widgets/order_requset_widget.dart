@@ -48,8 +48,8 @@ class OrderRequestWidget extends StatelessWidget {
 
     return InkWell(
       onTap: () async {
-        final bool canOpen =
-            await Get.find<OrderController>().fetchOrderDetailsOnTap(orderModel.id);
+        final bool canOpen = await Get.find<OrderController>()
+            .fetchOrderDetailsOnTap(orderModel.id);
         if (!canOpen) {
           return;
         }
@@ -394,7 +394,8 @@ class OrderRequestWidget extends StatelessWidget {
                                             "you_want_to_accept_this_service"
                                                 .tr,
                                         onYesPressed: () {
-                                          debugPrint(orderModel.groupOrder);
+                                          debugPrint(
+                                              orderModel.groupOrder as String?);
                                           orderController
                                               .addRequest(orderModel.id)
                                               .then((isSuccess) {
@@ -464,17 +465,26 @@ class OrderRequestWidget extends StatelessWidget {
                                                 // Controller already updates status correctly based on module_id
                                                 // No need to override it here
                                                 onTap();
-                                                final bool canOpen =
-                                                    await Get.find<OrderController>()
-                                                        .fetchOrderDetailsOnTap(orderModel.id);
+                                                final bool canOpen = await Get
+                                                        .find<OrderController>()
+                                                    .fetchOrderDetailsOnTap(
+                                                        orderModel.id);
                                                 if (canOpen) {
                                                   Get.toNamed(
-                                                    RouteHelper.getOrderDetailsRoute(orderModel.id),
-                                                    arguments: OrderDetailsScreen(
+                                                    RouteHelper
+                                                        .getOrderDetailsRoute(
+                                                            orderModel.id),
+                                                    arguments:
+                                                        OrderDetailsScreen(
                                                       orderId: orderModel.id,
                                                       isRunningOrder: true,
-                                                      orderIndex: orderController.currentOrderList != null
-                                                          ? orderController.currentOrderList!.length - 1
+                                                      orderIndex: orderController
+                                                                  .currentOrderList !=
+                                                              null
+                                                          ? orderController
+                                                                  .currentOrderList!
+                                                                  .length -
+                                                              1
                                                           : 0,
                                                     ),
                                                   );
@@ -493,19 +503,26 @@ class OrderRequestWidget extends StatelessWidget {
                                                 // Controller already updates status correctly based on module_id
                                                 // No need to override it here
                                                 onTap();
-                                                final bool canOpen =
-                                                    await Get.find<OrderController>()
-                                                        .fetchOrderDetailsOnTap(orderModel.id);
+                                                final bool canOpen = await Get
+                                                        .find<OrderController>()
+                                                    .fetchOrderDetailsOnTap(
+                                                        orderModel.id);
                                                 if (canOpen) {
                                                   Get.toNamed(
                                                     RouteHelper
                                                         .getOrderDetailsRoute(
                                                             orderModel.id),
-                                                    arguments: OrderDetailsScreen(
+                                                    arguments:
+                                                        OrderDetailsScreen(
                                                       orderId: orderModel.id,
                                                       isRunningOrder: true,
-                                                      orderIndex: orderController.currentOrderList != null
-                                                          ? orderController.currentOrderList!.length - 1
+                                                      orderIndex: orderController
+                                                                  .currentOrderList !=
+                                                              null
+                                                          ? orderController
+                                                                  .currentOrderList!
+                                                                  .length -
+                                                              1
                                                           : 0,
                                                     ),
                                                   );

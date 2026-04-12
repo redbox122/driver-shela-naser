@@ -178,7 +178,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
 
   Widget _buildOrderProofUploadSection(OrderModel order) {
     // PICKUP PHOTOS: show for delivery orders assigned to this driver
-    
+
     // Hide if already picked up
     if (_isStatus(order.orderStatus, AppConstants.pickedUp)) {
       return const SizedBox.shrink();
@@ -192,271 +192,277 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
     }());
 
     return GetBuilder<OrderController>(builder: (orderController) {
-      final shouldShowPhotos =
-          orderController.canShowPickupPhotos(order);
+      final shouldShowPhotos = orderController.canShowPickupPhotos(order);
       if (!shouldShowPhotos) {
         return const SizedBox.shrink();
       }
       final hasUploadedPhotos = order.orderProofFullUrl != null &&
           order.orderProofFullUrl!.isNotEmpty;
-      final hasSelectedPhotos = orderController.pickedOrderProofImages.isNotEmpty;
-      
+      final hasSelectedPhotos =
+          orderController.pickedOrderProofImages.isNotEmpty;
+
       final showHelper = !hasUploadedPhotos && !hasSelectedPhotos;
 
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeDefault),
-      padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-        border: Border.all(color: Theme.of(context).dividerColor),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (showHelper)
-            Container(
-              margin:
-                  const EdgeInsets.only(bottom: Dimensions.paddingSizeSmall),
-              padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
-              decoration: BoxDecoration(
-                color: Colors.blue[50],
-                border: Border.all(color: Colors.blue[300]!, width: 1),
-                borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.camera_alt_rounded,
-                      color: Colors.blue[600], size: 28),
-                  const SizedBox(width: Dimensions.paddingSizeDefault),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'please_take_pickup_photo_first'.tr,
-                          style: robotoBold.copyWith(
-                            color: Colors.blue[700],
-                            fontSize: Dimensions.fontSizeDefault,
-                          ),
-                        ),
-                        const SizedBox(height: Dimensions.paddingSizeExtraSmall),
-                        Text(
-                          'pickup_photo_instruction'.tr,
-                          style: robotoRegular.copyWith(
-                            color: Colors.blue[600],
-                            fontSize: Dimensions.fontSizeSmall,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          Row(
-            children: [
-              Icon(Icons.camera_alt_rounded,
-                  color: Theme.of(context).primaryColor, size: 24),
-              const SizedBox(width: Dimensions.paddingSizeSmall),
-              Text('pickup_photos'.tr,
-                  style: robotoBold.copyWith(fontSize: Dimensions.fontSizeLarge)),
-            ],
-          ),
-          const SizedBox(height: Dimensions.paddingSizeSmall),
-          Text(
-            'upload_order_proof_description'.tr,
-            style: robotoRegular.copyWith(
-                color: Theme.of(context).hintColor,
-                fontSize: Dimensions.fontSizeSmall),
-          ),
-          const SizedBox(height: Dimensions.paddingSizeDefault),
-          
-          // Show already uploaded photos
-          if (hasUploadedPhotos) ...[
-            Text('uploaded_photos'.tr, style: robotoMedium),
-            const SizedBox(height: Dimensions.paddingSizeSmall),
-            GridView.builder(
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                childAspectRatio: 1.5,
-                crossAxisCount: ResponsiveHelper.isTab(context) ? 5 : 3,
-                mainAxisSpacing: 10,
-                crossAxisSpacing: 5,
-              ),
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: order.orderProofFullUrl!.length,
-              itemBuilder: (BuildContext context, index) {
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: InkWell(
-                    onTap: () => openDialog(
-                        context, order.orderProofFullUrl![index]),
-                    child: Center(
-                      child: ClipRRect(
-                        borderRadius:
-                            BorderRadius.circular(Dimensions.radiusSmall),
-                        child: CustomImageWidget(
-                          image: order.orderProofFullUrl![index],
-                          width: 100,
-                          height: 100,
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: Dimensions.paddingSizeDefault),
-          ],
-
-          // Show selected photos (not yet uploaded)
-          if (hasSelectedPhotos) ...[
-            Text('selected_photos'.tr,
-                style: robotoMedium.copyWith(
-                    color: Theme.of(context).primaryColor)),
-            const SizedBox(height: Dimensions.paddingSizeSmall),
-            SizedBox(
-              height: 100,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: orderController.pickedOrderProofImages.length,
-                itemBuilder: (context, index) {
-                  return Container(
-                    margin: const EdgeInsets.only(right: 8),
-                    child: Stack(
-                      children: [
-                        ClipRRect(
-                          borderRadius:
-                              BorderRadius.circular(Dimensions.radiusSmall),
-                          child: Image.file(
-                            File(orderController.pickedOrderProofImages[index].path),
-                            width: 100,
-                            height: 100,
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                        Positioned(
-                          top: 0,
-                          right: 0,
-                          child: InkWell(
-                            onTap: () {
-                              orderController.pickOrderProofImages(
-                                  isRemove: true, isCamera: false);
-                              orderController.pickedOrderProofImages.removeAt(index);
-                              orderController.update();
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: const BoxDecoration(
-                                color: Colors.red,
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(Icons.close,
-                                  color: Colors.white, size: 16),
+      return Container(
+        margin:
+            const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeDefault),
+        padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
+          border: Border.all(color: Theme.of(context).dividerColor),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (showHelper)
+              Container(
+                margin:
+                    const EdgeInsets.only(bottom: Dimensions.paddingSizeSmall),
+                padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
+                decoration: BoxDecoration(
+                  color: Colors.blue[50],
+                  border: Border.all(color: Colors.blue[300]!, width: 1),
+                  borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.camera_alt_rounded,
+                        color: Colors.blue[600], size: 28),
+                    const SizedBox(width: Dimensions.paddingSizeDefault),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'please_take_pickup_photo_first'.tr,
+                            style: robotoBold.copyWith(
+                              color: Colors.blue[700],
+                              fontSize: Dimensions.fontSizeDefault,
                             ),
                           ),
+                          const SizedBox(
+                              height: Dimensions.paddingSizeExtraSmall),
+                          Text(
+                            'pickup_photo_instruction'.tr,
+                            style: robotoRegular.copyWith(
+                              color: Colors.blue[600],
+                              fontSize: Dimensions.fontSizeSmall,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            Row(
+              children: [
+                Icon(Icons.camera_alt_rounded,
+                    color: Theme.of(context).primaryColor, size: 24),
+                const SizedBox(width: Dimensions.paddingSizeSmall),
+                Text('pickup_photos'.tr,
+                    style: robotoBold.copyWith(
+                        fontSize: Dimensions.fontSizeLarge)),
+              ],
+            ),
+            const SizedBox(height: Dimensions.paddingSizeSmall),
+            Text(
+              'upload_order_proof_description'.tr,
+              style: robotoRegular.copyWith(
+                  color: Theme.of(context).hintColor,
+                  fontSize: Dimensions.fontSizeSmall),
+            ),
+            const SizedBox(height: Dimensions.paddingSizeDefault),
+
+            // Show already uploaded photos
+            if (hasUploadedPhotos) ...[
+              Text('uploaded_photos'.tr, style: robotoMedium),
+              const SizedBox(height: Dimensions.paddingSizeSmall),
+              GridView.builder(
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  childAspectRatio: 1.5,
+                  crossAxisCount: ResponsiveHelper.isTab(context) ? 5 : 3,
+                  mainAxisSpacing: 10,
+                  crossAxisSpacing: 5,
+                ),
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: order.orderProofFullUrl!.length,
+                itemBuilder: (BuildContext context, index) {
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: InkWell(
+                      onTap: () =>
+                          openDialog(context, order.orderProofFullUrl![index]),
+                      child: Center(
+                        child: ClipRRect(
+                          borderRadius:
+                              BorderRadius.circular(Dimensions.radiusSmall),
+                          child: CustomImageWidget(
+                            image: order.orderProofFullUrl![index],
+                            width: 100,
+                            height: 100,
+                          ),
                         ),
-                      ],
+                      ),
                     ),
                   );
                 },
               ),
-            ),
-            const SizedBox(height: Dimensions.paddingSizeDefault),
-          ],
+              const SizedBox(height: Dimensions.paddingSizeDefault),
+            ],
 
-          // Upload buttons
-          Row(
-            children: [
-              Expanded(
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: () {
-                      assert(() {
-                        debugPrint('PICKUP PHOTO BUTTON TAP');
-                        return true;
-                      }());
-                      Get.bottomSheet(
-                        CameraButtonSheetWidget(
-                          isOrderProof: true,
-                          onCameraTap: () {
-                            orderController.pickOrderProofImages(
-                                isRemove: false, isCamera: true);
-                            Get.back();
-                          },
-                          onGalleryTap: () {
-                            orderController.pickOrderProofImages(
-                                isRemove: false, isCamera: false);
-                            Get.back();
-                          },
-                        ),
-                        backgroundColor: Colors.transparent,
-                      );
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: Dimensions.paddingSizeDefault),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context)
-                            .primaryColor
-                            .withValues(alpha: 0.1),
-                        borderRadius:
-                            BorderRadius.circular(Dimensions.radiusDefault),
-                        border: Border.all(
-                            color: Theme.of(context).primaryColor, width: 1),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+            // Show selected photos (not yet uploaded)
+            if (hasSelectedPhotos) ...[
+              Text('selected_photos'.tr,
+                  style: robotoMedium.copyWith(
+                      color: Theme.of(context).primaryColor)),
+              const SizedBox(height: Dimensions.paddingSizeSmall),
+              SizedBox(
+                height: 100,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: orderController.pickedOrderProofImages.length,
+                  itemBuilder: (context, index) {
+                    return Container(
+                      margin: const EdgeInsets.only(right: 8),
+                      child: Stack(
                         children: [
-                          Icon(Icons.add_photo_alternate,
-                              color: Theme.of(context).primaryColor),
-                          const SizedBox(width: Dimensions.paddingSizeSmall),
-                          Text('select_photos'.tr,
-                              style: robotoMedium.copyWith(
-                                  color: Theme.of(context).primaryColor)),
+                          ClipRRect(
+                            borderRadius:
+                                BorderRadius.circular(Dimensions.radiusSmall),
+                            child: Image.file(
+                              File(orderController
+                                  .pickedOrderProofImages[index].path),
+                              width: 100,
+                              height: 100,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                          Positioned(
+                            top: 0,
+                            right: 0,
+                            child: InkWell(
+                              onTap: () {
+                                orderController.pickOrderProofImages(
+                                    isRemove: true, isCamera: false);
+                                orderController.pickedOrderProofImages
+                                    .removeAt(index);
+                                orderController.update();
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: const BoxDecoration(
+                                  color: Colors.red,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.close,
+                                    color: Colors.white, size: 16),
+                              ),
+                            ),
+                          ),
                         ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: Dimensions.paddingSizeDefault),
+            ],
+
+            // Upload buttons
+            Row(
+              children: [
+                Expanded(
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () {
+                        assert(() {
+                          debugPrint('PICKUP PHOTO BUTTON TAP');
+                          return true;
+                        }());
+                        Get.bottomSheet(
+                          CameraButtonSheetWidget(
+                            isOrderProof: true,
+                            onCameraTap: () {
+                              orderController.pickOrderProofImages(
+                                  isRemove: false, isCamera: true);
+                            },
+                            onGalleryTap: () {
+                              orderController.pickOrderProofImages(
+                                  isRemove: false, isCamera: false);
+                            },
+                          ),
+                          backgroundColor: Colors.transparent,
+                        );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: Dimensions.paddingSizeDefault),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context)
+                              .primaryColor
+                              .withValues(alpha: 0.1),
+                          borderRadius:
+                              BorderRadius.circular(Dimensions.radiusDefault),
+                          border: Border.all(
+                              color: Theme.of(context).primaryColor, width: 1),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.add_photo_alternate,
+                                color: Theme.of(context).primaryColor),
+                            const SizedBox(width: Dimensions.paddingSizeSmall),
+                            Text('select_photos'.tr,
+                                style: robotoMedium.copyWith(
+                                    color: Theme.of(context).primaryColor)),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-              if (hasSelectedPhotos) ...[
-                const SizedBox(width: Dimensions.paddingSizeDefault),
-                Expanded(
-                  child: CustomButtonWidget(
-                    buttonText: 'upload'.tr,
-                    onPressed: () async {
-                      final success = await orderController.uploadOrderProof(order);
-                      if (success) {
-                        // Refresh order details
-                        await orderController.getOrderDetails(order.id, false);
-                        // Refresh the order model
-                        await orderController.getOrderWithId(order.id);
-                        setState(() {});
-                      }
-                    },
-                    radius: Dimensions.radiusDefault,
+                if (hasSelectedPhotos) ...[
+                  const SizedBox(width: Dimensions.paddingSizeDefault),
+                  Expanded(
+                    child: CustomButtonWidget(
+                      buttonText: 'upload'.tr,
+                      onPressed: () async {
+                        final success =
+                            await orderController.uploadOrderProof(order);
+                        if (success) {
+                          // Refresh order details
+                          await orderController.getOrderDetails(
+                              order.id, false);
+                          // Refresh the order model
+                          await orderController.getOrderWithId(order.id);
+                          setState(() {});
+                        }
+                      },
+                      radius: Dimensions.radiusDefault,
+                    ),
                   ),
-                ),
+                ],
               ],
-            ],
-          ),
-          if (hasSelectedPhotos)
-            Padding(
-              padding: const EdgeInsets.only(top: Dimensions.paddingSizeSmall),
-              child: Text(
-                '${orderController.pickedOrderProofImages.length}/5 photos selected',
-                style: robotoRegular.copyWith(
-                    fontSize: Dimensions.fontSizeSmall,
-                    color: Theme.of(context).hintColor),
-                textAlign: TextAlign.center,
-              ),
             ),
-        ],
-      ),
-    );
+            if (hasSelectedPhotos)
+              Padding(
+                padding:
+                    const EdgeInsets.only(top: Dimensions.paddingSizeSmall),
+                child: Text(
+                  '${orderController.pickedOrderProofImages.length}/5 photos selected',
+                  style: robotoRegular.copyWith(
+                      fontSize: Dimensions.fontSizeSmall,
+                      color: Theme.of(context).hintColor),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+          ],
+        ),
+      );
     });
   }
 
@@ -478,23 +484,27 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
       final isSelfDelivery = selfDelivery ?? false;
       final isPickedUp = pickedUp ?? false;
       final isHandover = handover ?? false;
-      
+
       String translationKey;
       if (isParcel && isAccepted) {
         translationKey = 'swipe_to_confirm_delivery';
       } else if (isCod && isAccepted && !isRestConfModel && !isSelfDelivery) {
         translationKey = 'swipe_to_confirm_order';
       } else if (isPickedUp) {
-        translationKey = isParcel ? 'swipe_to_deliver_parcel' : 'swipe_to_deliver_order';
+        translationKey =
+            isParcel ? 'swipe_to_deliver_parcel' : 'swipe_to_deliver_order';
       } else if (isHandover) {
-        translationKey = isParcel ? 'swipe_to_pick_up_parcel' : 'swipe_to_pick_up_order';
+        translationKey =
+            isParcel ? 'swipe_to_pick_up_parcel' : 'swipe_to_pick_up_order';
       } else {
         translationKey = 'swipe_to_pick_up_order';
       }
-      
+
       // Try to translate, fallback to key if translation fails
       final translated = translationKey.tr;
-      return translated.isNotEmpty && translated != translationKey ? translated : translationKey;
+      return translated.isNotEmpty && translated != translationKey
+          ? translated
+          : translationKey;
     } catch (e) {
       // If anything fails, return a safe default
       return 'Continue';
@@ -699,14 +709,10 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                     _normalizeStatus(controllerOrderModel.orderStatus);
                 processing =
                     status == _normalizeStatus(AppConstants.processing);
-                accepted =
-                    status == _normalizeStatus(AppConstants.accepted);
-                confirmed =
-                    status == _normalizeStatus(AppConstants.confirmed);
-                handover =
-                    status == _normalizeStatus(AppConstants.handover);
-                pickedUp =
-                    status == _normalizeStatus(AppConstants.pickedUp);
+                accepted = status == _normalizeStatus(AppConstants.accepted);
+                confirmed = status == _normalizeStatus(AppConstants.confirmed);
+                handover = status == _normalizeStatus(AppConstants.handover);
+                pickedUp = status == _normalizeStatus(AppConstants.pickedUp);
                 cod = controllerOrderModel.paymentMethod == 'cash_on_delivery';
                 wallet = controllerOrderModel.paymentMethod == 'wallet';
                 partialPay =
@@ -753,7 +759,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                           kDebugMode
                               ? OrderDebugWidget(order: controllerOrderModel)
                               : const SizedBox.shrink(),
-                          
+
                           Row(children: [
                             Text(
                                 '${parcel! ? 'delivery_id'.tr : 'order_id'.tr}:',
@@ -1148,10 +1154,10 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                     ],
                                   ),
                                 (Get.find<SplashController>()
-                                            .getModule(
-                                                controllerOrderModel.moduleType)
-                                            .orderAttachment ==
-                                        true &&
+                                                .getModule(controllerOrderModel
+                                                    .moduleType)
+                                                .orderAttachment ==
+                                            true &&
                                         controllerOrderModel
                                                 .orderAttachmentFullUrl !=
                                             null &&
@@ -1186,7 +1192,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                           // Order Proof Upload Section (Modules 6/7/8/9 when status is confirmed)
                           _buildOrderProofUploadSection(controllerOrderModel),
                           (_isStatus(controllerOrderModel.orderStatus,
-                                  AppConstants.delivered) &&
+                                      AppConstants.delivered) &&
                                   controllerOrderModel.orderProofFullUrl !=
                                       null &&
                                   controllerOrderModel
@@ -1371,26 +1377,26 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                   ]),
                             )
                           : const SizedBox(),
-                        (cancelPermission == true &&
-                                (accepted == true || processing == true) &&
-                                !showSlider)
-                            ? Padding(
-                                padding: const EdgeInsets.only(
-                                    bottom: Dimensions.paddingSizeSmall),
-                                child: CustomButtonWidget(
-                                  buttonText: 'cancel'.tr,
-                                  backgroundColor: Colors.red,
-                                  onPressed: orderController.isLoading
-                                      ? null
-                                      : () => _showCancelDialog(
-                                          controllerOrderModel),
-                                ),
-                              )
-                            : const SizedBox(),
-                        (_isStatus(controllerOrderModel.orderStatus,
-                                AppConstants.pickedUp) ||
-                            _isStatus(controllerOrderModel.orderStatus,
-                                AppConstants.handover))
+                      (cancelPermission == true &&
+                              (accepted == true || processing == true) &&
+                              !showSlider)
+                          ? Padding(
+                              padding: const EdgeInsets.only(
+                                  bottom: Dimensions.paddingSizeSmall),
+                              child: CustomButtonWidget(
+                                buttonText: 'cancel'.tr,
+                                backgroundColor: Colors.red,
+                                onPressed: orderController.isLoading
+                                    ? null
+                                    : () =>
+                                        _showCancelDialog(controllerOrderModel),
+                              ),
+                            )
+                          : const SizedBox(),
+                      (_isStatus(controllerOrderModel.orderStatus,
+                                  AppConstants.pickedUp) ||
+                              _isStatus(controllerOrderModel.orderStatus,
+                                  AppConstants.handover))
                           ? Column(children: [
                               // ✅ MANDATORY INSTRUCTION
                               if (!orderController.hasPickedDeliveryPhotos())
@@ -1402,18 +1408,15 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                   decoration: BoxDecoration(
                                     color: Colors.orange[50],
                                     border: Border.all(
-                                        color: Colors.orange[400]!,
-                                        width: 2),
+                                        color: Colors.orange[400]!, width: 2),
                                     borderRadius: BorderRadius.circular(
                                         Dimensions.radiusDefault),
                                   ),
                                   child: Row(children: [
                                     Icon(Icons.warning_amber_rounded,
-                                        color: Colors.orange[700],
-                                        size: 24),
+                                        color: Colors.orange[700], size: 24),
                                     const SizedBox(
-                                        width: Dimensions
-                                            .paddingSizeSmall),
+                                        width: Dimensions.paddingSizeSmall),
                                     Expanded(
                                       child: Column(
                                         crossAxisAlignment:
@@ -1423,20 +1426,17 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                             'please_take_delivery_photo_first'
                                                 .tr,
                                             style: robotoMedium.copyWith(
-                                                color:
-                                                    Colors.orange[700]),
+                                                color: Colors.orange[700]),
                                           ),
                                           const SizedBox(
                                               height: Dimensions
                                                   .paddingSizeExtraSmall),
                                           Text(
-                                            'delivery_requires_photo_proof'
-                                                .tr,
+                                            'delivery_requires_photo_proof'.tr,
                                             style: robotoRegular.copyWith(
                                                 fontSize:
                                                     Dimensions.fontSizeSmall,
-                                                color:
-                                                    Colors.orange[600]),
+                                                color: Colors.orange[600]),
                                           ),
                                         ],
                                       ),
@@ -1480,19 +1480,22 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                                   VerifyDeliverySheetWidget(
                                                     currentOrderModel:
                                                         controllerOrderModel,
-                                                    verify: Get.find<SplashController>()
+                                                    verify: Get.find<
+                                                            SplashController>()
                                                         .configModel!
                                                         .orderDeliveryVerification,
                                                     orderAmount: partialPay!
                                                         ? controllerOrderModel
-                                                            .payments![1].amount!
+                                                            .payments![1]
+                                                            .amount!
                                                             .toDouble()
                                                         : controllerOrderModel
                                                             .orderAmount,
                                                     cod: cod! ||
                                                         (partialPay &&
                                                             controllerOrderModel
-                                                                    .payments![1]
+                                                                    .payments![
+                                                                        1]
                                                                     .paymentMethod ==
                                                                 'cash_on_delivery'),
                                                   ),
@@ -1509,19 +1512,22 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                                   CollectMoneyDeliverySheetWidget(
                                                     currentOrderModel:
                                                         controllerOrderModel,
-                                                    verify: Get.find<SplashController>()
+                                                    verify: Get.find<
+                                                            SplashController>()
                                                         .configModel!
                                                         .orderDeliveryVerification,
                                                     orderAmount: partialPay!
                                                         ? controllerOrderModel
-                                                            .payments![1].amount!
+                                                            .payments![1]
+                                                            .amount!
                                                             .toDouble()
                                                         : controllerOrderModel
                                                             .orderAmount,
                                                     cod: cod ||
                                                         (partialPay &&
                                                             controllerOrderModel
-                                                                    .payments![1]
+                                                                    .payments![
+                                                                        1]
                                                                     .paymentMethod ==
                                                                 'cash_on_delivery'),
                                                   ),
@@ -1534,14 +1540,16 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                               CollectMoneyDeliverySheetWidget(
                                                 currentOrderModel:
                                                     controllerOrderModel,
-                                                verify: Get.find<SplashController>()
+                                                verify: Get.find<
+                                                        SplashController>()
                                                     .configModel!
                                                     .orderDeliveryVerification,
                                                 orderAmount: partialPay!
                                                     ? controllerOrderModel
                                                         .payments![1].amount!
                                                         .toDouble()
-                                                    : controllerOrderModel.orderAmount,
+                                                    : controllerOrderModel
+                                                        .orderAmount,
                                                 cod: cod! ||
                                                     (partialPay &&
                                                         controllerOrderModel
@@ -1608,14 +1616,19 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                                   selfDelivery)) ||
                                           (processing! ||
                                               (confirmed! &&
-                                                  !([6, 7, 8, 9].contains(
+                                                  !([
+                                                        6,
+                                                        7,
+                                                        8,
+                                                        9
+                                                      ].contains(
                                                           controllerOrderModel
                                                               .module_id) &&
                                                       controllerOrderModel
                                                               .orderProofFullUrl !=
                                                           null &&
                                                       controllerOrderModel
-                                                              .orderProofFullUrl!
+                                                          .orderProofFullUrl!
                                                           .isNotEmpty))))
                                       ? Container(
                                           padding: const EdgeInsets.all(
@@ -1894,7 +1907,8 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                                             '🔧 DELIVERY FLOW: Opening VerifyDeliverySheetWidget for delivery');
                                                         debugPrint(
                                                             '   Order Status: ${controllerOrderModel.orderStatus}');
-                                                        debugPrint('   COD: $cod');
+                                                        debugPrint(
+                                                            '   COD: $cod');
                                                         debugPrint(
                                                             '   Parcel: $parcel');
                                                         Get.bottomSheet(
@@ -2001,9 +2015,16 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                                                   true);
                                                         }
                                                       });
-                                                    } else if ((confirmed! || handover!) &&
-                                                        ![AppConstants.canceled, AppConstants.delivered, AppConstants.pickedUp]
-                                                            .contains(controllerOrderModel.orderStatus)) {
+                                                    } else if ((confirmed! ||
+                                                            handover!) &&
+                                                        ![
+                                                          AppConstants.canceled,
+                                                          AppConstants
+                                                              .delivered,
+                                                          AppConstants.pickedUp
+                                                        ].contains(
+                                                            controllerOrderModel
+                                                                .orderStatus)) {
                                                       // ✅ GENERAL PICKUP LOGIC - applies to ALL orders
                                                       // بدون قيد module - لأي طلب في حالة confirmed أو handover
                                                       if (Get.find<
@@ -2012,15 +2033,19 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                                               .active ==
                                                           1) {
                                                         // Step 1: Check if module 3 needs OTP
-                                                        if (controllerOrderModel.module_id == 3) {
+                                                        if (controllerOrderModel
+                                                                .module_id ==
+                                                            3) {
                                                           // Module 3 - Show store OTP dialog
                                                           String? storeOtp =
                                                               await _showStoreOtpDialog();
 
-                                                          if (storeOtp != null &&
+                                                          if (storeOtp !=
+                                                                  null &&
                                                               storeOtp
                                                                   .isNotEmpty) {
-                                                            if (storeOtp.length !=
+                                                            if (storeOtp
+                                                                    .length !=
                                                                 4) {
                                                               showCustomSnackBar(
                                                                   'otp_must_be_4_digits'
@@ -2037,25 +2062,30 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                                             return; // User cancelled OTP
                                                           }
                                                         }
-                                                        
+
                                                         // Step 2: Check if pickup photos are uploaded
                                                         // ✅ Apply to ALL orders, check status not module
-                                                        if (!Get.find<OrderController>().hasUploadedRestaurantPhotos(controllerOrderModel)) {
-                                                          debugPrint(' ❌ PICKUP BLOCKED: No pickup photos uploaded');
+                                                        if (!Get.find<
+                                                                OrderController>()
+                                                            .hasUploadedRestaurantPhotos(
+                                                                controllerOrderModel)) {
+                                                          debugPrint(
+                                                              ' ❌ PICKUP BLOCKED: No pickup photos uploaded');
                                                           showCustomSnackBar(
-                                                              'please_upload_order_proof_photos_first'.tr,
+                                                              'please_upload_order_proof_photos_first'
+                                                                  .tr,
                                                               isError: true);
                                                           return;
                                                         }
-                                                        
-                                                        debugPrint('✅ PICKUP ALLOWED: All validations passed');
+
+                                                        debugPrint(
+                                                            '✅ PICKUP ALLOWED: All validations passed');
                                                         // Step 3: Update status to 'picked_up'
                                                         Get.find<
                                                                 OrderController>()
                                                             .updateOrderStatus(
                                                           controllerOrderModel,
-                                                          AppConstants
-                                                              .pickedUp,
+                                                          AppConstants.pickedUp,
                                                           back: false,
                                                           gotoDashboard: false,
                                                         );
@@ -2071,8 +2101,10 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                                       parcel: parcel,
                                                       accepted: accepted,
                                                       cod: cod,
-                                                      restConfModel: restConfModel,
-                                                      selfDelivery: selfDelivery,
+                                                      restConfModel:
+                                                          restConfModel,
+                                                      selfDelivery:
+                                                          selfDelivery,
                                                       pickedUp: pickedUp,
                                                       handover: handover,
                                                     ),
@@ -2087,7 +2119,12 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                                   dismissThresholds: 0.5,
                                                   dismissible: false,
                                                   shimmer: true,
-                                                  width: MediaQuery.of(context).size.width - (Dimensions.paddingSizeDefault * 2),
+                                                  width: MediaQuery.of(context)
+                                                          .size
+                                                          .width -
+                                                      (Dimensions
+                                                              .paddingSizeDefault *
+                                                          2),
                                                   height: 60,
                                                   buttonSize: 50,
                                                   radius: 10,
