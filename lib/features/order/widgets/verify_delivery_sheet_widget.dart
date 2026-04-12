@@ -39,19 +39,10 @@ class _VerifyDeliverySheetWidgetState extends State<VerifyDeliverySheetWidget> {
   @override
   void initState() {
     super.initState();
-    print('🔧 VerifyDeliverySheetWidget initialized:');
-    print('   isSenderPay: ${widget.isSenderPay}');
-    print('   verify: ${widget.verify}');
-    print('   isSetOtp: ${widget.isSetOtp}');
-
     if (widget.isSetOtp!) {
       if (widget.isSenderPay) {
-        // For pickup (isSenderPay = true), use store OTP
-        print('🔧 Setting up for PICKUP - using store OTP');
         Get.find<OrderController>().setStoreOtp('');
       } else {
-        // For delivery (isSenderPay = false), use customer OTP
-        print('🔧 Setting up for DELIVERY - using customer OTP');
         Get.find<OrderController>().setOtp('');
       }
     }
@@ -189,12 +180,6 @@ class _VerifyDeliverySheetWidgetState extends State<VerifyDeliverySheetWidget> {
                                     orderController.otp.length != 4)))
                         ? null
                         : () {
-                            print(
-                                '🔧 VerifyDeliverySheetWidget button pressed:');
-                            print('   isSenderPay: ${widget.isSenderPay}');
-                            print(
-                                '   Status to send: ${widget.isSenderPay ? 'picked_up' : 'delivered'}');
-
                             if (widget.cod!) {
                               if (widget.verify! && widget.isParcel!) {
                                 Get.back(result: 'show_price_view');

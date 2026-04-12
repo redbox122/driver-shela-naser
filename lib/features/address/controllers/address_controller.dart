@@ -97,19 +97,48 @@ class AddressController extends GetxController implements GetxService {
     if (!updateInAddress) {
       update();
     }
+
     ZoneResponseModel? responseModel;
     Response response = await addressServiceInterface.getZone(lat, long);
+
     if (response.statusCode == 200) {
-      _inZone = true;
-      _zoneID = int.parse(jsonDecode(response.body['zone_id'])[0].toString());
-      List<int> zoneIds = [];
-      jsonDecode(response.body['zone_id']).forEach((zoneId) {
-        zoneIds.add(int.parse(zoneId.toString()));
-      });
+      try {
+        // CS-06: safe parse — zone_id array may be empty or contain non-ints
+        final decoded = jsonDecode(response.body['zone_id']);
+        if (decoded is List && decoded.isNotEmpty) {
+          final List<int> zoneIds = [];
+          for (final zoneId in decoded) {
+            final int? id = int.tryParse(zoneId.toString());
+            if (id != null) zoneIds.add(id);
+          }
+          if (zoneIds.isNotEmpty) {
+            _zoneID = zoneIds.first;
+            _inZone = true;
+            // SM-05: on success we now return a populated ZoneResponseModel
+            // (previously the method returned null on success, making the
+            // caller's `response != null && response.isSuccess` always false).
+            responseModel =
+                ZoneResponseModel(true, null, zoneIds, []);
+          } else {
+            _inZone = false;
+            responseModel =
+                ZoneResponseModel(false, response.statusText, [], []);
+          }
+        } else {
+          _inZone = false;
+          responseModel =
+              ZoneResponseModel(false, response.statusText, [], []);
+        }
+      } catch (e) {
+        debugPrint('getZone parse error: $e');
+        _inZone = false;
+        responseModel = ZoneResponseModel(false, response.statusText, [], []);
+      }
     } else {
       _inZone = false;
       responseModel = ZoneResponseModel(false, response.statusText, [], []);
     }
+
     markerLoad ? _loading = false : _isLoading = false;
     update();
     return responseModel;

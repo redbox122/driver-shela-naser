@@ -73,13 +73,7 @@ class OrderController extends GetxController implements GetxService {
                 Get.find<ProfileController>().profileModel?.id)
         .toList();
 
-    print('🔍 FILTERED ORDERS DEBUG:');
-    print('Total orders: ${_currentOrderList!.length}');
-    print('Assigned orders: ${assignedOrders.length}');
-    for (var order in assignedOrders) {
-      print(
-          'Assigned Order #${order.id}: Status=${order.orderStatus}, DeliveryManId=${order.deliveryManId}');
-    }
+    debugPrint('[currentOrdersSorted] total=${_currentOrderList!.length} assigned=${assignedOrders.length}');
 
     return OrderHelper.sortOrdersByPriority(assignedOrders);
   }
@@ -269,11 +263,7 @@ class OrderController extends GetxController implements GetxService {
     }
 
     // Debug print - check order status before upload
-    print('📸 UPLOADING RESTAURANT PHOTOS:');
-    print('   Order ID: ${order.id}');
-    print('   Current Status: ${order.orderStatus}');
-    print('   Selected Photos: ${_pickedOrderProofImages.length}');
-    print('   Module ID: ${order.module_id}');
+    debugPrint('[uploadOrderProof] order_id=${order.id} photos=${_pickedOrderProofImages.length}');
 
     _isLoading = true;
     update();
@@ -294,7 +284,6 @@ class OrderController extends GetxController implements GetxService {
         updateStatusBody.otpStore = order.otpStore;
       }
 
-      print('📸 Sending upload request...');
       ResponseModel responseModel = await orderServiceInterface.updateOrderStatus(
           updateStatusBody, multiParts);
 
@@ -305,27 +294,30 @@ class OrderController extends GetxController implements GetxService {
         // Refresh order details to get updated orderProofFullUrl
         await getOrderDetails(order.id, false);
         
-        print('✅ PHOTOS UPLOADED SUCCESSFULLY');
-        print('   Photos are now saved on server');
-        print('   "Pick Up" button is NOW ENABLED');
-        
+        debugPrint('[uploadOrderProof] success');
         showCustomSnackBar('order_proof_photos_uploaded'.tr, isError: false);
         update();
         return true;
       } else {
-        print('❌ Upload failed: ${responseModel.message}');
+        debugPrint('[uploadOrderProof] failed: ${responseModel.message}');
         showCustomSnackBar(responseModel.message, isError: true);
         return false;
       }
     } catch (e) {
-      print('❌ Upload error: $e');
       showCustomSnackBar('upload_failed'.tr, isError: true);
-      debugPrint('Order proof upload error: $e');
+      debugPrint('[uploadOrderProof] error: $e');
       return false;
     } finally {
       _isLoading = false;
       update();
     }
+  }
+
+  @override
+  void onClose() {
+    // ML-02: TextEditingController holds a ChangeNotifier — must be disposed
+    priceRequest.dispose();
+    super.onClose();
   }
 
   void initLoading() {
@@ -494,11 +486,7 @@ class OrderController extends GetxController implements GetxService {
     _isLoading = true;
     update();
 
-    print('🔧 ORDER STATUS UPDATE:');
-    print('   Order ID: ${currentOrder.id}');
-    print('   Status: $status');
-    print('   Store OTP: $_storeOtp');
-    print('   Customer OTP: $_otp');
+    debugPrint('[updateOrderStatus] order_id=${currentOrder.id} status=$status');
 
     List<MultipartBody> multiParts =
         orderServiceInterface.prepareOrderProofImages(_pickedPrescriptions);
@@ -509,11 +497,6 @@ class OrderController extends GetxController implements GetxService {
       otp: status == AppConstants.delivered ? _otp : null,
       otpStore: status == AppConstants.pickedUp ? _storeOtp : null,
     );
-
-    print('🔧 UpdateStatusBodyModel created:');
-    print('   Status: ${updateStatusBody.status}');
-    print('   OTP: ${updateStatusBody.otp}');
-    print('   OTP Store: ${updateStatusBody.otpStore}');
 
     ResponseModel responseModel = await orderServiceInterface.updateOrderStatus(
         updateStatusBody, multiParts);
@@ -527,7 +510,8 @@ class OrderController extends GetxController implements GetxService {
       }
       Get.find<ProfileController>().getProfile();
       getCurrentOrders();
-      currentOrder.orderStatus = status;
+      // SM-07: do not mutate the passed-in OrderModel directly; getCurrentOrders()
+      // above already refreshes the list from the server with the updated status.
       if (_isTerminalStatus(status)) {
         _removeOrderFromCurrentList(currentOrder.id);
         _removeOrderFromLatestList(currentOrder.id);
@@ -732,7 +716,6 @@ class OrderController extends GetxController implements GetxService {
 
   void setOtp(String otp) {
     _otp = otp;
-    print('🔧 Customer OTP set: $otp');
     if (otp != '') {
       update();
     }
@@ -740,17 +723,23 @@ class OrderController extends GetxController implements GetxService {
 
   void setStoreOtp(String otp) {
     _storeOtp = otp;
-    print('🔧 Store OTP set: $otp');
     if (otp != '') {
       update();
     }
   }
 
-  Future<bool> addRequest(
-    orderId,
-  ) {
-    return orderServiceInterface.setPriceService(
-        orderId, double.parse(priceRequest.text));
+  Future<bool> addRequest(int? orderId) {
+    // CS-05: guard against null orderId and non-numeric price input
+    if (orderId == null) {
+      showCustomSnackBar('invalid_order_id'.tr, isError: true);
+      return Future.value(false);
+    }
+    final double? price = double.tryParse(priceRequest.text.trim());
+    if (price == null) {
+      showCustomSnackBar('invalid_price'.tr, isError: true);
+      return Future.value(false);
+    }
+    return orderServiceInterface.setPriceService(orderId, price);
   }
 
   /// Check if delivery man can see orders based on their status

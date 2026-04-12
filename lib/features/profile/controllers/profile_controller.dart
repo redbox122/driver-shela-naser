@@ -129,6 +129,12 @@ class ProfileController extends GetxController implements GetxService {
     _timer?.cancel();
   }
 
+  @override
+  void onClose() {
+    _timer?.cancel(); // ML-03: cancel location timer to prevent memory leak
+    super.onClose();
+  }
+
   /// Handles location permission checking with state tracking to prevent repeated dialogs
   Future<void> _handleLocationPermissionCheck() async {
     // Prevent multiple simultaneous permission checks

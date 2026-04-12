@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 import 'package:shellafood_delivery/features/auth/controllers/auth_controller.dart';
 import 'package:shellafood_delivery/features/language/controllers/language_controller.dart';
 import 'package:shellafood_delivery/features/splash/controllers/splash_controller.dart';
@@ -25,11 +24,9 @@ final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
 
 Future<void> main() async {
-  if (!GetPlatform.isWeb) {
-    HttpOverrides.global = MyHttpOverrides();
-  }
-  setPathUrlStrategy();
+  // SS-06: ensureInitialized must come before any platform-channel calls
   WidgetsFlutterBinding.ensureInitialized();
+  setPathUrlStrategy();
 
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
@@ -55,17 +52,33 @@ Future<void> main() async {
     }
   } catch (e) {
     if (kDebugMode) {
-      print("Error initializing notifications: $e");
+      debugPrint("Error initializing notifications: $e");
     }
   }
 
   runApp(MyApp(languages: languages, body: body));
 }
 
-class MyApp extends StatelessWidget {
+// WR-04: Converted to StatefulWidget so web init side-effects run once in
+// initState() instead of on every build() call, which caused repeated API calls.
+class MyApp extends StatefulWidget {
   final Map<String, Map<String, String>>? languages;
   final NotificationBodyModel? body;
   const MyApp({super.key, required this.languages, this.body});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+    if (GetPlatform.isWeb) {
+      Get.find<SplashController>().initSharedData();
+      _route();
+    }
+  }
 
   void _route() {
     Get.find<SplashController>().getConfigData().then((bool isSuccess) async {
@@ -79,11 +92,6 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (GetPlatform.isWeb) {
-      Get.find<SplashController>().initSharedData();
-      _route();
-    }
-
     return GetBuilder<ThemeController>(builder: (themeController) {
       return GetBuilder<LocalizationController>(builder: (localizeController) {
         return GetBuilder<SplashController>(builder: (splashController) {
@@ -95,11 +103,11 @@ class MyApp extends StatelessWidget {
                   navigatorKey: Get.key,
                   theme: themeController.darkTheme ? dark : light,
                   locale: localizeController.locale,
-                  translations: Messages(languages: languages),
+                  translations: Messages(languages: widget.languages),
                   fallbackLocale: Locale(
                       AppConstants.languages[0].languageCode!,
                       AppConstants.languages[0].countryCode),
-                  initialRoute: RouteHelper.getSplashRoute(body),
+                  initialRoute: RouteHelper.getSplashRoute(widget.body),
                   getPages: RouteHelper.routes,
                   navigatorObservers: [AppRouteLogger()],
                   defaultTransition: Transition.topLevel,
@@ -144,11 +152,5 @@ class AppRouteLogger extends GetObserver {
   }
 }
 
-class MyHttpOverrides extends HttpOverrides {
-  @override
-  HttpClient createHttpClient(SecurityContext? context) {
-    return super.createHttpClient(context)
-      ..badCertificateCallback =
-          (X509Certificate cert, String host, int port) => true;
-  }
-}
+// SR-01: MyHttpOverrides (global TLS bypass) has been removed.
+// All HTTPS connections now use proper certificate validation.

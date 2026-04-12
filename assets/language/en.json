@@ -478,5 +478,11 @@
   "mins_short": "m",
   "ago": "ago",
   "hours_mins_ago": "@h h @m m ago",
-  "just_now": "just now"
+  "just_now": "just now",
+  "invalid_price": "Please enter a valid price",
+  "sort_newest": "Newest",
+  "sort_oldest": "Oldest",
+  "sort_distance_none": "Distance: Any",
+  "sort_nearest": "Nearest",
+  "sort_farthest": "Farthest"
 }

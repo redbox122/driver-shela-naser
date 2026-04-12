@@ -53,9 +53,9 @@ class OrderHelper {
         .sort((a, b) => getOrderPriority(a).compareTo(getOrderPriority(b)));
 
     // Debug: Print sorting results
-    print('🔍 ORDER SORTING DEBUG:');
+    debugPrint('🔍 ORDER SORTING DEBUG:');
     for (var order in sortedOrders) {
-      print(
+      debugPrint(
           'Order #${order.id}: Status=${order.orderStatus}, Priority=${getOrderPriority(order)}');
     }
 

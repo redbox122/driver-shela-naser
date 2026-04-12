@@ -21,7 +21,14 @@ import 'package:http/http.dart' as http;
 class NotificationHelper {
   static const String _defaultChannelId = 'shellafood';
   static const String _ordersChannelId = 'shellafood_orders';
+
+  // ML-04: cap the reminder-timer map so a flood of notifications cannot grow
+  // it without bound. 50 simultaneous order reminders is a safe upper limit.
+  static const int _maxReminderTimers = 50;
   static final Map<int, Timer> _orderReminderTimers = {};
+
+  // ML-05: store the foreground subscription so it can be canceled if needed
+  static StreamSubscription<RemoteMessage>? _foregroundSubscription;
 
   static Future<void> initialize(
       FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin) async {
@@ -68,7 +75,7 @@ class NotificationHelper {
         );
 
         if (kDebugMode) {
-          print(
+          debugPrint(
               "🔔 Android notification channel 'shellafood' created with max importance");
         }
       }
@@ -100,24 +107,28 @@ class NotificationHelper {
         }
       } catch (e) {
         if (kDebugMode) {
-          print("Error handling notification tap: $e");
+          debugPrint("Error handling notification tap: $e");
         }
       }
       return;
     });
 
     if (kDebugMode) {
-      print("🔔 Setting up onMessage listener...");
+      debugPrint("🔔 Setting up onMessage listener...");
     }
 
-    // Set up foreground message handler
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+    // Set up foreground message handler.
+    // ML-05: store the subscription so duplicate calls to initialize() do not
+    // stack up a second listener — cancel any existing one first.
+    await _foregroundSubscription?.cancel();
+    _foregroundSubscription =
+        FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
       if (kDebugMode) {
-        print("🔔 onMessage FIRED - message received in foreground");
-        print("🔔 onMessage message type:${message.data['type']}");
-        print("🔔 onMessage message data:${message.data}");
-        print("🔔 onMessage notification title:${message.notification?.title}");
-        print("🔔 onMessage notification body:${message.notification?.body}");
+        debugPrint("🔔 onMessage FIRED - message received in foreground");
+        debugPrint("🔔 onMessage message type:${message.data['type']}");
+        debugPrint("🔔 onMessage message data:${message.data}");
+        debugPrint("🔔 onMessage notification title:${message.notification?.title}");
+        debugPrint("🔔 onMessage notification body:${message.notification?.body}");
       }
 
       try {
@@ -145,7 +156,7 @@ class NotificationHelper {
         }
 
         if (kDebugMode) {
-          print(
+          debugPrint(
               "Notification display called for type: $type (notify=$canNotifyOrder)");
         }
 
@@ -192,7 +203,7 @@ class NotificationHelper {
           }
         } catch (e) {
           if (kDebugMode) {
-            print("Error in notification handler logic: $e");
+            debugPrint("Error in notification handler logic: $e");
           }
         }
 
@@ -203,24 +214,29 @@ class NotificationHelper {
         }
       } catch (e) {
         if (kDebugMode) {
-          print("ERROR in onMessage listener: $e");
-          print("Error stack: ${e.toString()}");
+          debugPrint("ERROR in onMessage listener: $e");
+          debugPrint("Error stack: ${e.toString()}");
         }
       }
     });
 
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
       if (kDebugMode) {
-        print("onOpenApp message type:${message.data['type']}");
+        debugPrint("onOpenApp message type:${message.data['type']}");
       }
       try {
         if (message.data.isNotEmpty) {
-          NotificationBodyModel notificationBody =
-              convertNotification(message.data)!;
+          // CS-07: convertNotification returns null for unknown types — guard
+          // before use to prevent a force-unwrap crash.
+          final NotificationBodyModel? notificationBody =
+              convertNotification(message.data);
+          if (notificationBody == null) return;
 
           if (notificationBody.notificationType == NotificationType.order) {
-            Get.toNamed(RouteHelper.getOrderDetailsRoute(
-                int.parse(message.data['order_id'])));
+            final int? orderId =
+                int.tryParse(message.data['order_id']?.toString() ?? '');
+            if (orderId == null) return;
+            Get.toNamed(RouteHelper.getOrderDetailsRoute(orderId));
           } else if (notificationBody.notificationType ==
               NotificationType.order_request) {
             Get.toNamed(RouteHelper.getMainRoute('order-request'));
@@ -233,14 +249,16 @@ class NotificationHelper {
                 conversationId: notificationBody.conversationId));
           }
         }
-      } catch (_) {}
+      } catch (e) {
+        if (kDebugMode) debugPrint('onMessageOpenedApp handler error: $e');
+      }
     });
   }
 
   static Future<void> showNotification(
       RemoteMessage message, FlutterLocalNotificationsPlugin fln) async {
     if (kDebugMode) {
-      print("🔔 showNotification called - type: ${message.data['type']}");
+      debugPrint("🔔 showNotification called - type: ${message.data['type']}");
     }
 
     String? title;
@@ -274,7 +292,7 @@ class NotificationHelper {
     final String finalBody = body ?? 'You have a new notification';
 
     if (kDebugMode) {
-      print("🔔 Notification title: $finalTitle, body: $finalBody");
+      debugPrint("🔔 Notification title: $finalTitle, body: $finalBody");
 
     }
 
@@ -315,7 +333,7 @@ class NotificationHelper {
       );
 
       if (kDebugMode) {
-        print("🔔 iOS notification displayed");
+        debugPrint("🔔 iOS notification displayed");
       }
     } else {
       // Android: Show notification with image support
@@ -331,11 +349,11 @@ class NotificationHelper {
               channelName,
               channelDesc);
           if (kDebugMode) {
-            print("🔔 Android notification with image displayed");
+            debugPrint("🔔 Android notification with image displayed");
           }
         } catch (e) {
           if (kDebugMode) {
-            print("🔔 Error showing image notification, fallback to text: $e");
+            debugPrint("🔔 Error showing image notification, fallback to text: $e");
           }
           await showBigTextNotification(
               finalTitle, finalBody, notificationBody, fln, channelId, channelName, channelDesc);
@@ -344,50 +362,10 @@ class NotificationHelper {
         await showBigTextNotification(
             finalTitle, finalBody, notificationBody, fln, channelId, channelName, channelDesc);
         if (kDebugMode) {
-          print("🔔 Android text notification displayed");
+          debugPrint("🔔 Android text notification displayed");
         }
       }
     }
-  }
-
-  static Future<void> showTextNotification(
-      String title,
-      String body,
-      NotificationBodyModel notificationBody,
-      FlutterLocalNotificationsPlugin fln) async {
-    final AndroidNotificationDetails androidPlatformChannelSpecifics =
-        AndroidNotificationDetails(
-      'shellafood',
-      'shellafood',
-      channelDescription: 'Delivery notifications',
-      playSound: true,
-      importance: Importance.max,
-      priority: Priority.max,
-      sound: const RawResourceAndroidNotificationSound('notification'),
-      enableVibration: true,
-      channelShowBadge: true,
-      showWhen: true,
-      color: const Color(0xFF2A9849), // App primary green
-      colorized: true,
-      icon: 'notification_icon',
-      ticker: 'New delivery notification',
-      category: AndroidNotificationCategory.message,
-      visibility: NotificationVisibility.public,
-      autoCancel: true,
-      enableLights: true,
-      ledColor: const Color(0xFF2A9849),
-      ledOnMs: 1000,
-      ledOffMs: 500,
-    );
-    final NotificationDetails platformChannelSpecifics =
-        NotificationDetails(android: androidPlatformChannelSpecifics);
-    await fln.show(
-      id: 0,
-      title: title,
-      body: body,
-      notificationDetails: platformChannelSpecifics,
-      payload: jsonEncode(notificationBody.toJson()),
-    );
   }
 
   static Future<void> showBigTextNotification(
@@ -519,23 +497,28 @@ class NotificationHelper {
     if (data['type'] == 'general') {
       return NotificationBodyModel(notificationType: NotificationType.general);
     } else if (data['type'] == 'order_status') {
+      // CS-02: use tryParse so a malformed order_id never throws
+      final int? orderId = int.tryParse(data['order_id']?.toString() ?? '');
+      if (orderId == null) return null;
       return NotificationBodyModel(
-          orderId: int.parse(data['order_id']),
-          notificationType: NotificationType.order);
+          orderId: orderId, notificationType: NotificationType.order);
     } else if (data['type'] == 'new_order' || data['type'] == 'assign') {
+      final int? orderId = int.tryParse(data['order_id']?.toString() ?? '');
+      if (orderId == null) return null;
       return NotificationBodyModel(
-          orderId: int.parse(data['order_id']),
-          notificationType: NotificationType.order);
+          orderId: orderId, notificationType: NotificationType.order);
     } else if (data['type'] == 'order_request') {
+      final int? orderId = int.tryParse(data['order_id']?.toString() ?? '');
+      if (orderId == null) return null;
       return NotificationBodyModel(
-          orderId: int.parse(data['order_id']),
-          notificationType: NotificationType.order_request);
+          orderId: orderId, notificationType: NotificationType.order_request);
     } else if (data['type'] == 'message') {
+      final String? rawConvId = data['conversation_id']?.toString();
       return NotificationBodyModel(
-        conversationId: (data['conversation_id'] != null &&
-                data['conversation_id'].isNotEmpty)
-            ? int.parse(data['conversation_id'])
-            : null,
+        conversationId:
+            (rawConvId != null && rawConvId.isNotEmpty)
+                ? int.tryParse(rawConvId)
+                : null,
         notificationType: NotificationType.message,
         type: data['sender_type'] == AppConstants.user
             ? AppConstants.user
@@ -610,6 +593,12 @@ class NotificationHelper {
       return;
     }
 
+    // ML-04: discard new reminders when the map is at capacity to prevent
+    // unbounded memory growth during high-notification-volume periods.
+    if (_orderReminderTimers.length >= _maxReminderTimers) {
+      return;
+    }
+
     final Duration age = DateTime.now().difference(orderTime);
     if (age.inMinutes >= 5) {
       return;
@@ -636,10 +625,10 @@ class NotificationHelper {
 @pragma('vm:entry-point')
 Future<void> myBackgroundMessageHandler(RemoteMessage message) async {
   if (kDebugMode) {
-    print("📱🔔 BACKGROUND NOTIFICATION RECEIVED!");
-    print("📱 Background data: ${message.data}");
-    print("📱 Background title: ${message.notification?.title}");
-    print("📱 Background body: ${message.notification?.body}");
+    debugPrint("📱🔔 BACKGROUND NOTIFICATION RECEIVED!");
+    debugPrint("📱 Background data: ${message.data}");
+    debugPrint("📱 Background title: ${message.notification?.title}");
+    debugPrint("📱 Background body: ${message.notification?.body}");
   }
 
   try {
@@ -671,7 +660,7 @@ Future<void> myBackgroundMessageHandler(RemoteMessage message) async {
       onDidReceiveNotificationResponse: (details) {
         // Handle notification tap when app opens from terminated state
         if (kDebugMode) {
-          print("Notification tapped from background: ${details.payload}");
+          debugPrint("Notification tapped from background: ${details.payload}");
         }
         // Navigation will be handled when app fully initializes
       },
@@ -708,7 +697,7 @@ Future<void> myBackgroundMessageHandler(RemoteMessage message) async {
           ),
         );
         if (kDebugMode) {
-          print("🔔 Background: Notification channel created");
+          debugPrint("🔔 Background: Notification channel created");
         }
       }
     }
@@ -796,9 +785,9 @@ Future<void> myBackgroundMessageHandler(RemoteMessage message) async {
         );
 
         if (kDebugMode) {
-          print("✅📱 Background notification DISPLAYED successfully!");
-          print("✅📱 Title: $title");
-          print("✅📱 Body: $body");
+          debugPrint("✅📱 Background notification DISPLAYED successfully!");
+          debugPrint("✅📱 Title: $title");
+          debugPrint("✅📱 Body: $body");
         }
       } else if (Platform.isIOS) {
         // Show notification for iOS
@@ -822,19 +811,19 @@ Future<void> myBackgroundMessageHandler(RemoteMessage message) async {
         );
 
         if (kDebugMode) {
-          print("✅📱 iOS Background notification DISPLAYED successfully!");
+          debugPrint("✅📱 iOS Background notification DISPLAYED successfully!");
         }
       }
     } else {
       if (kDebugMode) {
-        print("❌📱 Background notification SKIPPED - title or body is null");
-        print("❌📱 Title: $title, Body: $body");
+        debugPrint("❌📱 Background notification SKIPPED - title or body is null");
+        debugPrint("❌📱 Title: $title, Body: $body");
       }
     }
   } catch (e, stackTrace) {
     if (kDebugMode) {
-      print("❌📱 ERROR in background notification handler: $e");
-      print("❌📱 Stack trace: $stackTrace");
+      debugPrint("❌📱 ERROR in background notification handler: $e");
+      debugPrint("❌📱 Stack trace: $stackTrace");
     }
   }
 }

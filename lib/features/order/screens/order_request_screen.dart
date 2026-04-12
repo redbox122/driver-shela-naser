@@ -52,8 +52,9 @@ class OrderRequestScreenState extends State<OrderRequestScreen> {
           return const Center(child: CircularProgressIndicator());
         }
 
+        // CS-08: empty list is a distinct state from loading (null) — show message, not spinner
         if (orderController.latestOrderList!.isEmpty) {
-          return const Center(child: CircularProgressIndicator());
+          return Center(child: Text('no_order_found'.tr));
         }
 
         final profileController = Get.find<ProfileController>();
@@ -117,14 +118,14 @@ class OrderRequestScreenState extends State<OrderRequestScreen> {
                 isDense: true,
                 border: OutlineInputBorder(),
               ),
-              items: const [
+              items: [
                 DropdownMenuItem(
                   value: _DateSort.newest,
-                  child: Text('Newest'),
+                  child: Text('sort_newest'.tr),
                 ),
                 DropdownMenuItem(
                   value: _DateSort.oldest,
-                  child: Text('Oldest'),
+                  child: Text('sort_oldest'.tr),
                 ),
               ],
               onChanged: (value) {
@@ -143,18 +144,18 @@ class OrderRequestScreenState extends State<OrderRequestScreen> {
                 isDense: true,
                 border: OutlineInputBorder(),
               ),
-              items: const [
+              items: [
                 DropdownMenuItem(
                   value: _DistanceSort.none,
-                  child: Text('Distance: None'),
+                  child: Text('sort_distance_none'.tr),
                 ),
                 DropdownMenuItem(
                   value: _DistanceSort.nearest,
-                  child: Text('Nearest'),
+                  child: Text('sort_nearest'.tr),
                 ),
                 DropdownMenuItem(
                   value: _DistanceSort.farthest,
-                  child: Text('Farthest'),
+                  child: Text('sort_farthest'.tr),
                 ),
               ],
               onChanged: hasLocation

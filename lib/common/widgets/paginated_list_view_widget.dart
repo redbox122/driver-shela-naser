@@ -37,17 +37,25 @@ class _PaginatedListViewWidgetState extends State<PaginatedListViewWidget> {
     _offset = 1;
     _offsetList = [1];
 
-    widget.scrollController.addListener(() {
-      if (widget.scrollController.position.pixels ==
-              widget.scrollController.position.maxScrollExtent &&
-          widget.totalSize != null &&
-          !_isLoading &&
-          widget.enabledPagination) {
-        if (mounted && !ResponsiveHelper.isDesktop(context)) {
-          _paginate();
-        }
+    widget.scrollController.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    if (widget.scrollController.position.pixels ==
+            widget.scrollController.position.maxScrollExtent &&
+        widget.totalSize != null &&
+        !_isLoading &&
+        widget.enabledPagination) {
+      if (mounted && !ResponsiveHelper.isDesktop(context)) {
+        _paginate();
       }
-    });
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.scrollController.removeListener(_onScroll);
+    super.dispose();
   }
 
   void _paginate() async {
@@ -71,15 +79,19 @@ class _PaginatedListViewWidgetState extends State<PaginatedListViewWidget> {
     }
   }
 
+  // WR-03: sync local offset state with widget updates via didUpdateWidget
+  // so we never mutate state inside build(), which can cause extra renders.
+  @override
+  void didUpdateWidget(PaginatedListViewWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.offset != null && widget.offset != oldWidget.offset) {
+      _offset = widget.offset;
+      _offsetList = List<int?>.generate(widget.offset!, (i) => i + 1);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    if (widget.offset != null) {
-      _offset = widget.offset;
-      _offsetList = [];
-      for (int index = 1; index <= widget.offset!; index++) {
-        _offsetList.add(index);
-      }
-    }
 
     return Column(children: [
       widget.productView,

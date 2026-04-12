@@ -21,8 +21,24 @@ import 'package:flutter_switch/flutter_switch.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 
-class HomeScreen extends StatelessWidget {
+// P-01/AM-06: HomeScreen converted from StatelessWidget to StatefulWidget so
+// that _loadData() runs once in initState() rather than on every build() call.
+// Previously a StatelessWidget was calling async network operations from build,
+// which triggered multiple redundant API calls per render cycle.
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Load data once when the screen is first created.
+    _loadData();
+  }
 
   Future<void> _loadData() async {
     Get.find<OrderController>().getIgnoreList();
@@ -30,18 +46,17 @@ class HomeScreen extends StatelessWidget {
     await Get.find<ProfileController>().getProfile();
     await Get.find<OrderController>().getCurrentOrders();
     await Get.find<NotificationController>().getNotificationList();
-    bool isBatteryOptimizationDisabled = GetPlatform.isAndroid
-        ? (await DisableBatteryOptimization.isBatteryOptimizationDisabled)!
-        : true;
-    if (!isBatteryOptimizationDisabled && GetPlatform.isAndroid) {
-      DisableBatteryOptimization.showDisableBatteryOptimizationSettings();
+    if (GetPlatform.isAndroid) {
+      final bool? isBatteryOptimizationDisabled =
+          await DisableBatteryOptimization.isBatteryOptimizationDisabled;
+      if (isBatteryOptimizationDisabled == false) {
+        DisableBatteryOptimization.showDisableBatteryOptimizationSettings();
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    _loadData();
-
     return Scaffold(
       appBar: AppBar(
         leading: GetBuilder<ProfileController>(
@@ -150,33 +165,32 @@ class HomeScreen extends StatelessWidget {
                                     },
                                   ));
                                 } else {
+                                  // DC-08: removed the always-false iOS branch
+                                  // `(GetPlatform.isIOS ? false : true)` which
+                                  // made the permission dialog unreachable on iOS.
+                                  // Now the check correctly runs on both platforms.
                                   LocationPermission permission =
                                       await Geolocator.checkPermission();
-                                  if (permission == LocationPermission.denied ||
+                                  if (permission ==
+                                          LocationPermission.denied ||
                                       permission ==
-                                          LocationPermission.deniedForever ||
-                                      (GetPlatform.isIOS ? false : true)) {
-                                    if (GetPlatform.isAndroid) {
-                                      Get.dialog(
-                                          ConfirmationDialogWidget(
-                                            icon: Images.locationPermission,
-                                            iconSize: 200,
-                                            hasCancel: false,
-                                            description:
-                                                'this_app_collects_location_data'
-                                                    .tr,
-                                            onYesPressed: () {
-                                              Get.back();
-                                              _checkPermission(() =>
-                                                  profileController
-                                                      .updateActiveStatus());
-                                            },
-                                          ),
-                                          barrierDismissible: false);
-                                    } else {
-                                      _checkPermission(() => profileController
-                                          .updateActiveStatus());
-                                    }
+                                          LocationPermission.deniedForever) {
+                                    Get.dialog(
+                                        ConfirmationDialogWidget(
+                                          icon: Images.locationPermission,
+                                          iconSize: 200,
+                                          hasCancel: false,
+                                          description:
+                                              'this_app_collects_location_data'
+                                                  .tr,
+                                          onYesPressed: () {
+                                            Get.back();
+                                            _checkPermission(() =>
+                                                profileController
+                                                    .updateActiveStatus());
+                                          },
+                                        ),
+                                        barrierDismissible: false);
                                   } else {
                                     profileController.updateActiveStatus();
                                   }
@@ -287,12 +301,9 @@ class HomeScreen extends StatelessWidget {
                                 'week', 'this_week_orders'.tr));
                           },
                           onTotalOrdersTap: () {
-                            // Navigate to all orders screen
                             Get.toNamed(RouteHelper.getMainRoute('order'));
                           },
                         ),
-
-                        // Remove redundant order stats - already shown in performance metrics above
 
                         const SizedBox(height: Dimensions.paddingSizeSection),
                       ]);
@@ -324,14 +335,12 @@ class HomeScreen extends StatelessWidget {
                 description: 'you_denied'.tr,
                 onOkPressed: () async {
                   Get.back();
-                  // Try one more time
                   final retryPermission = await Geolocator.requestPermission();
                   if (retryPermission == LocationPermission.denied) {
                     debugPrint(
                         'Home screen: Permission still denied after retry');
                     return;
                   }
-                  // If retry succeeded, execute callback
                   callback();
                 }),
             barrierDismissible: false);

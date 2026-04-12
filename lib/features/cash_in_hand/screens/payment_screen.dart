@@ -47,7 +47,7 @@ class PaymentScreenState extends State<PaymentScreen> {
       await serviceWorkerController.setServiceWorkerClient(ServiceWorkerClient(
         shouldInterceptRequest: (request) async {
           if (kDebugMode) {
-            print(request);
+            debugPrint(request);
           }
           return null;
         },
@@ -111,14 +111,14 @@ class MyInAppBrowser extends InAppBrowser {
   @override
   Future onBrowserCreated() async {
     if (kDebugMode) {
-      print("\n\nBrowser Created!\n\n");
+      debugPrint("\n\nBrowser Created!\n\n");
     }
   }
 
   @override
   Future onLoadStart(url) async {
     if (kDebugMode) {
-      print("\n\nStarted: $url\n\n");
+      debugPrint("\n\nStarted: $url\n\n");
     }
     _redirect(url.toString());
   }
@@ -127,7 +127,7 @@ class MyInAppBrowser extends InAppBrowser {
   Future onLoadStop(url) async {
     pullToRefreshController?.endRefreshing();
     if (kDebugMode) {
-      print("\n\nStopped: $url\n\n");
+      debugPrint("\n\nStopped: $url\n\n");
     }
     _redirect(url.toString());
   }
@@ -136,7 +136,7 @@ class MyInAppBrowser extends InAppBrowser {
   void onLoadError(url, code, message) {
     pullToRefreshController?.endRefreshing();
     if (kDebugMode) {
-      print("Can't load [$url] Error: $message");
+      debugPrint("Can't load [$url] Error: $message");
     }
   }
 
@@ -146,7 +146,7 @@ class MyInAppBrowser extends InAppBrowser {
       pullToRefreshController?.endRefreshing();
     }
     if (kDebugMode) {
-      print("Progress: $progress");
+      debugPrint("Progress: $progress");
     }
   }
 
@@ -156,7 +156,7 @@ class MyInAppBrowser extends InAppBrowser {
       // Get.dialog(PaymentFailedDialog(orderID: orderID, orderAmount: orderAmount, maxCodOrderAmount: maxCodOrderAmount));
     }
     if (kDebugMode) {
-      print("\n\nBrowser closed!\n\n");
+      debugPrint("\n\nBrowser closed!\n\n");
     }
   }
 
@@ -164,7 +164,7 @@ class MyInAppBrowser extends InAppBrowser {
   Future<NavigationActionPolicy> shouldOverrideUrlLoading(
       navigationAction) async {
     if (kDebugMode) {
-      print("\n\nOverride ${navigationAction.request.url}\n\n");
+      debugPrint("\n\nOverride ${navigationAction.request.url}\n\n");
     }
     return NavigationActionPolicy.ALLOW;
   }
@@ -172,7 +172,7 @@ class MyInAppBrowser extends InAppBrowser {
   @override
   void onLoadResource(resource) {
     if (kDebugMode) {
-      print(
+      debugPrint(
           "Started at: ${resource.startTime}ms ---> duration: ${resource.duration}ms ${resource.url ?? ''}");
     }
   }
@@ -180,14 +180,14 @@ class MyInAppBrowser extends InAppBrowser {
   @override
   void onConsoleMessage(consoleMessage) {
     if (kDebugMode) {
-      print(
+      debugPrint(
           """console output:message: ${consoleMessage.message}messageLevel: ${consoleMessage.messageLevel.toValue()}""");
     }
   }
 
   void _redirect(String url) {
     if (kDebugMode) {
-      print('---url---$url');
+      debugPrint('---url---$url');
     }
     if (_canRedirect) {
       bool isSuccess =

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shellafood_delivery/api/api_client.dart';
@@ -36,7 +37,7 @@ class OrderRepository implements OrderRepositoryInterface {
   @override
   Future<Response> get(int? id) async {
     if (id == null || id <= 0) {
-      print('[REQUEST] skipped /delivery-man/order بسبب order_id غير صالح: $id');
+      debugPrint('[REQUEST] skipped /delivery-man/order: invalid order_id: $id');
       return Response(
         statusCode: 400,
         statusText: 'invalid_order_id',
@@ -142,8 +143,9 @@ class OrderRepository implements OrderRepositoryInterface {
         ..sort();
       final int? maxId = ids.isNotEmpty ? ids.last : null;
       final List<int> tail = ids.length > 5 ? ids.sublist(ids.length - 5) : ids;
-      print(
-          '[LATEST RAW] count=${latestOrderList.length}, max_id=$maxId, last_ids=$tail');
+      if (kDebugMode) {
+        debugPrint('[LATEST RAW] count=${latestOrderList.length}, max_id=$maxId, last_ids=$tail');
+      }
     }
     return latestOrderList;
   }
@@ -170,7 +172,7 @@ class OrderRepository implements OrderRepositoryInterface {
   @override
   Future<List<OrderDetailsModel>?> getOrderDetails(int? orderID) async {
     if (orderID == null || orderID <= 0) {
-      print('[REQUEST] skipped /delivery-man/order-details بسبب order_id غير صالح: $orderID');
+      debugPrint('[REQUEST] skipped /delivery-man/order-details: invalid order_id: $orderID');
       return null;
     }
 
@@ -323,23 +325,19 @@ class OrderRepository implements OrderRepositoryInterface {
     required Map<String, String> headers,
     required Map<String, String> queryParams,
   }) {
-    final fullUrl = '${AppConstants.baseUrl}$uri';
-    print('[REQUEST] $fullUrl');
-    print('method: $method');
-    print('headers: $headers');
-    print('query: $queryParams');
-    print('endpoint: $endpoint');
+    if (!kDebugMode) return;
+    // SR-02: strip token from logged URL to avoid leaking credentials
+    final String safeUri = uri.replaceAll(RegExp(r'token=[^&]*'), 'token=***');
+    debugPrint('[REQUEST] ${AppConstants.baseUrl}$safeUri');
+    debugPrint('method: $method, endpoint: $endpoint');
   }
 
   void _logOrderResponse({
     required String endpoint,
     required Response response,
   }) {
-    final body = response.bodyString?.isNotEmpty == true
-        ? response.bodyString
-        : response.body?.toString();
-    print('[RESPONSE] endpoint=$endpoint status=${response.statusCode}');
-    print('body: $body');
+    if (!kDebugMode) return;
+    debugPrint('[RESPONSE] endpoint=$endpoint status=${response.statusCode}');
   }
 
   List<dynamic> _extractOrderList(dynamic body) {
@@ -375,13 +373,9 @@ class OrderRepository implements OrderRepositoryInterface {
       "order_id": orderId,
       "delivery_man_id": Get.find<ProfileController>().profileModel?.id
     }).then((onValue) {
-      print({
-        "token": _getUserToken(),
-        "price": price,
-        "order_id": orderId,
-        "delivery_man_id": Get.find<ProfileController>().profileModel?.id
-      });
-      print("onValue.body${onValue.body}");
+      if (kDebugMode) {
+        debugPrint('[setPriceService] order_id=$orderId status=${onValue.statusCode}');
+      }
       if (onValue.statusCode == 200) {
         return true;
       } else {

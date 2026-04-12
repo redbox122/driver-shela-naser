@@ -74,26 +74,6 @@ Future<Map<String, Map<String, String>>> init() async {
   Get.lazyPut(() => ApiClient(
       appBaseUrl: AppConstants.baseUrl, sharedPreferences: Get.find()));
 
-  /// Repository
-  //Get.lazyPut(() => SplashRepo(sharedPreferences: Get.find(), apiClient: Get.find()));
-  //Get.lazyPut(() => LanguageRepo());
-  // Get.lazyPut(() => AuthRepo(apiClient: Get.find(), sharedPreferences: Get.find()));
-  //Get.lazyPut(() => OrderRepo(apiClient: Get.find(), sharedPreferences: Get.find()));
-  //Get.lazyPut(() => NotificationRepo(apiClient: Get.find(), sharedPreferences: Get.find()));
-  //Get.lazyPut(() => ChatRepo(apiClient: Get.find(), sharedPreferences: Get.find()));
-  //Get.lazyPut(() => DisbursementRepo(apiClient: Get.find()));
-
-  /// Controller
-  // Get.lazyPut(() => ThemeController(sharedPreferences: Get.find()));
-  //Get.lazyPut(() => SplashController(splashRepo: Get.find()));
-  //Get.lazyPut(() => LocalizationController(sharedPreferences: Get.find(), apiClient: Get.find()));
-  //Get.lazyPut(() => LanguageController(sharedPreferences: Get.find()));
-  //Get.lazyPut(() => AuthController(authRepo: Get.find()));
-  //Get.lazyPut(() => OrderController(orderRepo: Get.find()));
-  //Get.lazyPut(() => NotificationController(notificationRepo: Get.find()));
-  //Get.lazyPut(() => ChatController(chatRepo: Get.find()));
-  //Get.lazyPut(() => DisbursementController(disbursementRepo: Get.find()));
-
   /// Repository Interface
   HtmlRepositoryInterface htmlRepositoryInterface =
       HtmlRepository(apiClient: Get.find());
@@ -196,23 +176,12 @@ Future<Map<String, Map<String, String>>> init() async {
       OrderService(orderRepositoryInterface: Get.find());
   Get.lazyPut(() => orderServiceInterface);
 
-  /// Service
-  Get.lazyPut(() => HtmlService(htmlRepositoryInterface: Get.find()));
-  Get.lazyPut(
-      () => DisbursementService(disbursementRepositoryInterface: Get.find()));
-  Get.lazyPut(
-      () => CashInHandService(cashInHandRepositoryInterface: Get.find()));
-  Get.lazyPut(() =>
-      ForgotPasswordService(forgotPasswordRepositoryInterface: Get.find()));
-  Get.lazyPut(() => ChatService(chatRepositoryInterface: Get.find()));
-  Get.lazyPut(() => LanguageService(languageRepositoryInterface: Get.find()));
-  Get.lazyPut(() => SplashService(splashRepositoryInterface: Get.find()));
-  Get.lazyPut(
-      () => NotificationService(notificationRepositoryInterface: Get.find()));
-  Get.lazyPut(() => ProfileService(profileRepositoryInterface: Get.find()));
-  Get.lazyPut(() => AddressService(addressRepositoryInterface: Get.find()));
-  Get.lazyPut(() => AuthService(authRepositoryInterface: Get.find()));
-  Get.lazyPut(() => OrderService(orderRepositoryInterface: Get.find()));
+  // SM-01/DC-01: The concrete service types (HtmlService, DisbursementService,
+  // etc.) were previously registered a second time here after already being
+  // registered above as their interface types. Each duplicate registration
+  // created an independent singleton, breaking the intended single-instance
+  // pattern. The duplicate block has been removed — services are resolved via
+  // their interface type (e.g. Get.find<HtmlServiceInterface>()) as intended.
 
   /// Controller
   Get.lazyPut(() => HtmlController(htmlServiceInterface: Get.find()));

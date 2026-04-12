@@ -45,9 +45,9 @@ class _OrderLocationScreenState extends State<OrderLocationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    print(widget.orderModel.groupOrderLocation);
-    print("${widget.orderModel.storeLat},${widget.orderModel.storeLng}");
-    print(_markers.length);
+    debugPrint(widget.orderModel.groupOrderLocation);
+    debugPrint("${widget.orderModel.storeLat},${widget.orderModel.storeLng}");
+    debugPrint(_markers.length);
     bool parcel = widget.orderModel.orderType == 'parcel';
     return Scaffold(
       appBar: CustomAppBarWidget(title: 'order_location'.tr),
@@ -143,7 +143,7 @@ class _OrderLocationScreenState extends State<OrderLocationScreen> {
         );
 
         if (kDebugMode) {
-          print('center bound $centerBounds');
+          debugPrint('center bound $centerBounds');
         }
 
         // Zoom to fit bounds
@@ -223,7 +223,7 @@ class _OrderLocationScreenState extends State<OrderLocationScreen> {
       }
     } catch (e) {
       if (kDebugMode) {
-        print('Error setting markers: $e');
+        debugPrint('Error setting markers: $e');
       }
     }
     setState(() {});
@@ -269,7 +269,7 @@ class _OrderLocationScreenState extends State<OrderLocationScreen> {
       }
     } catch (e) {
       if (kDebugMode) {
-        print('Error loading zone polygon: $e');
+        debugPrint('Error loading zone polygon: $e');
       }
     }
   }

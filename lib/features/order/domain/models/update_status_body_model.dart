@@ -38,17 +38,13 @@ class UpdateStatusBodyModel {
     // Only send otp_store for module 3
     if (status == 'picked_up' && moduleId == 3 && otpStore != null && otpStore!.isNotEmpty) {
       data['otp_store'] = otpStore!;
-      print('🔧 PICKUP API: Sending otp_store = ${otpStore} (Module 3)');
     } else if (status == 'delivered' && otp != null && otp!.isNotEmpty) {
       data['otp'] = otp!;
-      print('🔧 DELIVERY API: Sending otp = ${otp}');
     }
 
     if (reason != '' && reason != null) {
       data['reason'] = reason!;
     }
-
-    print('🔧 API Request Body: $data');
     return data;
   }
 }

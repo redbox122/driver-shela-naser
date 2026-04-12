@@ -5,6 +5,7 @@ class AppConstants {
   static const String appName = 'منفذي الخدمات';
   static const double appVersion = 2.8; // web version: 2.8
 
+  // SR-04: This points to a DEVELOPMENT server. Replace with production URL before release.
   static const String baseUrl = 'https://dev.shelafood.com';
 
   static const String configUri = '/api/v1/config';

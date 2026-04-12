@@ -157,7 +157,7 @@ class SliderButtonState extends State<SliderButton> {
               Vibration.vibrate(duration: 200);
             } catch (e) {
               if (kDebugMode) {
-                print(e);
+                debugPrint(e);
               }
             }
           }

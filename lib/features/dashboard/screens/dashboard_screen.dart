@@ -51,33 +51,41 @@ class DashboardScreenState extends State<DashboardScreen> {
 
     showDisbursementWarningMessage();
 
+    // NA-02: NotificationHelper already has an onMessage listener that calls
+    // getCurrentOrders() and getLatestOrdersIfActive(). This listener is kept
+    // only for UI-exclusive actions (showing dialogs, handling 'block').
+    // The duplicate API calls have been removed to prevent 4× requests per
+    // notification (2 listeners × 2 methods each).
     _stream = FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      String? type = message.data['body_loc_key'] ?? message.data['type'];
-      String? orderID =
+      final String? type = message.data['body_loc_key'] ?? message.data['type'];
+      final String? orderID =
           message.data['title_loc_key'] ?? message.data['order_id'];
-      bool isParcel = (message.data['order_type'] == 'parcel_order');
-
-      // Note: Notification is already shown by NotificationHelper.onMessage listener
-      // This listener only handles special UI actions (dialogs)
+      final bool isParcel = (message.data['order_type'] == 'parcel_order');
 
       if (type == 'new_order' || type == 'order_request') {
-        Get.find<OrderController>().getCurrentOrders();
-        Get.find<OrderController>().getLatestOrdersIfActive();
+        // CS-03: guard int.parse — malformed order_id would crash the listener
+        final int? parsedId =
+            int.tryParse(message.data['order_id']?.toString() ?? '');
+        if (parsedId == null) return;
+        // Order list refresh is handled by NotificationHelper's listener.
         Get.dialog(NewRequestDialogWidget(
             isRequest: true,
             onTap: () => _navigateRequestPage(),
-            orderId: int.parse(message.data['order_id'].toString()),
+            orderId: parsedId,
             isParcel: isParcel));
       } else if (type == 'assign' && orderID != null && orderID.isNotEmpty) {
-        Get.find<OrderController>().getCurrentOrders();
-        Get.find<OrderController>().getLatestOrdersIfActive();
+        final int? parsedOrderId =
+            int.tryParse(message.data['order_id']?.toString() ?? '');
+        final int? parsedAssignId = int.tryParse(orderID);
+        if (parsedOrderId == null || parsedAssignId == null) return;
+        // Order list refresh is handled by NotificationHelper's listener.
         Get.dialog(NewRequestDialogWidget(
             isRequest: false,
-            orderId: int.parse(message.data['order_id'].toString()),
+            orderId: parsedOrderId,
             isParcel: isParcel,
             onTap: () {
               Get.offAllNamed(RouteHelper.getOrderDetailsRoute(
-                  int.parse(orderID),
+                  parsedAssignId,
                   fromNotification: true));
             }));
       } else if (type == 'block') {
@@ -114,9 +122,9 @@ class DashboardScreenState extends State<DashboardScreen> {
 
   @override
   void dispose() {
-    super.dispose();
-
     _stream.cancel();
+    _pageController?.dispose(); // ML-01: dispose to release scroll resources
+    super.dispose();
   }
 
   @override
@@ -127,8 +135,10 @@ class DashboardScreenState extends State<DashboardScreen> {
         if (_pageIndex != 0) {
           _setPage(0);
         } else {
-          if (GetPlatform.isAndroid &&
-              Get.find<ProfileController>().profileModel!.active == 1) {
+          // CS-01: profileModel can be null before the first API response
+          final bool isActive =
+              Get.find<ProfileController>().profileModel?.active == 1;
+          if (GetPlatform.isAndroid && isActive) {
             _channel.invokeMethod('sendToBackground');
           } else {
             return;

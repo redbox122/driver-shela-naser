@@ -26,8 +26,7 @@ class ApiClient extends GetxService {
 
   ApiClient({required this.appBaseUrl, required this.sharedPreferences}) {
     token = sharedPreferences.getString(AppConstants.token);
-    debugPrint('Token: $token');
-
+    // SR-02: Do not log the auth token.
     updateHeader(token, sharedPreferences.getString(AppConstants.languageCode));
   }
 
@@ -47,7 +46,7 @@ class ApiClient extends GetxService {
       Map<String, String>? headers,
       bool handleError = true}) async {
     try {
-      debugPrint('====> API Call: $uri\nHeader: $_mainHeaders');
+      debugPrint('====> API Call: $uri');
       http.Response response = await http
           .get(
             Uri.parse(appBaseUrl + uri),
@@ -63,8 +62,7 @@ class ApiClient extends GetxService {
   Future<Response> postData(String uri, dynamic body,
       {Map<String, String>? headers, bool handleError = true}) async {
     try {
-      debugPrint('====> API Call: $uri\nHeader: $_mainHeaders');
-      debugPrint('====> API Body: $body');
+      debugPrint('====> API Call: $uri');
       http.Response response = await http
           .post(
             Uri.parse(appBaseUrl + uri),
@@ -74,7 +72,7 @@ class ApiClient extends GetxService {
           .timeout(Duration(seconds: timeoutInSeconds));
       return handleResponse(response, uri, handleError);
     } catch (e) {
-      print(e.toString());
+      debugPrint('====> API Error (postData): $e');
       return const Response(statusCode: 1, statusText: noInternetMessage);
     }
   }
@@ -83,19 +81,20 @@ class ApiClient extends GetxService {
       String uri, Map<String, String> body, List<MultipartBody> multipartBody,
       {Map<String, String>? headers, bool handleError = true}) async {
     try {
-      debugPrint('====> API Call: $uri\nHeader: $_mainHeaders');
-      debugPrint('====> API Body: $body with ${multipartBody.length} files');
+      debugPrint('====> API Call: $uri (multipart, ${multipartBody.length} files)');
       http.MultipartRequest request =
           http.MultipartRequest('POST', Uri.parse(appBaseUrl + uri));
       request.headers.addAll(headers ?? _mainHeaders);
       for (MultipartBody multipart in multipartBody) {
         if (multipart.file != null) {
           if (foundation.kIsWeb) {
-            Uint8List list = await multipart.file!.readAsBytes();
+            // P-03: read bytes once, reuse the same Uint8List for both
+            // length and stream — previously the file was read twice.
+            final Uint8List bytes = await multipart.file!.readAsBytes();
             http.MultipartFile part = http.MultipartFile(
               multipart.key,
-              multipart.file!.readAsBytes().asStream(),
-              list.length,
+              Stream.value(bytes),
+              bytes.length,
               filename: basename(multipart.file!.path),
               contentType: MediaType('image', 'jpg'),
             );
@@ -123,8 +122,7 @@ class ApiClient extends GetxService {
   Future<Response> putData(String uri, dynamic body,
       {Map<String, String>? headers, bool handleError = true}) async {
     try {
-      debugPrint('====> API Call: $uri\nHeader: $_mainHeaders');
-      debugPrint('====> API Body: $body');
+      debugPrint('====> API Call: $uri');
       http.Response response = await http
           .put(
             Uri.parse(appBaseUrl + uri),
@@ -141,7 +139,7 @@ class ApiClient extends GetxService {
   Future<Response> deleteData(String uri,
       {Map<String, String>? headers, bool handleError = true}) async {
     try {
-      debugPrint('====> API Call: $uri\nHeader: $_mainHeaders');
+      debugPrint('====> API Call: $uri');
       http.Response response = await http
           .delete(
             Uri.parse(appBaseUrl + uri),
@@ -239,21 +237,7 @@ void _logApiError(Response response, String uri) {
   }
 }
 
-bool _updateServerTimeFromHeaders(Map<String, String> headers) {
-  final String? dateHeader = headers['date'];
-  if (dateHeader == null || dateHeader.isEmpty) {
-    return false;
-  }
-  try {
-    final DateTime serverTime = HttpDate.parse(dateHeader);
-    if (Get.isRegistered<SplashController>()) {
-      Get.find<SplashController>().updateServerTime(serverTime);
-    }
-    return true;
-  } catch (_) {
-    return false;
-  }
-}
+// DC-03: _updateServerTimeFromHeaders was never called; removed.
 
 bool _updateServerTimeFromBody(dynamic body) {
   final dynamic rawValue = _extractServerTimeRaw(body);
