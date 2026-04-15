@@ -8,7 +8,7 @@ import 'package:shellafood_delivery/util/styles.dart';
 
 /// Widget to display delivery man status and order availability information
 class DeliveryManStatusWidget extends StatelessWidget {
-  const DeliveryManStatusWidget({Key? key}) : super(key: key);
+  const DeliveryManStatusWidget({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -85,10 +85,10 @@ class DeliveryManStatusWidget extends StatelessWidget {
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -101,7 +101,7 @@ class DeliveryManStatusWidget extends StatelessWidget {
               Container(
                 padding: EdgeInsets.all(Dimensions.paddingSizeSmall),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
                 ),
                 child: Icon(
@@ -131,7 +131,7 @@ class DeliveryManStatusWidget extends StatelessWidget {
                             .textTheme
                             .bodyMedium
                             ?.color
-                            ?.withOpacity(0.7),
+                            ?.withValues(alpha: 0.7),
                       ),
                     ),
                   ],

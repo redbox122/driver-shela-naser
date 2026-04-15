@@ -177,7 +177,7 @@ class _OrderLocationScreenState extends State<OrderLocationScreen> {
                 title: parcel ? 'Sender' : 'Destination',
                 snippet: orderModel.deliveryAddress?.address,
               ),
-              icon: BitmapDescriptor.fromBytes(destinationImageData),
+              icon: BitmapDescriptor.bytes(destinationImageData),
             ),
           );
         }
@@ -192,7 +192,7 @@ class _OrderLocationScreenState extends State<OrderLocationScreen> {
                 title: 'Receiver',
                 snippet: orderModel.receiverDetails?.address,
               ),
-              icon: BitmapDescriptor.fromBytes(restaurantImageData),
+              icon: BitmapDescriptor.bytes(restaurantImageData),
             ),
           );
         }
@@ -209,7 +209,7 @@ class _OrderLocationScreenState extends State<OrderLocationScreen> {
                 title: orderModel.storeName,
                 snippet: orderModel.storeAddress,
               ),
-              icon: BitmapDescriptor.fromBytes(restaurantImageData),
+              icon: BitmapDescriptor.bytes(restaurantImageData),
             ),
           );
         }
@@ -225,7 +225,7 @@ class _OrderLocationScreenState extends State<OrderLocationScreen> {
                 snippet:
                     Get.find<ProfileController>().recordLocationBody?.location,
               ),
-              icon: BitmapDescriptor.fromBytes(deliveryBoyImageData),
+              icon: BitmapDescriptor.bytes(deliveryBoyImageData),
             ),
           );
         }
@@ -241,7 +241,7 @@ class _OrderLocationScreenState extends State<OrderLocationScreen> {
                 Marker(
                   markerId: MarkerId(orderModel.groupOrder![i].toString()),
                   position: orderModel.groupOrderLocation![i],
-                  icon: BitmapDescriptor.fromBytes(restaurantImageData),
+                  icon: BitmapDescriptor.bytes(restaurantImageData),
                 ),
               );
             }
@@ -289,7 +289,7 @@ class _OrderLocationScreenState extends State<OrderLocationScreen> {
           points: points,
           strokeColor: Colors.green,
           strokeWidth: 2,
-          fillColor: Colors.green.withOpacity(0.2),
+          fillColor: Colors.green.withValues(alpha: 0.2),
         ),
       );
 

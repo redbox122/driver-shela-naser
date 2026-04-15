@@ -49,8 +49,8 @@ class GlassmorphicContainer extends StatelessWidget {
 
     final effectiveBorderColor = borderColor ??
         (isDark
-            ? AppColors.onSurfaceDark.withOpacity(0.2)
-            : AppColors.onSurface.withOpacity(0.1));
+            ? AppColors.onSurfaceDark.withValues(alpha: 0.2)
+            : AppColors.onSurface.withValues(alpha: 0.1));
 
     final effectiveBorderRadius =
         borderRadius ?? BorderRadius.circular(Dimensions.radiusGlassmorphism);

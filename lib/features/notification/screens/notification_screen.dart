@@ -29,7 +29,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
   Widget build(BuildContext context) {
     return PopScope(
       canPop: true,
-      onPopInvoked: (didPop) async {
+      onPopInvokedWithResult: (didPop, _) async {
         if (widget.fromNotification && !didPop) {
           Get.offAllNamed(RouteHelper.getInitialRoute());
         } else {

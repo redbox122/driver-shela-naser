@@ -168,7 +168,7 @@ class CustomTextFieldWidgetState extends State<CustomTextFieldWidget> {
               ? IconButton(
                   icon: Icon(
                       _obscureText ? Icons.visibility_off : Icons.visibility,
-                      color: Theme.of(context).hintColor.withOpacity(0.3)),
+                      color: Theme.of(context).hintColor.withValues(alpha: 0.3)),
                   onPressed: _toggle,
                 )
               : null,

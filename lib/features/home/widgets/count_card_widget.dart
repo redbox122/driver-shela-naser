@@ -63,7 +63,7 @@ class CountCardWidget extends StatelessWidget {
                 Icon(
                   icon,
                   size: Dimensions.iconSizeLarge,
-                  color: Colors.white.withOpacity(0.9),
+                  color: Colors.white.withValues(alpha: 0.9),
                 ),
                 const SizedBox(height: Dimensions.paddingSizeSmall),
               ],
@@ -99,7 +99,7 @@ class CountCardWidget extends StatelessWidget {
                 title,
                 style: robotoMedium.copyWith(
                   fontSize: Dimensions.fontSizeDefault,
-                  color: Colors.white.withOpacity(0.9),
+                  color: Colors.white.withValues(alpha: 0.9),
                 ),
                 textAlign: TextAlign.center,
                 maxLines: 2,

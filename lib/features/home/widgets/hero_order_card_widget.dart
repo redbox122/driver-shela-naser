@@ -125,7 +125,7 @@ class _HeroOrderCardWidgetState extends State<HeroOrderCardWidget>
                       borderRadius:
                           BorderRadius.circular(Dimensions.radiusHero),
                       border: Border.all(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         width: 1.5,
                       ),
                       boxShadow: [
@@ -171,11 +171,11 @@ class _HeroOrderCardWidgetState extends State<HeroOrderCardWidget>
                                       width: Dimensions.mapPreviewSize,
                                       height: Dimensions.mapPreviewSize,
                                       decoration: BoxDecoration(
-                                        color: Colors.white.withOpacity(0.2),
+                                        color: Colors.white.withValues(alpha: 0.2),
                                         borderRadius: BorderRadius.circular(
                                             Dimensions.radiusModern),
                                         border: Border.all(
-                                          color: Colors.white.withOpacity(0.3),
+                                          color: Colors.white.withValues(alpha: 0.3),
                                           width: 1.0,
                                         ),
                                       ),
@@ -221,14 +221,14 @@ class _HeroOrderCardWidgetState extends State<HeroOrderCardWidget>
                                                   ),
                                                   decoration: BoxDecoration(
                                                     color: AppColors.error
-                                                        .withOpacity(0.2),
+                                                        .withValues(alpha: 0.2),
                                                     borderRadius:
                                                         BorderRadius.circular(
                                                             Dimensions
                                                                 .radiusSmall),
                                                     border: Border.all(
                                                       color: AppColors.error
-                                                          .withOpacity(0.5),
+                                                          .withValues(alpha: 0.5),
                                                       width: 1.0,
                                                     ),
                                                   ),
@@ -262,13 +262,13 @@ class _HeroOrderCardWidgetState extends State<HeroOrderCardWidget>
                                             ),
                                             decoration: BoxDecoration(
                                               color:
-                                                  Colors.white.withOpacity(0.2),
+                                                  Colors.white.withValues(alpha: 0.2),
                                               borderRadius:
                                                   BorderRadius.circular(
                                                       Dimensions.radiusSmall),
                                               border: Border.all(
                                                 color: Colors.white
-                                                    .withOpacity(0.3),
+                                                    .withValues(alpha: 0.3),
                                                 width: 1.0,
                                               ),
                                             ),
@@ -309,12 +309,12 @@ class _HeroOrderCardWidgetState extends State<HeroOrderCardWidget>
                                             Dimensions.paddingSizeSmall),
                                         decoration: BoxDecoration(
                                           color: AppColors.warning
-                                              .withOpacity(0.15),
+                                              .withValues(alpha: 0.15),
                                           borderRadius: BorderRadius.circular(
                                               Dimensions.radiusModern),
                                           border: Border.all(
                                             color: AppColors.warning
-                                                .withOpacity(0.3),
+                                                .withValues(alpha: 0.3),
                                             width: 1.0,
                                           ),
                                         ),
@@ -364,7 +364,7 @@ class _HeroOrderCardWidgetState extends State<HeroOrderCardWidget>
                   ? (isInDeliveryPhase ? Icons.person : Icons.store)
                   : (isInDeliveryPhase ? Icons.home : Icons.store),
               size: Dimensions.iconSizeDefault,
-              color: Colors.white.withOpacity(0.8),
+              color: Colors.white.withValues(alpha: 0.8),
             ),
             const SizedBox(width: Dimensions.paddingSizeSmall),
             Expanded(
@@ -372,7 +372,7 @@ class _HeroOrderCardWidgetState extends State<HeroOrderCardWidget>
                 contextualLabel,
                 style: robotoMedium.copyWith(
                   fontSize: Dimensions.fontSizeDefault,
-                  color: Colors.white.withOpacity(0.9),
+                  color: Colors.white.withValues(alpha: 0.9),
                 ),
               ),
             ),
@@ -388,7 +388,7 @@ class _HeroOrderCardWidgetState extends State<HeroOrderCardWidget>
             contextualLocation,
             style: robotoRegular.copyWith(
               fontSize: Dimensions.fontSizeSmall,
-              color: Colors.white.withOpacity(0.7),
+              color: Colors.white.withValues(alpha: 0.7),
             ),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
@@ -418,7 +418,7 @@ class _HeroOrderCardWidgetState extends State<HeroOrderCardWidget>
                       : 'digitally_paid'.tr,
               style: robotoMedium.copyWith(
                 fontSize: Dimensions.fontSizeSmall,
-                color: Colors.white.withOpacity(0.8),
+                color: Colors.white.withValues(alpha: 0.8),
               ),
             ),
             if (parcel) ...[
@@ -429,10 +429,10 @@ class _HeroOrderCardWidgetState extends State<HeroOrderCardWidget>
                   vertical: Dimensions.paddingSizeExtraSmall,
                 ),
                 decoration: BoxDecoration(
-                  color: AppColors.accent.withOpacity(0.15),
+                  color: AppColors.accent.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
                   border: Border.all(
-                    color: AppColors.accent.withOpacity(0.3),
+                    color: AppColors.accent.withValues(alpha: 0.3),
                     width: 1.0,
                   ),
                 ),

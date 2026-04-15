@@ -56,8 +56,8 @@ class PerformanceCardWidget extends StatelessWidget {
           height: Dimensions.cardHeightMedium,
           padding: const EdgeInsets.all(Dimensions.paddingSizeHero),
           borderRadius: BorderRadius.circular(Dimensions.radiusModern),
-          backgroundColor: backgroundColor.withOpacity(0.05),
-          borderColor: backgroundColor.withOpacity(0.15),
+          backgroundColor: backgroundColor.withValues(alpha: 0.05),
+          borderColor: backgroundColor.withValues(alpha: 0.15),
           boxShadow: [
             BoxShadow(
               color: AppColors.shadowLayer1,
@@ -83,14 +83,14 @@ class PerformanceCardWidget extends StatelessWidget {
                       padding:
                           const EdgeInsets.all(Dimensions.paddingSizeSmall),
                       decoration: BoxDecoration(
-                        color: backgroundColor.withOpacity(0.2),
+                        color: backgroundColor.withValues(alpha: 0.2),
                         borderRadius:
                             BorderRadius.circular(Dimensions.radiusModern),
                       ),
                       child: Icon(
                         icon,
                         size: Dimensions.iconSizeDefault,
-                        color: effectiveTextColor.withOpacity(0.8),
+                        color: effectiveTextColor.withValues(alpha: 0.8),
                       ),
                     ),
                     const SizedBox(width: Dimensions.paddingSizeSmall),
@@ -100,7 +100,7 @@ class PerformanceCardWidget extends StatelessWidget {
                       title,
                       style: robotoMedium.copyWith(
                         fontSize: Dimensions.fontSizeSmall,
-                        color: effectiveTextColor.withOpacity(0.8),
+                        color: effectiveTextColor.withValues(alpha: 0.8),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -126,7 +126,7 @@ class PerformanceCardWidget extends StatelessWidget {
                       subtitle!,
                       style: robotoRegular.copyWith(
                         fontSize: Dimensions.fontSizeSmall,
-                        color: effectiveTextColor.withOpacity(0.6),
+                        color: effectiveTextColor.withValues(alpha: 0.6),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -143,7 +143,7 @@ class PerformanceCardWidget extends StatelessWidget {
                         color: (percentageChange! >= 0
                                 ? AppColors.success
                                 : AppColors.error)
-                            .withOpacity(0.2),
+                            .withValues(alpha: 0.2),
                         borderRadius:
                             BorderRadius.circular(Dimensions.radiusSmall),
                       ),
@@ -293,8 +293,8 @@ class DeliveryPerformanceWidget extends StatelessWidget {
         subtitle: 'today'.tr,
         percentageChange: todaysPercentageChange,
         backgroundColor: isDark
-            ? AppColors.primary.withOpacity(0.2)
-            : AppColors.primary.withOpacity(0.1),
+            ? AppColors.primary.withValues(alpha: 0.2)
+            : AppColors.primary.withValues(alpha: 0.1),
         textColor: isDark ? AppColors.primaryLight : AppColors.primary,
         icon: Icons.today,
         onTap: onTodaysOrdersTap,
@@ -306,8 +306,8 @@ class DeliveryPerformanceWidget extends StatelessWidget {
         subtitle: 'this_week'.tr,
         percentageChange: weeklyPercentageChange,
         backgroundColor: isDark
-            ? AppColors.accent.withOpacity(0.2)
-            : AppColors.accent.withOpacity(0.1),
+            ? AppColors.accent.withValues(alpha: 0.2)
+            : AppColors.accent.withValues(alpha: 0.1),
         textColor: isDark ? AppColors.accentLight : AppColors.accent,
         icon: Icons.date_range,
         onTap: onWeeklyOrdersTap,
@@ -318,8 +318,8 @@ class DeliveryPerformanceWidget extends StatelessWidget {
         value: totalOrders?.toString() ?? '0',
         subtitle: 'all_time'.tr,
         backgroundColor: isDark
-            ? AppColors.warning.withOpacity(0.2)
-            : AppColors.warning.withOpacity(0.1),
+            ? AppColors.warning.withValues(alpha: 0.2)
+            : AppColors.warning.withValues(alpha: 0.1),
         textColor: isDark ? AppColors.warningLight : AppColors.warning,
         icon: Icons.analytics,
         onTap: onTotalOrdersTap,

@@ -39,6 +39,7 @@ class OrderModel {
   int? itemCampaignId;
   int? userId;
   double? orderAmount;
+  // ignore: non_constant_identifier_names
   int? module_id;
   List? groupOrder;
   List? groupOrderLocation;
@@ -104,6 +105,7 @@ class OrderModel {
     this.paymentStatus,
     this.groupOrderLocation,
     this.orderStatus,
+    // ignore: non_constant_identifier_names
     this.module_id,
     this.mainOrder,
     this.groupOrder,

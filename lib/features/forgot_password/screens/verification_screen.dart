@@ -105,18 +105,18 @@ class VerificationScreenState extends State<VerificationScreen> {
                             borderRadius:
                                 BorderRadius.circular(Dimensions.radiusSmall),
                             selectedColor:
-                                Theme.of(context).primaryColor.withOpacity(0.2),
+                                Theme.of(context).primaryColor.withValues(alpha: 0.2),
                             selectedFillColor: Colors.white,
                             inactiveFillColor: Theme.of(context)
                                 .disabledColor
-                                .withOpacity(0.2),
+                                .withValues(alpha: 0.2),
                             inactiveColor:
-                                Theme.of(context).primaryColor.withOpacity(0.2),
+                                Theme.of(context).primaryColor.withValues(alpha: 0.2),
                             activeColor:
-                                Theme.of(context).primaryColor.withOpacity(0.4),
+                                Theme.of(context).primaryColor.withValues(alpha: 0.4),
                             activeFillColor: Theme.of(context)
                                 .disabledColor
-                                .withOpacity(0.2),
+                                .withValues(alpha: 0.2),
                           ),
                           animationDuration: const Duration(milliseconds: 300),
                           backgroundColor: Colors.transparent,

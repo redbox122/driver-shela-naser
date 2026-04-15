@@ -50,7 +50,7 @@ class OrderRequestWidget extends StatelessWidget {
       onTap: () async {
         final bool canOpen = await Get.find<OrderController>()
             .fetchOrderDetailsOnTap(orderModel.id);
-        if (!canOpen) {
+        if (!canOpen || !context.mounted) {
           return;
         }
         Navigator.push(
@@ -67,7 +67,7 @@ class OrderRequestWidget extends StatelessWidget {
           color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
           boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10)
+            BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10)
           ],
         ),
         child: GetBuilder<OrderController>(builder: (orderController) {
@@ -85,7 +85,7 @@ class OrderRequestWidget extends StatelessWidget {
                             borderRadius:
                                 BorderRadius.circular(Dimensions.radiusSmall),
                             color:
-                                Theme.of(context).primaryColor.withOpacity(0.2),
+                                Theme.of(context).primaryColor.withValues(alpha: 0.2),
                           )
                         : null,
                     child: ClipRRect(
@@ -158,7 +158,7 @@ class OrderRequestWidget extends StatelessWidget {
                             decoration: BoxDecoration(
                               color: Theme.of(context)
                                   .primaryColor
-                                  .withOpacity(0.15),
+                                  .withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(
                                   Dimensions.radiusDefault),
                             ),
@@ -263,7 +263,7 @@ class OrderRequestWidget extends StatelessWidget {
             Container(
               constraints: const BoxConstraints(minHeight: 80),
               decoration: BoxDecoration(
-                color: Theme.of(context).disabledColor.withOpacity(0.05),
+                color: Theme.of(context).disabledColor.withValues(alpha: 0.05),
                 borderRadius: const BorderRadius.vertical(
                     bottom: Radius.circular(Dimensions.radiusDefault)),
               ),
@@ -299,7 +299,7 @@ class OrderRequestWidget extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: Theme.of(context)
                                 .primaryColor
-                                .withOpacity(0.15),
+                                .withValues(alpha: 0.15),
                             borderRadius:
                                 BorderRadius.circular(Dimensions.radiusSmall),
                           ),
@@ -320,7 +320,7 @@ class OrderRequestWidget extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: Theme.of(context)
                                 .primaryColor
-                                .withOpacity(0.15),
+                                .withValues(alpha: 0.15),
                             borderRadius:
                                 BorderRadius.circular(Dimensions.radiusSmall),
                           ),
@@ -402,7 +402,7 @@ class OrderRequestWidget extends StatelessWidget {
                                             if (isSuccess) {
                                               Get.find<OrderController>()
                                                   .getLatestOrders();
-
+                                              if (!context.mounted) return;
                                               Navigator.pop(context);
                                               Get.showSnackbar(
                                                   const GetSnackBar(

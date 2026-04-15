@@ -1,8 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shellafood_delivery/util/images.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:video_player/video_player.dart';
 
 class CustomImageWidget extends StatelessWidget {
@@ -55,7 +53,7 @@ class VideoApp extends StatefulWidget {
   const VideoApp({super.key, required this.videoPath});
 
   @override
-  _VideoAppState createState() => _VideoAppState();
+  State<VideoApp> createState() => _VideoAppState();
 }
 
 class _VideoAppState extends State<VideoApp> {

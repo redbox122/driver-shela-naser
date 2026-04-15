@@ -27,7 +27,7 @@ class _WithdrawMethodScreenState extends State<WithdrawMethodScreen> {
     initCall();
   }
 
-  initCall() async {
+  Future<void> initCall() async {
     Get.find<DisbursementController>().getWithdrawMethodList();
     disbursementHelper.enableDisbursementWarningMessage(false,
         canShowDialog: !widget.isFromDashboard);
@@ -64,7 +64,7 @@ class _WithdrawMethodScreenState extends State<WithdrawMethodScreen> {
                           color: Theme.of(context).cardColor,
                           boxShadow: [
                             BoxShadow(
-                                color: Colors.black12.withOpacity(0.1),
+                                color: Colors.black12.withValues(alpha: 0.1),
                                 spreadRadius: 1,
                                 blurRadius: 5,
                                 offset: const Offset(2, 3))
@@ -93,7 +93,7 @@ class _WithdrawMethodScreenState extends State<WithdrawMethodScreen> {
                                           decoration: BoxDecoration(
                                             color: Theme.of(context)
                                                 .primaryColor
-                                                .withOpacity(0.1),
+                                                .withValues(alpha: 0.1),
                                             borderRadius: BorderRadius.circular(
                                                 Dimensions.radiusDefault),
                                           ),

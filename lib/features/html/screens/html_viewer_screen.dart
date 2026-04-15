@@ -1,4 +1,4 @@
-import 'package:flutter_html/flutter_html.dart';
+import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter/material.dart';
 import 'package:shellafood_delivery/features/html/controllers/html_controller.dart';
@@ -62,17 +62,17 @@ class _HtmlViewerScreenState extends State<HtmlViewerScreen> {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(Dimensions.paddingSizeSmall),
       physics: const BouncingScrollPhysics(),
-      child: Html(
-        data: html,
+      child: HtmlWidget(
+        html,
         key: Key(
             widget.isPrivacyPolicy ? 'privacy_policy' : 'terms_condition'),
-        onLinkTap: (url, attributes, element) {
-          if (url == null) return;
+        onTapUrl: (url) {
           String safeUrl = url;
           if (safeUrl.startsWith('www.')) {
             safeUrl = 'https://$safeUrl';
           }
           launchUrlString(safeUrl, mode: LaunchMode.externalApplication);
+          return true;
         },
       ),
     );

@@ -63,7 +63,7 @@ class MessageBubbleWidget extends StatelessWidget {
                                   decoration: BoxDecoration(
                                     color: Theme.of(context)
                                         .secondaryHeaderColor
-                                        .withOpacity(0.2),
+                                        .withValues(alpha: 0.2),
                                     borderRadius: const BorderRadius.only(
                                       bottomRight: Radius.circular(
                                           Dimensions.radiusDefault),
@@ -171,7 +171,7 @@ class MessageBubbleWidget extends StatelessWidget {
                                       decoration: BoxDecoration(
                                         color: Theme.of(context)
                                             .primaryColor
-                                            .withOpacity(0.5),
+                                            .withValues(alpha: 0.5),
                                         borderRadius: const BorderRadius.only(
                                           topLeft: Radius.circular(
                                               Dimensions.radiusDefault),

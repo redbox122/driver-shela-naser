@@ -17,7 +17,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
-import 'package:url_strategy/url_strategy.dart';
+import 'package:flutter_web_plugins/url_strategy.dart';
 import 'helper/get_di.dart' as di;
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
@@ -26,7 +26,7 @@ final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
 Future<void> main() async {
   // SS-06: ensureInitialized must come before any platform-channel calls
   WidgetsFlutterBinding.ensureInitialized();
-  setPathUrlStrategy();
+  usePathUrlStrategy();
 
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,

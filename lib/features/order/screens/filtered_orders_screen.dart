@@ -128,13 +128,13 @@ class _FilteredOrdersScreenState extends State<FilteredOrdersScreen> {
             Container(
               padding: const EdgeInsets.all(Dimensions.paddingSizeLarge),
               decoration: BoxDecoration(
-                color: Theme.of(context).primaryColor.withOpacity(0.1),
+                color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 emptyIcon,
                 size: 80,
-                color: Theme.of(context).primaryColor.withOpacity(0.6),
+                color: Theme.of(context).primaryColor.withValues(alpha: 0.6),
               ),
             ),
             const SizedBox(height: Dimensions.paddingSizeLarge),
@@ -155,7 +155,7 @@ class _FilteredOrdersScreenState extends State<FilteredOrdersScreen> {
                     .textTheme
                     .bodyMedium
                     ?.color
-                    ?.withOpacity(0.7),
+                    ?.withValues(alpha: 0.7),
               ),
               textAlign: TextAlign.center,
             ),

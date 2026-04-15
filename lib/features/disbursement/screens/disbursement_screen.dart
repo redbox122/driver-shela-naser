@@ -198,13 +198,13 @@ class _DisbursementScreenState extends State<DisbursementScreen> {
                                                 color: disbursement.status ==
                                                         'pending'
                                                     ? Colors.blue
-                                                        .withOpacity(0.1)
+                                                        .withValues(alpha: 0.1)
                                                     : disbursement.status ==
                                                             'completed'
                                                         ? Colors.green
-                                                            .withOpacity(0.1)
+                                                            .withValues(alpha: 0.1)
                                                         : Colors.red
-                                                            .withOpacity(0.1),
+                                                            .withValues(alpha: 0.1),
                                               ),
                                               child: Text(
                                                   disbursement.status!.tr,
@@ -229,7 +229,7 @@ class _DisbursementScreenState extends State<DisbursementScreen> {
                                       thickness: 1,
                                       color: Theme.of(context)
                                           .disabledColor
-                                          .withOpacity(0.5)),
+                                          .withValues(alpha: 0.5)),
                                 ]);
                               },
                             )

@@ -122,7 +122,7 @@ class _CurrentOrdersListWidgetState extends State<CurrentOrdersListWidget>
               Container(
                 padding: const EdgeInsets.all(Dimensions.paddingSizeLarge),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).primaryColor.withOpacity(0.2),
+                  color: Theme.of(context).primaryColor.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -145,7 +145,7 @@ class _CurrentOrdersListWidgetState extends State<CurrentOrdersListWidget>
                 style: robotoRegular.copyWith(
                   fontSize: Dimensions.fontSizeDefault,
                   color:
-                      Colors.white.withOpacity(0.8), // Light white for subtitle
+                      Colors.white.withValues(alpha: 0.8), // Light white for subtitle
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -201,7 +201,7 @@ class _CurrentOrdersListWidgetState extends State<CurrentOrdersListWidget>
                             .textTheme
                             .bodyLarge
                             ?.color
-                            ?.withOpacity(0.7),
+                            ?.withValues(alpha: 0.7),
                       ),
                     ),
                     const Spacer(),
@@ -215,15 +215,15 @@ class _CurrentOrdersListWidgetState extends State<CurrentOrdersListWidget>
                         decoration: BoxDecoration(
                           color:
                               OrderHelper.hasReachedMaxCapacity(widget.orders)
-                                  ? AppColors.error.withOpacity(0.1)
-                                  : AppColors.success.withOpacity(0.1),
+                                  ? AppColors.error.withValues(alpha: 0.1)
+                                  : AppColors.success.withValues(alpha: 0.1),
                           borderRadius:
                               BorderRadius.circular(Dimensions.radiusSmall),
                           border: Border.all(
                             color:
                                 OrderHelper.hasReachedMaxCapacity(widget.orders)
-                                    ? AppColors.error.withOpacity(0.3)
-                                    : AppColors.success.withOpacity(0.3),
+                                    ? AppColors.error.withValues(alpha: 0.3)
+                                    : AppColors.success.withValues(alpha: 0.3),
                             width: 1.0,
                           ),
                         ),
@@ -272,7 +272,7 @@ class _CurrentOrdersListWidgetState extends State<CurrentOrdersListWidget>
                       onNavigate: () => _navigateToOrder(order),
                       onViewDetails: () => _viewOrderDetails(order, index + 1),
                     );
-                  }).toList(),
+                  }),
                 ],
               ),
             ),

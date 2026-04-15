@@ -150,7 +150,7 @@ class CompactOrderCardWidget extends StatelessWidget {
                               .textTheme
                               .bodyMedium
                               ?.color
-                              ?.withOpacity(0.7),
+                              ?.withValues(alpha: 0.7),
                         ),
                         const SizedBox(width: Dimensions.paddingSizeSmall),
                         Expanded(
@@ -165,7 +165,7 @@ class CompactOrderCardWidget extends StatelessWidget {
                                       .textTheme
                                       .bodyMedium
                                       ?.color
-                                      ?.withOpacity(0.8),
+                                      ?.withValues(alpha: 0.8),
                                 ),
                               ),
                               Text(
@@ -176,7 +176,7 @@ class CompactOrderCardWidget extends StatelessWidget {
                                       .textTheme
                                       .bodyMedium
                                       ?.color
-                                      ?.withOpacity(0.6),
+                                      ?.withValues(alpha: 0.6),
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -203,11 +203,11 @@ class CompactOrderCardWidget extends StatelessWidget {
                                 vertical: Dimensions.paddingSizeSmall,
                               ),
                               decoration: BoxDecoration(
-                                color: AppColors.primary.withOpacity(0.1),
+                                color: AppColors.primary.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(
                                     Dimensions.radiusSmall),
                                 border: Border.all(
-                                  color: AppColors.primary.withOpacity(0.3),
+                                  color: AppColors.primary.withValues(alpha: 0.3),
                                   width: 1.0,
                                 ),
                               ),
@@ -246,11 +246,11 @@ class CompactOrderCardWidget extends StatelessWidget {
                                 vertical: Dimensions.paddingSizeSmall,
                               ),
                               decoration: BoxDecoration(
-                                color: AppColors.onSurface.withOpacity(0.1),
+                                color: AppColors.onSurface.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(
                                     Dimensions.radiusSmall),
                                 border: Border.all(
-                                  color: AppColors.onSurface.withOpacity(0.3),
+                                  color: AppColors.onSurface.withValues(alpha: 0.3),
                                   width: 1.0,
                                 ),
                               ),
@@ -312,32 +312,32 @@ class CompactOrderCardWidget extends StatelessWidget {
   Color _getStatusBackgroundColor(String statusColor) {
     switch (statusColor) {
       case 'urgent':
-        return AppColors.error.withOpacity(0.1);
+        return AppColors.error.withValues(alpha: 0.1);
       case 'success':
-        return AppColors.success.withOpacity(0.1);
+        return AppColors.success.withValues(alpha: 0.1);
       case 'warning':
-        return AppColors.warning.withOpacity(0.1);
+        return AppColors.warning.withValues(alpha: 0.1);
       case 'info':
         return AppColors.primary
-            .withOpacity(0.1); // Use primary color instead of info
+            .withValues(alpha: 0.1); // Use primary color instead of info
       default:
-        return AppColors.onSurfaceVariant.withOpacity(0.1);
+        return AppColors.onSurfaceVariant.withValues(alpha: 0.1);
     }
   }
 
   Color _getStatusBorderColor(String statusColor) {
     switch (statusColor) {
       case 'urgent':
-        return AppColors.error.withOpacity(0.3);
+        return AppColors.error.withValues(alpha: 0.3);
       case 'success':
-        return AppColors.success.withOpacity(0.3);
+        return AppColors.success.withValues(alpha: 0.3);
       case 'warning':
-        return AppColors.warning.withOpacity(0.3);
+        return AppColors.warning.withValues(alpha: 0.3);
       case 'info':
         return AppColors.primary
-            .withOpacity(0.3); // Use primary color instead of info
+            .withValues(alpha: 0.3); // Use primary color instead of info
       default:
-        return AppColors.onSurfaceVariant.withOpacity(0.3);
+        return AppColors.onSurfaceVariant.withValues(alpha: 0.3);
     }
   }
 }

@@ -32,7 +32,7 @@ class NotificationDialogWidget extends StatelessWidget {
                   decoration: BoxDecoration(
                       borderRadius:
                           BorderRadius.circular(Dimensions.radiusSmall),
-                      color: Theme.of(context).primaryColor.withOpacity(0.20)),
+                      color: Theme.of(context).primaryColor.withValues(alpha: 0.20)),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
                     child: CustomImageWidget(

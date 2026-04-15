@@ -61,7 +61,7 @@ class FinancialOverviewWidget extends StatelessWidget {
                 borderRadius: BorderRadius.circular(Dimensions.radiusLarge),
                 border: Border.all(
                   color: Colors.white
-                      .withOpacity(0.2), // Light border for contrast
+                      .withValues(alpha: 0.2), // Light border for contrast
                   width: 1.5,
                 ),
                 boxShadow: [
@@ -97,13 +97,13 @@ class FinancialOverviewWidget extends StatelessWidget {
                                           padding: const EdgeInsets.all(
                                               Dimensions.paddingSizeSmall),
                                           decoration: BoxDecoration(
-                                            color: Colors.white.withOpacity(
+                                            color: Colors.white.withValues(alpha: 
                                                 0.1), // Light background for dark card
                                             borderRadius: BorderRadius.circular(
                                                 Dimensions.radiusModern),
                                             border: Border.all(
                                               color:
-                                                  Colors.white.withOpacity(0.2),
+                                                  Colors.white.withValues(alpha: 0.2),
                                               width: 1.0,
                                             ),
                                           ),
@@ -121,7 +121,7 @@ class FinancialOverviewWidget extends StatelessWidget {
                                           'balance'.tr,
                                           style: robotoMedium.copyWith(
                                             fontSize: Dimensions.fontSizeSmall,
-                                            color: Colors.white.withOpacity(
+                                            color: Colors.white.withValues(alpha: 
                                                 0.8), // White text for visibility
                                           ),
                                         ),
@@ -155,7 +155,7 @@ class FinancialOverviewWidget extends StatelessWidget {
                                   end: Alignment.bottomCenter,
                                   colors: [
                                     Colors.transparent,
-                                    Colors.white.withOpacity(
+                                    Colors.white.withValues(alpha: 
                                         0.2), // White separator for dark card
                                     Colors.transparent,
                                   ],
@@ -174,13 +174,13 @@ class FinancialOverviewWidget extends StatelessWidget {
                                           padding: const EdgeInsets.all(
                                               Dimensions.paddingSizeSmall),
                                           decoration: BoxDecoration(
-                                            color: Colors.white.withOpacity(
+                                            color: Colors.white.withValues(alpha: 
                                                 0.1), // Light background for dark card
                                             borderRadius: BorderRadius.circular(
                                                 Dimensions.radiusModern),
                                             border: Border.all(
                                               color:
-                                                  Colors.white.withOpacity(0.2),
+                                                  Colors.white.withValues(alpha: 0.2),
                                               width: 1.0,
                                             ),
                                           ),
@@ -197,7 +197,7 @@ class FinancialOverviewWidget extends StatelessWidget {
                                           'cash_in_hand'.tr,
                                           style: robotoMedium.copyWith(
                                             fontSize: Dimensions.fontSizeSmall,
-                                            color: Colors.white.withOpacity(
+                                            color: Colors.white.withValues(alpha: 
                                                 0.8), // White text for visibility
                                           ),
                                         ),
@@ -209,13 +209,13 @@ class FinancialOverviewWidget extends StatelessWidget {
                                             padding: const EdgeInsets.all(2),
                                             decoration: BoxDecoration(
                                               color: AppColors.warning
-                                                  .withOpacity(0.15),
+                                                  .withValues(alpha: 0.15),
                                               borderRadius:
                                                   BorderRadius.circular(
                                                       Dimensions.radiusSmall),
                                               border: Border.all(
                                                 color: AppColors.warning
-                                                    .withOpacity(0.3),
+                                                    .withValues(alpha: 0.3),
                                                 width: 1.0,
                                               ),
                                             ),
@@ -268,7 +268,7 @@ class FinancialOverviewWidget extends StatelessWidget {
                                   end: Alignment.bottomCenter,
                                   colors: [
                                     Colors.transparent,
-                                    Colors.white.withOpacity(
+                                    Colors.white.withValues(alpha: 
                                         0.15), // White separator for dark card
                                     Colors.transparent,
                                   ],
@@ -290,7 +290,7 @@ class FinancialOverviewWidget extends StatelessWidget {
                                   end: Alignment.bottomCenter,
                                   colors: [
                                     Colors.transparent,
-                                    Colors.white.withOpacity(
+                                    Colors.white.withValues(alpha: 
                                         0.15), // White separator for dark card
                                     Colors.transparent,
                                   ],
@@ -336,7 +336,7 @@ class _EarningItemWidget extends StatelessWidget {
           title,
           style: robotoMedium.copyWith(
             fontSize: Dimensions.fontSizeSmall,
-            color: Colors.white.withOpacity(0.8), // White text for visibility
+            color: Colors.white.withValues(alpha: 0.8), // White text for visibility
           ),
         ),
         const SizedBox(height: Dimensions.paddingSizeExtraSmall),
@@ -399,7 +399,7 @@ class CompactFinancialOverviewWidget extends StatelessWidget {
             color: isDark ? AppColors.surfaceDark : AppColors.surface,
             borderRadius: BorderRadius.circular(Dimensions.radiusModern),
             border: Border.all(
-              color: AppColors.primary.withOpacity(0.2),
+              color: AppColors.primary.withValues(alpha: 0.2),
               width: 1.0,
             ),
             boxShadow: [
@@ -421,7 +421,7 @@ class CompactFinancialOverviewWidget extends StatelessWidget {
                       style: robotoMedium.copyWith(
                         fontSize: Dimensions.fontSizeSmall,
                         color: isDark
-                            ? AppColors.onSurfaceDark.withOpacity(0.7)
+                            ? AppColors.onSurfaceDark.withValues(alpha: 0.7)
                             : AppColors.onSurfaceVariant,
                       ),
                     ),
@@ -446,8 +446,8 @@ class CompactFinancialOverviewWidget extends StatelessWidget {
                 width: 1.0,
                 height: 40.0,
                 color: isDark
-                    ? AppColors.onSurfaceDark.withOpacity(0.2)
-                    : AppColors.onSurfaceVariant.withOpacity(0.2),
+                    ? AppColors.onSurfaceDark.withValues(alpha: 0.2)
+                    : AppColors.onSurfaceVariant.withValues(alpha: 0.2),
               ),
               Expanded(
                 child: Column(
@@ -460,7 +460,7 @@ class CompactFinancialOverviewWidget extends StatelessWidget {
                           style: robotoMedium.copyWith(
                             fontSize: Dimensions.fontSizeSmall,
                             color: isDark
-                                ? AppColors.onSurfaceDark.withOpacity(0.7)
+                                ? AppColors.onSurfaceDark.withValues(alpha: 0.7)
                                 : AppColors.onSurfaceVariant,
                           ),
                         ),

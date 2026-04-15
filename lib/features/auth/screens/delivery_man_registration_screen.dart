@@ -44,7 +44,6 @@ class _DeliveryManRegistrationScreenState
   final FocusNode _fNameNode = FocusNode();
   final FocusNode _lNameNode = FocusNode();
   final FocusNode _emailNode = FocusNode();
-  final FocusNode _nationalityNode = FocusNode();
   final FocusNode _phoneNode = FocusNode();
   final FocusNode _passwordNode = FocusNode();
   final FocusNode _identityNumberNode = FocusNode();
@@ -74,7 +73,7 @@ class _DeliveryManRegistrationScreenState
   Widget build(BuildContext context) {
     return PopScope(
       canPop: false,
-      onPopInvoked: (didPop) async {
+      onPopInvokedWithResult: (didPop, _) async {
         if (Get.find<AuthController>().dmStatus != 0.4 && !didPop) {
           Get.find<AuthController>().dmStatusChange(0.4);
         } else {

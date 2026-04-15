@@ -1,5 +1,4 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:flutter/foundation.dart';
 import 'package:shellafood_delivery/features/splash/controllers/splash_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -23,6 +22,7 @@ class NetworkInfoHelper {
           Get.find<SplashController>().setFirstTimeConnectionCheck(false);
         } else {
           bool isNotConnected = result == ConnectivityResult.none;
+          if (!context.mounted) return;
           isNotConnected
               ? const SizedBox()
               : ScaffoldMessenger.of(context).hideCurrentSnackBar();

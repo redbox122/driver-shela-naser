@@ -10,7 +10,7 @@ import 'package:shellafood_delivery/util/app_constants.dart';
 class OrderDebugWidget extends StatelessWidget {
   final OrderModel order;
   
-  const OrderDebugWidget({Key? key, required this.order}) : super(key: key);
+  const OrderDebugWidget({super.key, required this.order});
 
   @override
   Widget build(BuildContext context) {

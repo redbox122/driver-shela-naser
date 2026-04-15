@@ -266,8 +266,10 @@ class ProfileController extends GetxController implements GetxService {
 
       // Add timeout for location request
       final Position locationResult = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.medium,
-        timeLimit: const Duration(seconds: 10),
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.medium,
+          timeLimit: Duration(seconds: 10),
+        ),
       ).timeout(
         const Duration(seconds: 15),
         onTimeout: () {

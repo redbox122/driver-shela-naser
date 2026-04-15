@@ -57,7 +57,7 @@ class _PaymentMethodBottomSheetWidgetState
             height: 5,
             width: 50,
             decoration: BoxDecoration(
-              color: Theme.of(context).disabledColor.withOpacity(0.2),
+              color: Theme.of(context).disabledColor.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
             ),
           ),
@@ -124,7 +124,7 @@ class _PaymentMethodBottomSheetWidgetState
                         border: Border.all(
                             color: Theme.of(context)
                                 .disabledColor
-                                .withOpacity(0.4)),
+                                .withValues(alpha: 0.4)),
                       ),
                       padding: const EdgeInsets.symmetric(
                           horizontal: Dimensions.paddingSizeDefault,
@@ -159,7 +159,7 @@ class _PaymentMethodBottomSheetWidgetState
                           height: 20,
                           fit: BoxFit.contain,
                           image:
-                              '${Get.find<SplashController>().configModel?.activePaymentMethodList?[index].getWayImageFullUrl ?? ''}',
+                              Get.find<SplashController>().configModel?.activePaymentMethodList?[index].getWayImageFullUrl ?? '',
                         ),
                       ]),
                     ),

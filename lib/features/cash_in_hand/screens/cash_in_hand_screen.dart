@@ -192,7 +192,7 @@ class _CashInHandScreenState extends State<CashInHandScreen> {
                                                                               height: 45,
                                                                               child: CustomButtonWidget(
                                                                                 onPressed: () => Get.back(),
-                                                                                backgroundColor: Theme.of(context).disabledColor.withOpacity(0.5),
+                                                                                backgroundColor: Theme.of(context).disabledColor.withValues(alpha: 0.5),
                                                                                 buttonText: 'cancel'.tr,
                                                                               ),
                                                                             ),
@@ -347,7 +347,7 @@ class _CashInHandScreenState extends State<CashInHandScreen> {
                                                           .primaryColor
                                                       : Theme.of(context)
                                                           .disabledColor
-                                                          .withOpacity(0.8),
+                                                          .withValues(alpha: 0.8),
                                                 ),
                                                 child: Text('pay_now'.tr,
                                                     textAlign: TextAlign.center,

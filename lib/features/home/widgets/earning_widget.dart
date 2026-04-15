@@ -77,7 +77,7 @@ class EarningWidget extends StatelessWidget {
                 title,
                 style: robotoMedium.copyWith(
                   fontSize: Dimensions.fontSizeSmall,
-                  color: effectiveTextColor.withOpacity(0.8),
+                  color: effectiveTextColor.withValues(alpha: 0.8),
                 ),
               ),
               const SizedBox(height: Dimensions.paddingSizeSmall),
@@ -181,7 +181,7 @@ class EnhancedEarningWidget extends StatelessWidget {
                   Icon(
                     icon,
                     size: Dimensions.iconSizeDefault,
-                    color: effectiveTextColor.withOpacity(0.7),
+                    color: effectiveTextColor.withValues(alpha: 0.7),
                   ),
                   const SizedBox(width: Dimensions.paddingSizeSmall),
                   Expanded(
@@ -189,7 +189,7 @@ class EnhancedEarningWidget extends StatelessWidget {
                       title,
                       style: robotoMedium.copyWith(
                         fontSize: Dimensions.fontSizeSmall,
-                        color: effectiveTextColor.withOpacity(0.8),
+                        color: effectiveTextColor.withValues(alpha: 0.8),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,

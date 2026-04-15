@@ -106,7 +106,7 @@ class DateConverterHelper {
 
       const String lrm = '\u200E';
       if (totalMinutes < 60) {
-        return '$lrm${totalMinutes} min';
+        return '$lrm$totalMinutes min';
       }
 
       if (totalMinutes >= 1440) {

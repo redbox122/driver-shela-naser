@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(flutter analyze:*)",
+      "Bash(grep -v \"^$\")",
+      "Bash(grep -oP \"lib\\\\\\\\\\\\\\\\[^-]+\")",
+      "Bash(grep -E \"lib\\\\\\\\\")",
+      "Bash(awk -F' - lib/' '{print \"lib/\" $2}')",
+      "Bash(powershell -Command 'Get-ChildItem -Path '\\\\''lib'\\\\'' -Recurse -Filter '\\\\''*.dart'\\\\'' | ForEach-Object { $content = Get-Content $_.FullName -Raw; if \\($content -match '\\\\''\\\\.withOpacity\\\\\\('\\\\''\\) { $newContent = $content -replace '\\\\''\\\\.withOpacity\\\\\\('\\\\'', '\\\\''.withValues\\(alpha: '\\\\''; Set-Content -Path $_.FullName -Value $newContent -NoNewline; Write-Host \"Fixed: $\\($_.Name\\)\" } }')",
+      "Bash(powershell -Command ':*)",
+      "Bash(flutter pub:*)",
+      "Bash(flutter clean:*)",
+      "Bash(./gradlew assembleDebug)",
+      "Bash(./gradlew --stop)",
+      "Bash(./gradlew assembleDebug --info)",
+      "Bash(flutter build:*)"
+    ]
+  }
+}

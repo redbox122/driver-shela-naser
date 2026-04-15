@@ -64,7 +64,7 @@ class LocationCardWidget extends StatelessWidget {
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10)
+          BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10)
         ],
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -77,7 +77,7 @@ class LocationCardWidget extends StatelessWidget {
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Container(
                     decoration: BoxDecoration(
-                      color: Theme.of(context).primaryColor.withOpacity(0.2),
+                      color: Theme.of(context).primaryColor.withValues(alpha: 0.2),
                       borderRadius:
                           BorderRadius.circular(Dimensions.radiusDefault),
                     ),
@@ -118,7 +118,7 @@ class LocationCardWidget extends StatelessWidget {
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Container(
               decoration: BoxDecoration(
-                color: Theme.of(context).primaryColor.withOpacity(0.2),
+                color: Theme.of(context).primaryColor.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
               ),
               padding: const EdgeInsets.symmetric(
@@ -148,7 +148,7 @@ class LocationCardWidget extends StatelessWidget {
         Container(
           height: 80,
           decoration: BoxDecoration(
-              color: Theme.of(context).disabledColor.withOpacity(0.05),
+              color: Theme.of(context).disabledColor.withValues(alpha: 0.05),
               borderRadius: const BorderRadius.vertical(
                   bottom: Radius.circular(Dimensions.radiusDefault))),
           padding: const EdgeInsets.all(Dimensions.paddingSizeSmall),

@@ -103,7 +103,7 @@ class OrderRequestScreenState extends State<OrderRequestScreen> {
         color: Theme.of(context).cardColor,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -113,7 +113,7 @@ class OrderRequestScreenState extends State<OrderRequestScreen> {
         children: [
           Expanded(
             child: DropdownButtonFormField<_DateSort>(
-              value: _dateSort,
+              initialValue: _dateSort,
               decoration: const InputDecoration(
                 isDense: true,
                 border: OutlineInputBorder(),
@@ -139,7 +139,7 @@ class OrderRequestScreenState extends State<OrderRequestScreen> {
           const SizedBox(width: Dimensions.paddingSizeSmall),
           Expanded(
             child: DropdownButtonFormField<_DistanceSort>(
-              value: _distanceSort,
+              initialValue: _distanceSort,
               decoration: const InputDecoration(
                 isDense: true,
                 border: OutlineInputBorder(),
@@ -220,7 +220,7 @@ class OrderRequestScreenState extends State<OrderRequestScreen> {
     }
   }
 
-  double _distanceFromOrder(order, double userLat, double userLng) {
+  double _distanceFromOrder(dynamic order, double userLat, double userLng) {
     final double? lat = _orderLat(order);
     final double? lng = _orderLng(order);
     if (lat == null || lng == null) {
@@ -229,12 +229,12 @@ class OrderRequestScreenState extends State<OrderRequestScreen> {
     return _haversine(userLat, userLng, lat, lng);
   }
 
-  double? _orderLat(order) {
+  double? _orderLat(dynamic order) {
     final String? latStr = order.deliveryAddress?.latitude ?? order.storeLat;
     return latStr != null ? double.tryParse(latStr) : null;
   }
 
-  double? _orderLng(order) {
+  double? _orderLng(dynamic order) {
     final String? lngStr = order.deliveryAddress?.longitude ?? order.storeLng;
     return lngStr != null ? double.tryParse(lngStr) : null;
   }

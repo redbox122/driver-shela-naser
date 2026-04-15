@@ -96,7 +96,7 @@ class DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
-  showDisbursementWarningMessage() async {
+  Future<void> showDisbursementWarningMessage() async {
     if (!widget.fromOrderDetails) {
       disbursementHelper.enableDisbursementWarningMessage(true);
     }
@@ -131,7 +131,7 @@ class DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     return PopScope(
       canPop: false,
-      onPopInvoked: (didPop) async {
+      onPopInvokedWithResult: (didPop, _) async {
         if (_pageIndex != 0) {
           _setPage(0);
         } else {

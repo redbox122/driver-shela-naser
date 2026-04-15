@@ -84,8 +84,8 @@ class QuickActionButtonWidget extends StatelessWidget {
                               ? AppColors.onSurfaceDark
                               : AppColors.onSurface)
                           : (isDark
-                              ? AppColors.onSurfaceDark.withOpacity(0.4)
-                              : AppColors.onSurface.withOpacity(0.4))),
+                              ? AppColors.onSurfaceDark.withValues(alpha: 0.4)
+                              : AppColors.onSurface.withValues(alpha: 0.4))),
                 ),
                 const SizedBox(height: Dimensions.paddingSizeExtraSmall),
                 Text(
@@ -95,11 +95,11 @@ class QuickActionButtonWidget extends StatelessWidget {
                     color: labelColor ??
                         (isEnabled
                             ? (isDark
-                                ? AppColors.onSurfaceDark.withOpacity(0.7)
-                                : AppColors.onSurface.withOpacity(0.7))
+                                ? AppColors.onSurfaceDark.withValues(alpha: 0.7)
+                                : AppColors.onSurface.withValues(alpha: 0.7))
                             : (isDark
-                                ? AppColors.onSurfaceDark.withOpacity(0.4)
-                                : AppColors.onSurface.withOpacity(0.4))),
+                                ? AppColors.onSurfaceDark.withValues(alpha: 0.4)
+                                : AppColors.onSurface.withValues(alpha: 0.4))),
                   ),
                   textAlign: TextAlign.center,
                   maxLines: 1,
@@ -188,7 +188,7 @@ class DeliveryQuickActionsWidget extends StatelessWidget {
           icon: Icons.phone,
           label: 'call'.tr,
           onTap: onCallSupport ?? () {},
-          backgroundColor: AppColors.error.withOpacity(0.08),
+          backgroundColor: AppColors.error.withValues(alpha: 0.08),
           iconColor: AppColors.error,
           tooltip: 'call_support'.tr,
         ),
@@ -201,7 +201,7 @@ class DeliveryQuickActionsWidget extends StatelessWidget {
           icon: Icons.account_balance_wallet,
           label: 'earnings'.tr,
           onTap: onEarningsHistory ?? () {},
-          backgroundColor: AppColors.primary.withOpacity(0.08),
+          backgroundColor: AppColors.primary.withValues(alpha: 0.08),
           iconColor: AppColors.primary,
           tooltip: 'earnings_history'.tr,
         ),
@@ -214,7 +214,7 @@ class DeliveryQuickActionsWidget extends StatelessWidget {
           icon: Icons.navigation,
           label: 'navigate'.tr,
           onTap: onNavigate ?? () {},
-          backgroundColor: AppColors.accent.withOpacity(0.08),
+          backgroundColor: AppColors.accent.withValues(alpha: 0.08),
           iconColor: AppColors.accent,
           tooltip: 'open_navigation'.tr,
         ),
@@ -227,7 +227,7 @@ class DeliveryQuickActionsWidget extends StatelessWidget {
           icon: Icons.help_center,
           label: 'help'.tr,
           onTap: onHelpCenter ?? () {},
-          backgroundColor: AppColors.warning.withOpacity(0.08),
+          backgroundColor: AppColors.warning.withValues(alpha: 0.08),
           iconColor: AppColors.warning,
           tooltip: 'help_center'.tr,
         ),

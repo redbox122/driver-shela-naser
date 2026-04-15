@@ -214,7 +214,7 @@ class AppColors {
 
   // Helper methods
   static Color withOpacity(Color color, double opacity) {
-    return color.withOpacity(opacity);
+    return color.withValues(alpha: opacity);
   }
 
   static Color getStatusColor(String status) {

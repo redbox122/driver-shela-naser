@@ -8,7 +8,6 @@ import 'package:shellafood_delivery/features/profile/controllers/profile_control
 import 'package:shellafood_delivery/features/splash/controllers/splash_controller.dart';
 import 'package:shellafood_delivery/features/notification/domain/models/notification_body_model.dart';
 import 'package:shellafood_delivery/features/chat/domain/models/conversation_model.dart';
-import 'package:shellafood_delivery/features/order/domain/models/order_details_model.dart';
 import 'package:shellafood_delivery/features/order/domain/models/order_model.dart';
 import 'package:shellafood_delivery/helper/responsive_helper.dart';
 import 'package:shellafood_delivery/helper/route_helper.dart';

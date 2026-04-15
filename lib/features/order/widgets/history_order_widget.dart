@@ -26,7 +26,7 @@ class HistoryOrderWidget extends StatelessWidget {
       onTap: () async {
         final bool canOpen =
             await Get.find<OrderController>().fetchOrderDetailsOnTap(orderModel.id);
-        if (!canOpen) {
+        if (!canOpen || !context.mounted) {
           return;
         }
         Navigator.push(
@@ -58,7 +58,7 @@ class HistoryOrderWidget extends StatelessWidget {
             decoration: parcel
                 ? BoxDecoration(
                     borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
-                    color: Theme.of(context).primaryColor.withOpacity(0.2),
+                    color: Theme.of(context).primaryColor.withValues(alpha: 0.2),
                   )
                 : null,
             child: ClipRRect(
@@ -98,7 +98,7 @@ class HistoryOrderWidget extends StatelessWidget {
                           borderRadius:
                               BorderRadius.circular(Dimensions.radiusSmall),
                           color:
-                              Theme.of(context).primaryColor.withOpacity(0.1),
+                              Theme.of(context).primaryColor.withValues(alpha: 0.1),
                         ),
                         child: Text('parcel'.tr,
                             style: robotoMedium.copyWith(
