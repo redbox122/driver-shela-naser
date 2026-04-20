@@ -1,7 +1,7 @@
 name: shellafood_delivery
 description: A new Flutter application.
-publish_to: 'none' #
-version: 1.1.4+20
+publish_to: "none" #
+version: 1.1.5+21
 
 environment:
   sdk: ">=3.4.0 <4.0.0"
