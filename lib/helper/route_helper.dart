@@ -85,7 +85,8 @@ class RouteHelper {
   static String getRunningOrderRoute() => runningOrder;
   static String getTermsRoute() => terms;
   static String getPrivacyRoute() => privacy;
-  static String getLanguageRoute() => language;
+  static String getLanguageRoute({bool fromFirstLaunch = false}) =>
+      '$language?from_first_launch=${fromFirstLaunch.toString()}';
   static String getUpdateRoute(bool isUpdate) =>
       '$update?update=${isUpdate.toString()}';
   static String getChatRoute(
@@ -192,7 +193,11 @@ class RouteHelper {
     GetPage(
         name: privacy,
         page: () => const HtmlViewerScreen(isPrivacyPolicy: true)),
-    GetPage(name: language, page: () => const ChooseLanguageScreen()),
+    GetPage(
+        name: language,
+        page: () => ChooseLanguageScreen(
+              fromFirstLaunch: Get.parameters['from_first_launch'] == 'true',
+            )),
     GetPage(
         name: update,
         page: () => UpdateScreen(isUpdate: Get.parameters['update'] == 'true')),

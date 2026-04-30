@@ -50,4 +50,17 @@ class LocalizationController extends GetxController implements GetxService {
     _selectedIndex = index;
     update();
   }
+
+  /// True when the user has already completed the first-launch language
+  /// selection screen at least once. Used by the splash flow to decide
+  /// whether the language picker should be shown before normal routing.
+  bool hasSeenLanguageIntro() {
+    return languageServiceInterface.hasSeenLanguageIntro();
+  }
+
+  /// Persists that the first-launch language selection is done so the
+  /// language picker will not block app startup again.
+  Future<void> markLanguageIntroSeen() async {
+    await languageServiceInterface.markLanguageIntroSeen();
+  }
 }

@@ -88,7 +88,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   profileController.profileModel?.todaysEarning != null
                       ? PriceConverterHelper.convertPrice(
                           profileController.profileModel!.todaysEarning!)
-                      : '\$0.00',
+                      : PriceConverterHelper.convertPrice(0),
                   style: robotoBold.copyWith(
                     fontSize: Dimensions.fontSizeLarge,
                     color: Theme.of(context).textTheme.bodyLarge!.color,
@@ -143,8 +143,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             height: 25,
                             valueFontSize: Dimensions.fontSizeExtraSmall,
                             showOnOff: true,
-                            activeText: 'on',
-                            inactiveText: 'off',
+                            activeText: 'online_short'.tr,
+                            inactiveText: 'offline_short'.tr,
                             activeColor: AppColors.success,
                             inactiveColor: AppColors.onSurfaceDisabled,
                             value: profileController.profileModel!.active == 1,

@@ -141,7 +141,7 @@ class _CurrentOrdersListWidgetState extends State<CurrentOrdersListWidget>
               ),
               const SizedBox(height: Dimensions.paddingSizeSmall),
               Text(
-                'You will be notified when new orders arrive',
+                'you_will_be_notified_when_new_orders_arrive'.tr,
                 style: robotoRegular.copyWith(
                   fontSize: Dimensions.fontSizeDefault,
                   color:

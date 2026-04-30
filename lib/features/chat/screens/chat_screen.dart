@@ -447,7 +447,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     ),
                   ),
                 )
-              : const Center(child: Text('Not Login')),
+              : Center(child: Text('not_login'.tr)),
         ),
       );
     });

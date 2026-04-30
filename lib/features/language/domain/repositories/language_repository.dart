@@ -32,6 +32,16 @@ class LanguageRepository implements LanguageRepositoryInterface {
   }
 
   @override
+  bool hasSeenLanguageIntro() {
+    return sharedPreferences.getBool(AppConstants.langIntro) ?? false;
+  }
+
+  @override
+  Future<void> markLanguageIntroSeen() async {
+    await sharedPreferences.setBool(AppConstants.langIntro, true);
+  }
+
+  @override
   Future add(value) {
     throw UnimplementedError();
   }

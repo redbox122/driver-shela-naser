@@ -44,4 +44,14 @@ class LanguageService implements LanguageServiceInterface {
   void saveLanguage(Locale locale) async {
     languageRepositoryInterface.saveLanguage(locale);
   }
+
+  @override
+  bool hasSeenLanguageIntro() {
+    return languageRepositoryInterface.hasSeenLanguageIntro();
+  }
+
+  @override
+  Future<void> markLanguageIntroSeen() async {
+    await languageRepositoryInterface.markLanguageIntroSeen();
+  }
 }

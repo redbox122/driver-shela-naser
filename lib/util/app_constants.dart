@@ -121,18 +121,35 @@ class AppConstants {
   static const String deliveryMan = 'delivery_man';
   static const String vendor = 'vendor';
 
+  // Available app languages. Native names live in the `nativeName` field so
+  // the language list can display each language in its own script regardless
+  // of the currently active locale (matches first-launch UX).
   static List<LanguageModel> languages = [
     LanguageModel(
         imageUrl: Images.english,
         languageName: 'English',
+        nativeName: 'English',
         countryCode: 'US',
         languageCode: 'en'),
     LanguageModel(
         imageUrl: Images.arabic,
         languageName: 'Arabic',
+        nativeName: 'العربية',
         countryCode: 'SA',
         languageCode: 'ar'),
-    // LanguageModel(imageUrl: Images.arabic, languageName: 'Spanish', countryCode: 'ES', languageCode: 'es'),
-    // LanguageModel(imageUrl: Images.bangla, languageName: 'Bengali', countryCode: 'BN', languageCode: 'bn'),
+    LanguageModel(
+        // No bundled flag asset for Spanish – the language widget will
+        // render a circular textual fallback (language code) instead.
+        imageUrl: null,
+        languageName: 'Spanish',
+        nativeName: 'Español',
+        countryCode: 'ES',
+        languageCode: 'es'),
+    LanguageModel(
+        imageUrl: Images.bangla,
+        languageName: 'Bengali',
+        nativeName: 'বাংলা',
+        countryCode: 'BD',
+        languageCode: 'bn'),
   ];
 }

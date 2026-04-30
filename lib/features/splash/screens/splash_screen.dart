@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:shellafood_delivery/features/auth/controllers/auth_controller.dart';
+import 'package:shellafood_delivery/features/language/controllers/language_controller.dart';
 import 'package:shellafood_delivery/features/profile/controllers/profile_controller.dart';
 import 'package:shellafood_delivery/features/splash/controllers/splash_controller.dart';
 import 'package:shellafood_delivery/features/notification/domain/models/notification_body_model.dart';
@@ -50,7 +51,7 @@ class SplashScreenState extends State<SplashScreen> {
             backgroundColor: isNotConnected ? Colors.red : Colors.green,
             duration: Duration(seconds: isNotConnected ? 6000 : 3),
             content: Text(
-              isNotConnected ? 'no_connection' : 'connected',
+              isNotConnected ? 'no_connection'.tr : 'connected'.tr,
               textAlign: TextAlign.center,
             ),
           ));
@@ -64,7 +65,22 @@ class SplashScreenState extends State<SplashScreen> {
     });
 
     Get.find<SplashController>().initSharedData();
-    _route();
+
+    // SS-07: defer the first _route() call until after the first frame is
+    // mounted. Calling Get.offNamed/Navigator APIs synchronously from
+    // initState (which is what happens for the first-launch language gate
+    // and the maintenance/version branches) triggers
+    //   "setState() or markNeedsBuild() called during build"
+    // and
+    //   "Failed assertion: '!navigator._debugLocked'"
+    // because the navigator is still mid-build when initState runs. Using
+    // addPostFrameCallback guarantees the splash widget is fully built and
+    // the navigator is unlocked before we issue the first navigation.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _route();
+      }
+    });
   }
 
   @override
@@ -77,6 +93,17 @@ class SplashScreenState extends State<SplashScreen> {
     // SS-05: prevent duplicate concurrent routing
     if (_routeStarted) return;
     _routeStarted = true;
+
+    // First-launch language gate. If the user has never picked a language
+    // we route them to the language picker before any other navigation
+    // (and before any config / network requests) so all subsequent UI is
+    // rendered in their preferred locale. The picker resumes the rest of
+    // the splash routing on Save.
+    final localizationController = Get.find<LocalizationController>();
+    if (!localizationController.hasSeenLanguageIntro()) {
+      Get.offNamed(RouteHelper.getLanguageRoute(fromFirstLaunch: true));
+      return;
+    }
 
     final bool isSuccess =
         await Get.find<SplashController>().getConfigData();
