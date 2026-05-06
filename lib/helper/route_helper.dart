@@ -124,6 +124,15 @@ class RouteHelper {
   static String getFilteredOrdersRoute(String filter, String title) =>
       '$filteredOrders?filter=$filter&title=${Uri.encodeComponent(title)}';
 
+  static String _safeDecodeRouteParam(String? value) {
+    if (value == null || value.isEmpty) return '';
+    try {
+      return Uri.decodeComponent(value);
+    } catch (_) {
+      return value;
+    }
+  }
+
   static List<GetPage> routes = [
     GetPage(
         name: initial,
@@ -255,10 +264,12 @@ class RouteHelper {
         page: () => const WalletProvidedHistoryScreen()),
     GetPage(
         name: filteredOrders,
-        page: () => FilteredOrdersScreen(
-              filterType: Get.parameters['filter'] ?? 'all',
-              title:
-                  Uri.decodeComponent(Get.parameters['title'] ?? 'orders'.tr),
-            )),
+        page: () {
+          final String title = _safeDecodeRouteParam(Get.parameters['title']);
+          return FilteredOrdersScreen(
+            filterType: Get.parameters['filter'] ?? 'all',
+            title: title.isNotEmpty ? title : 'orders'.tr,
+          );
+        }),
   ];
 }
