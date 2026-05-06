@@ -779,7 +779,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                             const SizedBox(
                                 width: Dimensions.paddingSizeExtraSmall),
                             Text(
-                              controllerOrderModel.orderStatus!.tr,
+                              (controllerOrderModel.orderStatus ?? '').tr,
                               style: robotoRegular,
                             ),
                           ]),
@@ -791,7 +791,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                 width: Dimensions.paddingSizeExtraSmall),
                             Text(
                               parcel
-                                  ? controllerOrderModel.chargePayer!.tr
+                                  ? (controllerOrderModel.chargePayer ?? '').tr
                                   : orderController.orderDetailsModel!.length
                                       .toString(),
                               style: robotoMedium.copyWith(
@@ -838,7 +838,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                         style: robotoRegular),
                                     const Expanded(child: SizedBox()),
                                     Text(
-                                      controllerOrderModel.cutlery!
+                                      (controllerOrderModel.cutlery ?? false)
                                           ? 'yes'.tr
                                           : 'no'.tr,
                                       style: robotoRegular,
@@ -1469,8 +1469,9 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                                 AppConstants.handover)))
                                     ? () {
                                         if (Get.find<SplashController>()
-                                            .configModel!
-                                            .orderDeliveryVerification!) {
+                                                .configModel
+                                                ?.orderDeliveryVerification ??
+                                            false) {
                                           Get.find<NotificationController>()
                                               .sendDeliveredNotification(
                                                   controllerOrderModel.id);
@@ -1483,7 +1484,10 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                                             SplashController>()
                                                         .configModel!
                                                         .orderDeliveryVerification,
-                                                    orderAmount: partialPay!
+                                                    orderAmount: (partialPay! &&
+                                                            (controllerOrderModel.payments?.length ??
+                                                                    0) >
+                                                                1)
                                                         ? controllerOrderModel
                                                             .payments![1]
                                                             .amount!
@@ -1492,6 +1496,9 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                                             .orderAmount,
                                                     cod: cod! ||
                                                         (partialPay &&
+                                                            (controllerOrderModel.payments?.length ??
+                                                                    0) >
+                                                                1 &&
                                                             controllerOrderModel
                                                                     .payments![
                                                                         1]
@@ -1503,6 +1510,9 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                             if (isSuccess &&
                                                 (cod! ||
                                                     (partialPay! &&
+                                                        (controllerOrderModel.payments?.length ??
+                                                                0) >
+                                                            1 &&
                                                         controllerOrderModel
                                                                 .payments![1]
                                                                 .paymentMethod ==
@@ -1515,7 +1525,10 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                                             SplashController>()
                                                         .configModel!
                                                         .orderDeliveryVerification,
-                                                    orderAmount: partialPay!
+                                                    orderAmount: (partialPay! &&
+                                                            (controllerOrderModel.payments?.length ??
+                                                                    0) >
+                                                                1)
                                                         ? controllerOrderModel
                                                             .payments![1]
                                                             .amount!
@@ -1524,6 +1537,9 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                                             .orderAmount,
                                                     cod: cod ||
                                                         (partialPay &&
+                                                            (controllerOrderModel.payments?.length ??
+                                                                    0) >
+                                                                1 &&
                                                             controllerOrderModel
                                                                     .payments![
                                                                         1]
@@ -1543,7 +1559,10 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                                         SplashController>()
                                                     .configModel!
                                                     .orderDeliveryVerification,
-                                                orderAmount: partialPay!
+                                                orderAmount: (partialPay! &&
+                                                        (controllerOrderModel.payments?.length ??
+                                                                0) >
+                                                            1)
                                                     ? controllerOrderModel
                                                         .payments![1].amount!
                                                         .toDouble()
@@ -1551,6 +1570,9 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                                         .orderAmount,
                                                 cod: cod! ||
                                                     (partialPay &&
+                                                        (controllerOrderModel.payments?.length ??
+                                                                0) >
+                                                            1 &&
                                                         controllerOrderModel
                                                                 .payments![1]
                                                                 .paymentMethod ==
@@ -1726,9 +1748,10 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                                                 : 'you_want_to_confirm_this_order'
                                                                     .tr,
                                                             onYesPressed: () {
-                                                              if ((Get.find<SplashController>()
-                                                                          .configModel!
-                                                                          .orderDeliveryVerification! ||
+                                                              if (((Get.find<SplashController>()
+                                                                              .configModel
+                                                                              ?.orderDeliveryVerification ??
+                                                                          false) ||
                                                                       cod!) &&
                                                                   !parcel!) {
                                                                 orderController
@@ -1829,7 +1852,9 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                                                         SplashController>()
                                                                     .configModel!
                                                                     .orderDeliveryVerification,
-                                                                orderAmount: partialPay!
+                                                                orderAmount: (partialPay! &&
+                                                                        (controllerOrderModel.payments?.length ?? 0) >
+                                                                            1)
                                                                     ? controllerOrderModel
                                                                         .payments![
                                                                             1]
@@ -1839,6 +1864,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                                                         .orderAmount,
                                                                 cod: cod ||
                                                                     (partialPay &&
+                                                                        (controllerOrderModel.payments?.length ?? 0) > 1 &&
                                                                         controllerOrderModel.payments![1].paymentMethod ==
                                                                             'cash_on_delivery'),
                                                                 isSenderPay:
@@ -1852,8 +1878,11 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                                           controllerOrderModel
                                                                   .chargePayer !=
                                                               'sender') {
-                                                        debugPrint(
-                                                            '🔧 DELIVERY FLOW: Opening VerifyDeliverySheetWidget for parcel COD delivery');
+                                                        assert(() {
+                                                          debugPrint(
+                                                              '🔧 DELIVERY FLOW: Opening VerifyDeliverySheetWidget for parcel COD delivery');
+                                                          return true;
+                                                        }());
                                                         Get.bottomSheet(
                                                                 VerifyDeliverySheetWidget(
                                                                   currentOrderModel:
@@ -1896,20 +1925,24 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                                                     true);
                                                           }
                                                         });
-                                                      } else if ((Get.find<
-                                                                      SplashController>()
-                                                                  .configModel!
-                                                                  .orderDeliveryVerification! ||
+                                                      } else if (((Get.find<
+                                                                          SplashController>()
+                                                                      .configModel
+                                                                      ?.orderDeliveryVerification ??
+                                                                  false) ||
                                                               cod) &&
                                                           !parcel) {
-                                                        debugPrint(
-                                                            '🔧 DELIVERY FLOW: Opening VerifyDeliverySheetWidget for delivery');
-                                                        debugPrint(
-                                                            '   Order Status: ${controllerOrderModel.orderStatus}');
-                                                        debugPrint(
-                                                            '   COD: $cod');
-                                                        debugPrint(
-                                                            '   Parcel: $parcel');
+                                                        assert(() {
+                                                          debugPrint(
+                                                              '🔧 DELIVERY FLOW: Opening VerifyDeliverySheetWidget for delivery');
+                                                          debugPrint(
+                                                              '   Order Status: ${controllerOrderModel.orderStatus}');
+                                                          debugPrint(
+                                                              '   COD: $cod');
+                                                          debugPrint(
+                                                              '   Parcel: $parcel');
+                                                          return true;
+                                                        }());
                                                         Get.bottomSheet(
                                                             VerifyDeliverySheetWidget(
                                                               currentOrderModel:
@@ -1933,8 +1966,11 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                                           controllerOrderModel
                                                                   .chargePayer ==
                                                               'sender') {
-                                                        debugPrint(
-                                                            '🔧 DELIVERY FLOW: Opening VerifyDeliverySheetWidget for parcel delivery');
+                                                        assert(() {
+                                                          debugPrint(
+                                                              '🔧 DELIVERY FLOW: Opening VerifyDeliverySheetWidget for parcel delivery');
+                                                          return true;
+                                                        }());
                                                         Get.bottomSheet(
                                                             VerifyDeliverySheetWidget(
                                                               currentOrderModel:
@@ -2068,8 +2104,11 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                                                 OrderController>()
                                                             .hasUploadedRestaurantPhotos(
                                                                 controllerOrderModel)) {
-                                                          debugPrint(
-                                                              ' ❌ PICKUP BLOCKED: No pickup photos uploaded');
+                                                          assert(() {
+                                                            debugPrint(
+                                                                ' ❌ PICKUP BLOCKED: No pickup photos uploaded');
+                                                            return true;
+                                                          }());
                                                           showCustomSnackBar(
                                                               'please_upload_order_proof_photos_first'
                                                                   .tr,
@@ -2077,8 +2116,11 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                                           return;
                                                         }
 
-                                                        debugPrint(
-                                                            '✅ PICKUP ALLOWED: All validations passed');
+                                                        assert(() {
+                                                          debugPrint(
+                                                              '✅ PICKUP ALLOWED: All validations passed');
+                                                          return true;
+                                                        }());
                                                         // Step 3: Update status to 'picked_up'
                                                         Get.find<
                                                                 OrderController>()

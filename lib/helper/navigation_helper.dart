@@ -38,14 +38,19 @@ class NavigationHelper {
       String url;
 
       // Debug logging
-      debugPrint('🧭 Navigation Debug:');
-      debugPrint('   Order ID: ${activeOrder.id}');
-      debugPrint('   Order Type: ${activeOrder.orderType}');
-      debugPrint('   Order Status: ${activeOrder.orderStatus}');
-      debugPrint('   Store Lat: ${activeOrder.storeLat}');
-      debugPrint('   Store Lng: ${activeOrder.storeLng}');
-      debugPrint('   Customer Lat: ${activeOrder.deliveryAddress?.latitude}');
-      debugPrint('   Customer Lng: ${activeOrder.deliveryAddress?.longitude}');
+      assert(() {
+        debugPrint('🧭 Navigation Debug:');
+        debugPrint('   Order ID: ${activeOrder.id}');
+        debugPrint('   Order Type: ${activeOrder.orderType}');
+        debugPrint('   Order Status: ${activeOrder.orderStatus}');
+        debugPrint('   Store Lat: ${activeOrder.storeLat}');
+        debugPrint('   Store Lng: ${activeOrder.storeLng}');
+        debugPrint(
+            '   Customer Lat: ${activeOrder.deliveryAddress?.latitude}');
+        debugPrint(
+            '   Customer Lng: ${activeOrder.deliveryAddress?.longitude}');
+        return true;
+      }());
 
       // Check if order is in delivery phase (has food in hand)
       final isInDeliveryPhase =
@@ -57,16 +62,22 @@ class NavigationHelper {
         // For parcel orders
         if (isInDeliveryPhase) {
           // Navigate to receiver location after pickup
-          debugPrint(
-              '   🎯 Navigating to RECEIVER location (parcel picked up)');
+          assert(() {
+            debugPrint(
+                '   🎯 Navigating to RECEIVER location (parcel picked up)');
+            return true;
+          }());
           url = _buildGoogleMapsUrl(
             activeOrder.receiverDetails?.latitude ?? '0',
             activeOrder.receiverDetails?.longitude ?? '0',
           );
         } else {
           // Navigate to pickup location (delivery address for parcel) before pickup
-          debugPrint(
-              '   🎯 Navigating to PICKUP location (parcel not picked up)');
+          assert(() {
+            debugPrint(
+                '   🎯 Navigating to PICKUP location (parcel not picked up)');
+            return true;
+          }());
           url = _buildGoogleMapsUrl(
             activeOrder.deliveryAddress?.latitude ?? '0',
             activeOrder.deliveryAddress?.longitude ?? '0',
@@ -76,7 +87,11 @@ class NavigationHelper {
         // For food orders
         if (isInDeliveryPhase) {
           // Navigate to customer location after pickup
-          debugPrint('   🎯 Navigating to CUSTOMER location (food picked up)');
+          assert(() {
+            debugPrint(
+                '   🎯 Navigating to CUSTOMER location (food picked up)');
+            return true;
+          }());
           url = _buildGoogleMapsUrl(
             activeOrder.deliveryAddress?.latitude ?? '0',
             activeOrder.deliveryAddress?.longitude ?? '0',
@@ -84,8 +99,11 @@ class NavigationHelper {
         } else {
           // Navigate to restaurant location before pickup
           // This includes: pending, confirmed, accepted, processing
-          debugPrint(
-              '   🎯 Navigating to RESTAURANT location (food not picked up)');
+          assert(() {
+            debugPrint(
+                '   🎯 Navigating to RESTAURANT location (food not picked up)');
+            return true;
+          }());
           url = _buildGoogleMapsUrl(
             activeOrder.storeLat ?? '0',
             activeOrder.storeLng ?? '0',
@@ -95,17 +113,26 @@ class NavigationHelper {
 
       // Additional validation: If coordinates are invalid, show error
       if (url.contains('destination=0,0')) {
-        debugPrint('   ❌ Invalid coordinates detected!');
+        assert(() {
+          debugPrint('   ❌ Invalid coordinates detected!');
+          return true;
+        }());
         showCustomSnackBar('invalid_coordinates'.tr);
         return;
       }
 
-      debugPrint('   🗺️ Final URL: $url');
+      assert(() {
+        debugPrint('   🗺️ Final URL: $url');
+        return true;
+      }());
 
       // Launch Google Maps
       await _launchNavigationUrl(url);
     } catch (e) {
-      debugPrint('Navigation error: $e');
+      assert(() {
+        debugPrint('Navigation error: $e');
+        return true;
+      }());
       showCustomSnackBar('navigation_error'.tr);
     }
   }
@@ -120,7 +147,10 @@ class NavigationHelper {
       final url = _buildGoogleMapsUrl(latitude, longitude, label: label);
       await _launchNavigationUrl(url);
     } catch (e) {
-      debugPrint('Navigation error: $e');
+      assert(() {
+        debugPrint('Navigation error: $e');
+        return true;
+      }());
       showCustomSnackBar('navigation_error'.tr);
     }
   }

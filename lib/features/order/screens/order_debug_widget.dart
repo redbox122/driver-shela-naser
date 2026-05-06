@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shellafood_delivery/features/order/controllers/order_controller.dart';
@@ -7,13 +8,18 @@ import 'package:shellafood_delivery/util/dimensions.dart';
 import 'package:shellafood_delivery/util/app_constants.dart';
 
 /// 🔍 Debug Widget - لتتبع حالة الطلب والصور
+///
+/// IMPORTANT: This widget renders nothing outside debug builds. Callers should
+/// also gate it with `if (kDebugMode)` so the widget tree is fully stripped
+/// from release builds.
 class OrderDebugWidget extends StatelessWidget {
   final OrderModel order;
-  
+
   const OrderDebugWidget({super.key, required this.order});
 
   @override
   Widget build(BuildContext context) {
+    if (!kDebugMode) return const SizedBox.shrink();
     return GetBuilder<OrderController>(
       builder: (controller) {
         return Container(
@@ -73,19 +79,27 @@ class OrderDebugWidget extends StatelessWidget {
               
               const SizedBox(height: Dimensions.paddingSizeSmall),
               
-              // Action Buttons
+              // Action Buttons (debug builds only — masked, no PII)
               Row(
                 children: [
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () {
-                        debugPrint('📋 === FULL ORDER DEBUG ===');
-                        debugPrint('Order: ${order.toJson()}');
+                        // Print only a non-sensitive summary. Never log
+                        // order.toJson() — that contains customer PII.
+                        assert(() {
+                          debugPrint('📋 === ORDER DEBUG SUMMARY ===');
+                          debugPrint(
+                              'id=${order.id} status=${order.orderStatus} module_id=${order.module_id} '
+                              'orderType=${order.orderType} paymentMethod=${order.paymentMethod} '
+                              'proofPhotos=${order.orderProofFullUrl?.length ?? 0}');
+                          return true;
+                        }());
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue,
                       ),
-                      child: const Text('Print Order JSON'),
+                      child: const Text('Print Summary'),
                     ),
                   ),
                   const SizedBox(width: Dimensions.paddingSizeSmall),

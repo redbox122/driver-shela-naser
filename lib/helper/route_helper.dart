@@ -129,7 +129,10 @@ class RouteHelper {
     try {
       return Uri.decodeComponent(value);
     } catch (_) {
-      return value;
+      // Decoding failed (malformed percent-encoding). Returning the raw
+      // value would render percent-encoded garbage on screen, so fall back
+      // to empty so the caller's translated default kicks in.
+      return '';
     }
   }
 
@@ -185,7 +188,7 @@ class RouteHelper {
                 fromNotification: Get.parameters['from'] == 'true',
                 isRunningOrder: null,
                 orderIndex: null,
-                orderId: int.parse(Get.parameters['id']!),
+                orderId: int.tryParse(Get.parameters['id'] ?? '') ?? 0,
                 fromLocationScreen:
                     Get.parameters['from_location_screen'] == 'true',
               );
@@ -253,7 +256,7 @@ class RouteHelper {
     GetPage(
         name: payment,
         page: () {
-          String walletPayment = Get.parameters['redirect-url']!;
+          String walletPayment = Get.parameters['redirect-url'] ?? '';
           return PaymentScreen(redirectUrl: walletPayment);
         }),
     GetPage(

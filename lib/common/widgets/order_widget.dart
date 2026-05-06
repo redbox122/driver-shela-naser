@@ -211,8 +211,11 @@ class OrderWidget extends StatelessWidget {
                 return;
               }
 
-              debugPrint(
-                  'Direction debug: orderId=${orderModel.id} status=$status parcel=$parcel reason=$reason lat=$lat lng=$lng');
+              assert(() {
+                debugPrint(
+                    'Direction debug: orderId=${orderModel.id} status=$status parcel=$parcel reason=$reason lat=$lat lng=$lng');
+                return true;
+              }());
 
               String url =
                   'https://www.google.com/maps/dir/?api=1&destination=$lat,$lng&mode=d';

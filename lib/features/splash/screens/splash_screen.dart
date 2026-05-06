@@ -49,7 +49,7 @@ class SplashScreenState extends State<SplashScreen> {
           }
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             backgroundColor: isNotConnected ? Colors.red : Colors.green,
-            duration: Duration(seconds: isNotConnected ? 6000 : 3),
+            duration: Duration(seconds: isNotConnected ? 6 : 3),
             content: Text(
               isNotConnected ? 'no_connection'.tr : 'connected'.tr,
               textAlign: TextAlign.center,

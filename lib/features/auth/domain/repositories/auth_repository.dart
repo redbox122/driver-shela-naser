@@ -77,7 +77,13 @@ class AuthRepository implements AuthRepositoryInterface {
     if (!GetPlatform.isWeb) {
       deviceToken = (await FirebaseMessaging.instance.getToken())!;
     }
-    debugPrint('----Device Token----- $deviceToken');
+    assert(() {
+      final String masked = (deviceToken == null || deviceToken.length < 8)
+          ? '***'
+          : '${deviceToken.substring(0, 4)}...${deviceToken.substring(deviceToken.length - 4)}';
+      debugPrint('----Device Token----- $masked');
+      return true;
+    }());
     return deviceToken;
   }
 

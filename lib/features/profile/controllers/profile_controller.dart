@@ -52,7 +52,10 @@ class ProfileController extends GetxController implements GetxService {
         }
       }
     } catch (e) {
-      debugPrint('Error fetching profile: $e');
+      assert(() {
+        debugPrint('Error fetching profile: $e');
+        return true;
+      }());
     }
     update();
   }
@@ -139,7 +142,10 @@ class ProfileController extends GetxController implements GetxService {
   Future<void> _handleLocationPermissionCheck() async {
     // Prevent multiple simultaneous permission checks
     if (_isCheckingLocationPermission) {
-      debugPrint('Location permission check already in progress, skipping');
+      assert(() {
+        debugPrint('Location permission check already in progress, skipping');
+        return true;
+      }());
       return;
     }
 
@@ -149,8 +155,11 @@ class ProfileController extends GetxController implements GetxService {
       LocationPermission permission = await Geolocator.checkPermission();
       _lastKnownPermission = permission;
 
-      debugPrint('Current location permission: $permission');
-      debugPrint('Has shown dialog before: $_hasShownLocationDialog');
+      assert(() {
+        debugPrint('Current location permission: $permission');
+        debugPrint('Has shown dialog before: $_hasShownLocationDialog');
+        return true;
+      }());
 
       // Check if we need to show the dialog
       bool shouldShowDialog = _shouldShowLocationDialog(permission);
@@ -159,20 +168,32 @@ class ProfileController extends GetxController implements GetxService {
           permission == LocationPermission.always;
 
       if (shouldShowDialog) {
-        debugPrint('Showing location permission dialog');
+        assert(() {
+          debugPrint('Showing location permission dialog');
+          return true;
+        }());
         _hasShownLocationDialog = true;
         await _showLocationPermissionDialog();
         await _recordFallbackLocationIfNeeded(permission);
       } else if (isGranted) {
-        debugPrint('Permission granted, starting location recording');
+        assert(() {
+          debugPrint('Permission granted, starting location recording');
+          return true;
+        }());
         startLocationRecord();
       } else {
-        debugPrint('Permission not granted, stopping location recording');
+        assert(() {
+          debugPrint('Permission not granted, stopping location recording');
+          return true;
+        }());
         stopLocationRecord();
         await _recordFallbackLocationIfNeeded(permission);
       }
     } catch (e) {
-      debugPrint('Error in location permission check: $e');
+      assert(() {
+        debugPrint('Error in location permission check: $e');
+        return true;
+      }());
     } finally {
       _isCheckingLocationPermission = false;
     }
@@ -182,20 +203,29 @@ class ProfileController extends GetxController implements GetxService {
   bool _shouldShowLocationDialog(LocationPermission permission) {
     // Don't show if already shown
     if (_hasShownLocationDialog) {
-      debugPrint('Dialog already shown, skipping');
+      assert(() {
+        debugPrint('Dialog already shown, skipping');
+        return true;
+      }());
       return false;
     }
 
     // Check if permission status has changed since last check
     if (_lastKnownPermission != null && _lastKnownPermission == permission) {
-      debugPrint('Permission status unchanged, skipping dialog');
+      assert(() {
+        debugPrint('Permission status unchanged, skipping dialog');
+        return true;
+      }());
       return false;
     }
 
     // Show if permission is denied or denied forever
     if (permission == LocationPermission.denied ||
         permission == LocationPermission.deniedForever) {
-      debugPrint('Permission denied, showing dialog');
+      assert(() {
+        debugPrint('Permission denied, showing dialog');
+        return true;
+      }());
       return true;
     }
 
@@ -203,11 +233,17 @@ class ProfileController extends GetxController implements GetxService {
     if (GetPlatform.isAndroid &&
         permission != LocationPermission.whileInUse &&
         permission != LocationPermission.always) {
-      debugPrint('Android permission not granted, showing dialog');
+      assert(() {
+        debugPrint('Android permission not granted, showing dialog');
+        return true;
+      }());
       return true;
     }
 
-    debugPrint('Permission granted, no dialog needed');
+    assert(() {
+      debugPrint('Permission granted, no dialog needed');
+      return true;
+    }());
     return false;
   }
 
@@ -221,18 +257,28 @@ class ProfileController extends GetxController implements GetxService {
           description: 'this_app_collects_location_data'.tr,
           onYesPressed: () async {
             Get.back();
-            debugPrint('Location permission dialog confirmed');
+            assert(() {
+              debugPrint('Location permission dialog confirmed');
+              return true;
+            }());
 
             // Add safety timer to reset loading state
             Timer(const Duration(seconds: 10), () {
               try {
                 final orderController = Get.find<OrderController>();
                 if (orderController.isLoading) {
-                  debugPrint('Safety: Resetting OrderController loading state');
+                  assert(() {
+                    debugPrint(
+                        'Safety: Resetting OrderController loading state');
+                    return true;
+                  }());
                   orderController.initLoading();
                 }
               } catch (e) {
-                debugPrint('Error in safety timer: $e');
+                assert(() {
+                  debugPrint('Error in safety timer: $e');
+                  return true;
+                }());
               }
             });
 
@@ -248,7 +294,10 @@ class ProfileController extends GetxController implements GetxService {
     _hasShownLocationDialog = false;
     _isCheckingLocationPermission = false;
     _lastKnownPermission = null;
-    debugPrint('Location permission state reset');
+    assert(() {
+      debugPrint('Location permission state reset');
+      return true;
+    }());
   }
 
   /// Gets the current permission state for debugging
@@ -262,7 +311,10 @@ class ProfileController extends GetxController implements GetxService {
 
   Future<void> recordLocation() async {
     try {
-      debugPrint('Starting location recording...');
+      assert(() {
+        debugPrint('Starting location recording...');
+        return true;
+      }());
 
       // Add timeout for location request
       final Position locationResult = await Geolocator.getCurrentPosition(
@@ -273,18 +325,27 @@ class ProfileController extends GetxController implements GetxService {
       ).timeout(
         const Duration(seconds: 15),
         onTimeout: () {
-          debugPrint('Location request timed out');
+          assert(() {
+            debugPrint('Location request timed out');
+            return true;
+          }());
           throw TimeoutException(
               'Location request timed out', const Duration(seconds: 15));
         },
       );
 
-      debugPrint(
-          'Location obtained: ${locationResult.latitude}, ${locationResult.longitude}');
+      assert(() {
+        debugPrint(
+            'Location obtained: ${locationResult.latitude}, ${locationResult.longitude}');
+        return true;
+      }());
 
       String address =
           await profileServiceInterface.addressPlaceMark(locationResult);
-      debugPrint('Address resolved: $address');
+      assert(() {
+        debugPrint('Address resolved: $address');
+        return true;
+      }());
 
       _recordLocation = RecordLocationBodyModel(
         location: address,
@@ -293,16 +354,28 @@ class ProfileController extends GetxController implements GetxService {
       );
 
       if (Get.find<SplashController>().configModel!.webSocketStatus!) {
-        debugPrint('Recording location via WebSocket');
+        assert(() {
+          debugPrint('Recording location via WebSocket');
+          return true;
+        }());
         await profileServiceInterface.recordWebSocketLocation(_recordLocation!);
       } else {
-        debugPrint('Recording location via HTTP');
+        assert(() {
+          debugPrint('Recording location via HTTP');
+          return true;
+        }());
         await profileServiceInterface.recordLocation(_recordLocation!);
       }
 
-      debugPrint('Location recorded successfully');
+      assert(() {
+        debugPrint('Location recorded successfully');
+        return true;
+      }());
     } catch (e) {
-      debugPrint('Error recording location: $e');
+      assert(() {
+        debugPrint('Error recording location: $e');
+        return true;
+      }());
 
       // Use fallback location if GPS fails
       await _recordFallbackLocationIfNeeded(null);
@@ -341,9 +414,15 @@ class ProfileController extends GetxController implements GetxService {
         await profileServiceInterface.recordLocation(_recordLocation!);
       }
       _hasRecordedFallbackLocation = true;
-      debugPrint('Fallback location recorded');
+      assert(() {
+        debugPrint('Fallback location recorded');
+        return true;
+      }());
     } catch (fallbackError) {
-      debugPrint('Error recording fallback location: $fallbackError');
+      assert(() {
+        debugPrint('Error recording fallback location: $fallbackError');
+        return true;
+      }());
     }
   }
 }

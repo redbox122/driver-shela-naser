@@ -46,9 +46,6 @@ class _OrderLocationScreenState extends State<OrderLocationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    debugPrint('${widget.orderModel.groupOrderLocation}');
-    debugPrint("${widget.orderModel.storeLat},${widget.orderModel.storeLng}");
-    debugPrint('${_markers.length}');
     bool parcel = widget.orderModel.orderType == 'parcel';
     return Scaffold(
       appBar: CustomAppBarWidget(title: 'order_location'.tr),

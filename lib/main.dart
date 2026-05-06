@@ -126,8 +126,11 @@ class _MyAppState extends State<MyApp> {
 
 class AppRouteLogger extends GetObserver {
   void _logRoute(String action, Route<dynamic>? route) {
-    final String name = route?.settings.name ?? 'unknown';
-    debugPrint('\x1B[34m[ROUTE] $action: $name\x1B[0m');
+    assert(() {
+      final String name = route?.settings.name ?? 'unknown';
+      debugPrint('\x1B[34m[ROUTE] $action: $name\x1B[0m');
+      return true;
+    }());
   }
 
   @override

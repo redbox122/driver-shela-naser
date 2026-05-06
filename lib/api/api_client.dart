@@ -46,7 +46,10 @@ class ApiClient extends GetxService {
       Map<String, String>? headers,
       bool handleError = true}) async {
     try {
-      debugPrint('====> API Call: $uri');
+      assert(() {
+        debugPrint('====> API Call: $uri');
+        return true;
+      }());
       http.Response response = await http
           .get(
             Uri.parse(appBaseUrl + uri),
@@ -62,7 +65,10 @@ class ApiClient extends GetxService {
   Future<Response> postData(String uri, dynamic body,
       {Map<String, String>? headers, bool handleError = true}) async {
     try {
-      debugPrint('====> API Call: $uri');
+      assert(() {
+        debugPrint('====> API Call: $uri');
+        return true;
+      }());
       http.Response response = await http
           .post(
             Uri.parse(appBaseUrl + uri),
@@ -72,7 +78,10 @@ class ApiClient extends GetxService {
           .timeout(Duration(seconds: timeoutInSeconds));
       return handleResponse(response, uri, handleError);
     } catch (e) {
-      debugPrint('====> API Error (postData): $e');
+      assert(() {
+        debugPrint('====> API Error (postData): $e');
+        return true;
+      }());
       return const Response(statusCode: 1, statusText: noInternetMessage);
     }
   }
@@ -81,7 +90,10 @@ class ApiClient extends GetxService {
       String uri, Map<String, String> body, List<MultipartBody> multipartBody,
       {Map<String, String>? headers, bool handleError = true}) async {
     try {
-      debugPrint('====> API Call: $uri (multipart, ${multipartBody.length} files)');
+      assert(() {
+        debugPrint('====> API Call: $uri (multipart, ${multipartBody.length} files)');
+        return true;
+      }());
       http.MultipartRequest request =
           http.MultipartRequest('POST', Uri.parse(appBaseUrl + uri));
       request.headers.addAll(headers ?? _mainHeaders);
@@ -122,7 +134,10 @@ class ApiClient extends GetxService {
   Future<Response> putData(String uri, dynamic body,
       {Map<String, String>? headers, bool handleError = true}) async {
     try {
-      debugPrint('====> API Call: $uri');
+      assert(() {
+        debugPrint('====> API Call: $uri');
+        return true;
+      }());
       http.Response response = await http
           .put(
             Uri.parse(appBaseUrl + uri),
@@ -139,7 +154,10 @@ class ApiClient extends GetxService {
   Future<Response> deleteData(String uri,
       {Map<String, String>? headers, bool handleError = true}) async {
     try {
-      debugPrint('====> API Call: $uri');
+      assert(() {
+        debugPrint('====> API Call: $uri');
+        return true;
+      }());
       http.Response response = await http
           .delete(
             Uri.parse(appBaseUrl + uri),
@@ -184,8 +202,11 @@ class ApiClient extends GetxService {
       response0 = const Response(statusCode: 0, statusText: noInternetMessage);
     }
     _updateServerTimeFromBody(body);
-    debugPrint(
-        '====> API Response: [${response0.statusCode}] $uri\n${response0.body}');
+    assert(() {
+      debugPrint(
+          '====> API Response: [${response0.statusCode}] $uri\n${response0.body}');
+      return true;
+    }());
     if (handleError) {
       if (response0.statusCode == 200) {
         return response0;
@@ -208,33 +229,50 @@ class MultipartBody {
 }
 
 void _logApiError(Response response, String uri) {
-  final String url = response.request?.url.toString() ?? '';
-  final int? status = response.statusCode;
-  final Map<String, String>? headers = response.headers;
-  final String body = response.bodyString ?? response.body?.toString() ?? '';
+  assert(() {
+    final String url = response.request?.url.toString() ?? '';
+    final int? status = response.statusCode;
+    final Map<String, String>? headers = response.headers;
+    final String body = response.bodyString ?? response.body?.toString() ?? '';
 
-  final String prettyBody = _tryPrettyJson(body);
-  final String headerDump =
-      headers == null ? '' : headers.entries.map((e) => '${e.key}: ${e.value}').join('\n');
+    final String prettyBody = _tryPrettyJson(body);
+    final String headerDump = headers == null
+        ? ''
+        : headers.entries
+            .map((e) => '${e.key}: ${_maskSensitiveHeaderValue(e.key, e.value)}')
+            .join('\n');
 
-  debugPrint('\x1B[32m====> API Error\x1B[0m');
-  debugPrint('\x1B[32mStatus: $status\x1B[0m');
-  if (url.isNotEmpty) {
-    debugPrint('\x1B[32mURL: $url\x1B[0m');
-  } else {
-    debugPrint('\x1B[32mURL: ${AppConstants.baseUrl + uri}\x1B[0m');
-  }
-  if (headerDump.isNotEmpty) {
-    debugPrint('\x1B[32mHeaders:\n$headerDump\x1B[0m');
-  }
-  if (prettyBody.isNotEmpty) {
-    debugPrint('\x1B[32mBody:\n$prettyBody\x1B[0m');
-  }
+    debugPrint('\x1B[32m====> API Error\x1B[0m');
+    debugPrint('\x1B[32mStatus: $status\x1B[0m');
+    if (url.isNotEmpty) {
+      debugPrint('\x1B[32mURL: $url\x1B[0m');
+    } else {
+      debugPrint('\x1B[32mURL: ${AppConstants.baseUrl + uri}\x1B[0m');
+    }
+    if (headerDump.isNotEmpty) {
+      debugPrint('\x1B[32mHeaders:\n$headerDump\x1B[0m');
+    }
+    if (prettyBody.isNotEmpty) {
+      debugPrint('\x1B[32mBody:\n$prettyBody\x1B[0m');
+    }
 
-  final String? requestId = _findRequestId(headers);
-  if (requestId != null) {
-    debugPrint('\x1B[32mRequest-ID: $requestId\x1B[0m');
+    final String? requestId = _findRequestId(headers);
+    if (requestId != null) {
+      debugPrint('\x1B[32mRequest-ID: $requestId\x1B[0m');
+    }
+    return true;
+  }());
+}
+
+String _maskSensitiveHeaderValue(String key, String value) {
+  final String lowerKey = key.toLowerCase();
+  if (lowerKey == 'authorization' ||
+      lowerKey == 'cookie' ||
+      lowerKey == 'set-cookie' ||
+      lowerKey == 'x-api-key') {
+    return '***masked***';
   }
+  return value;
 }
 
 // DC-03: _updateServerTimeFromHeaders was never called; removed.
@@ -248,14 +286,20 @@ bool _updateServerTimeFromBody(dynamic body) {
   if (serverTime == null) {
     return false;
   }
-  debugPrint('Server time raw: $rawValue');
-  debugPrint('Server time parsed: $serverTime');
+  assert(() {
+    debugPrint('Server time raw: $rawValue');
+    debugPrint('Server time parsed: $serverTime');
+    return true;
+  }());
   if (Get.isRegistered<SplashController>()) {
     final splash = Get.find<SplashController>();
     splash.updateServerTime(serverTime);
-    final int offsetMs =
-        splash.currentTime.difference(DateTime.now()).inMilliseconds;
-    debugPrint('Server time offset ms: $offsetMs');
+    assert(() {
+      final int offsetMs =
+          splash.currentTime.difference(DateTime.now()).inMilliseconds;
+      debugPrint('Server time offset ms: $offsetMs');
+      return true;
+    }());
   }
   return true;
 }

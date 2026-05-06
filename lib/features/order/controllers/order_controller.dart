@@ -73,7 +73,11 @@ class OrderController extends GetxController implements GetxService {
                 Get.find<ProfileController>().profileModel?.id)
         .toList();
 
-    debugPrint('[currentOrdersSorted] total=${_currentOrderList!.length} assigned=${assignedOrders.length}');
+    assert(() {
+      debugPrint(
+          '[currentOrdersSorted] total=${_currentOrderList!.length} assigned=${assignedOrders.length}');
+      return true;
+    }());
 
     return OrderHelper.sortOrdersByPriority(assignedOrders);
   }
@@ -158,40 +162,57 @@ class OrderController extends GetxController implements GetxService {
   /// تتعامل مع null و empty string معاً
   bool hasUploadedRestaurantPhotos(OrderModel? order) {
     if (order == null) return false;
-    
+
     // التحقق الصحيح: null OR empty list OR all elements are empty
     if (order.orderProofFullUrl == null) {
-      debugPrint('🔍 No restaurant photos: orderProofFullUrl is null');
+      assert(() {
+        debugPrint('🔍 No restaurant photos: orderProofFullUrl is null');
+        return true;
+      }());
       return false;
     }
-    
+
     if (order.orderProofFullUrl!.isEmpty) {
-      debugPrint('🔍 No restaurant photos: orderProofFullUrl list is empty');
+      assert(() {
+        debugPrint('🔍 No restaurant photos: orderProofFullUrl list is empty');
+        return true;
+      }());
       return false;
     }
-    
+
     // التحقق من أن جميع الصور ليست فارغة
     final hasValidPhotos =
         order.orderProofFullUrl!.where((url) => url.isNotEmpty).isNotEmpty;
-    
-    debugPrint('🔍 Restaurant photos check: $hasValidPhotos (${order.orderProofFullUrl!.length} photos)');
+
+    assert(() {
+      debugPrint(
+          '🔍 Restaurant photos check: $hasValidPhotos (${order.orderProofFullUrl!.length} photos)');
+      return true;
+    }());
     return hasValidPhotos;
   }
 
   /// ✅ دالة للتحقق من التقاط صور التسليم
   bool hasPickedDeliveryPhotos() {
     final hasPicked = _pickedPrescriptions.isNotEmpty;
-    debugPrint('🔍 Delivery photos picked: $hasPicked (${_pickedPrescriptions.length} photos)');
+    assert(() {
+      debugPrint(
+          '🔍 Delivery photos picked: $hasPicked (${_pickedPrescriptions.length} photos)');
+      return true;
+    }());
     return hasPicked;
   }
 
-  /// ✅ دالة للتحقق من وجود صور التسليم المرفوعة
+  /// Conservative check for already-uploaded delivery proof photos.
+  ///
+  /// The backend field name for the uploaded delivery proof has not been
+  /// confirmed yet, so this returns false until that is wired up. This is
+  /// safe because no UI path currently gates on this method — picked-photos
+  /// state is gated on `hasPickedDeliveryPhotos()` above.
+  // TODO(backend): confirm field name (deliveryImage / deliveryProof / ...).
   bool hasUploadedDeliveryPhotos(OrderModel? order) {
     if (order == null) return false;
-    // TODO: هذا يعتمد على field من الخادم - تأكد من الاسم الصحيح
-    // قد يكون: deliveryImage, deliveryProof, proofImage, إلخ
-    debugPrint('🔍 Delivery photos uploaded check needed - verify field name with backend');
-    return false; // سيتم تحديثه حسب تجاوب الخادم
+    return false;
   }
 
   void changeDeliveryImageStatus({bool isUpdate = true}) {
@@ -263,7 +284,11 @@ class OrderController extends GetxController implements GetxService {
     }
 
     // Debug print - check order status before upload
-    debugPrint('[uploadOrderProof] order_id=${order.id} photos=${_pickedOrderProofImages.length}');
+    assert(() {
+      debugPrint(
+          '[uploadOrderProof] order_id=${order.id} photos=${_pickedOrderProofImages.length}');
+      return true;
+    }());
 
     _isLoading = true;
     update();
@@ -290,22 +315,31 @@ class OrderController extends GetxController implements GetxService {
       if (responseModel.isSuccess) {
         // Clear picked images after successful upload
         _pickedOrderProofImages = [];
-        
+
         // Refresh order details to get updated orderProofFullUrl
         await getOrderDetails(order.id, false);
-        
-        debugPrint('[uploadOrderProof] success');
+
+        assert(() {
+          debugPrint('[uploadOrderProof] success');
+          return true;
+        }());
         showCustomSnackBar('order_proof_photos_uploaded'.tr, isError: false);
         update();
         return true;
       } else {
-        debugPrint('[uploadOrderProof] failed: ${responseModel.message}');
+        assert(() {
+          debugPrint('[uploadOrderProof] failed: ${responseModel.message}');
+          return true;
+        }());
         showCustomSnackBar(responseModel.message, isError: true);
         return false;
       }
     } catch (e) {
       showCustomSnackBar('upload_failed'.tr, isError: true);
-      debugPrint('[uploadOrderProof] error: $e');
+      assert(() {
+        debugPrint('[uploadOrderProof] error: $e');
+        return true;
+      }());
       return false;
     } finally {
       _isLoading = false;
@@ -342,7 +376,10 @@ class OrderController extends GetxController implements GetxService {
 
   Future<void> getOrderWithId(int? orderId, {bool closeOnError = true}) async {
     if (orderId == null || orderId <= 0) {
-      debugPrint('[ORDER TAP] invalid order_id: $orderId');
+      assert(() {
+        debugPrint('[ORDER TAP] invalid order_id: $orderId');
+        return true;
+      }());
       showCustomSnackBar('invalid_order_id'.tr, isError: true);
       return;
     }
@@ -368,12 +405,18 @@ class OrderController extends GetxController implements GetxService {
 
   Future<bool> fetchOrderDetailsOnTap(int? orderId) async {
     if (orderId == null || orderId <= 0) {
-      debugPrint('[ORDER TAP] blocked - invalid order_id: $orderId');
+      assert(() {
+        debugPrint('[ORDER TAP] blocked - invalid order_id: $orderId');
+        return true;
+      }());
       showCustomSnackBar('invalid_order_id'.tr, isError: true);
       return false;
     }
 
-    debugPrint('[ORDER TAP] order_id=$orderId');
+    assert(() {
+      debugPrint('[ORDER TAP] order_id=$orderId');
+      return true;
+    }());
     await getOrderWithId(orderId, closeOnError: false);
     await getOrderDetails(orderId, _orderModel?.orderType == 'parcel');
     return true;
@@ -448,19 +491,27 @@ class OrderController extends GetxController implements GetxService {
         _latestOrderList!.addAll(filteredOrders);
 
         // Log filtering results for debugging
-        debugPrint(
-            'Orders filtered: raw=${latestOrderList.length}, ignored=$ignoredCount, after_ignore=${processedOrders.length}, after_security=${filteredOrders.length}');
-        final ids = filteredOrders
-            .map((e) => e.id)
-            .whereType<int>()
-            .toList()
-          ..sort();
-        final int? maxId = ids.isNotEmpty ? ids.last : null;
-        final List<int> tail = ids.length > 5 ? ids.sublist(ids.length - 5) : ids;
-        debugPrint('[LATEST FINAL] count=${filteredOrders.length}, max_id=$maxId, last_ids=$tail');
+        assert(() {
+          debugPrint(
+              'Orders filtered: raw=${latestOrderList.length}, ignored=$ignoredCount, after_ignore=${processedOrders.length}, after_security=${filteredOrders.length}');
+          final ids = filteredOrders
+              .map((e) => e.id)
+              .whereType<int>()
+              .toList()
+            ..sort();
+          final int? maxId = ids.isNotEmpty ? ids.last : null;
+          final List<int> tail =
+              ids.length > 5 ? ids.sublist(ids.length - 5) : ids;
+          debugPrint(
+              '[LATEST FINAL] count=${filteredOrders.length}, max_id=$maxId, last_ids=$tail');
+          return true;
+        }());
       }
     } catch (e) {
-      debugPrint('getLatestOrders error: $e');
+      assert(() {
+        debugPrint('getLatestOrders error: $e');
+        return true;
+      }());
     } finally {
       update();
     }
@@ -486,7 +537,11 @@ class OrderController extends GetxController implements GetxService {
     _isLoading = true;
     update();
 
-    debugPrint('[updateOrderStatus] order_id=${currentOrder.id} status=$status');
+    assert(() {
+      debugPrint(
+          '[updateOrderStatus] order_id=${currentOrder.id} status=$status');
+      return true;
+    }());
 
     List<MultipartBody> multiParts =
         orderServiceInterface.prepareOrderProofImages(_pickedPrescriptions);
@@ -527,7 +582,11 @@ class OrderController extends GetxController implements GetxService {
 
   Future<void> getOrderDetails(int? orderID, bool parcel) async {
     if (orderID == null || orderID <= 0) {
-      debugPrint('[ORDER TAP] getOrderDetails blocked - invalid order_id: $orderID');
+      assert(() {
+        debugPrint(
+            '[ORDER TAP] getOrderDetails blocked - invalid order_id: $orderID');
+        return true;
+      }());
       showCustomSnackBar('invalid_order_id'.tr, isError: true);
       return;
     }
@@ -584,7 +643,10 @@ class OrderController extends GetxController implements GetxService {
       Get.back();
       // Handle unexpected errors
       showCustomSnackBar('unexpected_error_occurred'.tr, isError: true);
-      debugPrint('Order acceptance error: $e');
+      assert(() {
+        debugPrint('Order acceptance error: $e');
+        return true;
+      }());
       return false;
     } finally {
       _isLoading = false;
@@ -613,7 +675,10 @@ class OrderController extends GetxController implements GetxService {
       }
     } catch (e) {
       showCustomSnackBar('unexpected_error_occurred'.tr, isError: true);
-      debugPrint('Order cancel error: $e');
+      assert(() {
+        debugPrint('Order cancel error: $e');
+        return true;
+      }());
     } finally {
       _isLoading = false;
       update();
@@ -626,9 +691,15 @@ class OrderController extends GetxController implements GetxService {
       try {
         // Find and remove order by ID instead of index for better reliability
         _latestOrderList!.removeWhere((order) => order.id == orderID);
-        debugPrint('Removed order $orderID from latest order list');
+        assert(() {
+          debugPrint('Removed order $orderID from latest order list');
+          return true;
+        }());
       } catch (e) {
-        debugPrint('Error removing order from latest list: $e');
+        assert(() {
+          debugPrint('Error removing order from latest list: $e');
+          return true;
+        }());
         // If removal fails, refresh the latest orders list
         getLatestOrders();
       }
@@ -644,17 +715,27 @@ class OrderController extends GetxController implements GetxService {
             _currentOrderList!.any((order) => order.id == orderModel.id);
         if (!orderExists) {
           _currentOrderList!.add(orderModel);
-          debugPrint('Added order ${orderModel.id} to current order list');
+          assert(() {
+            debugPrint('Added order ${orderModel.id} to current order list');
+            return true;
+          }());
         }
       } catch (e) {
-        debugPrint('Error adding order to current list: $e');
+        assert(() {
+          debugPrint('Error adding order to current list: $e');
+          return true;
+        }());
         // If addition fails, refresh the current orders list
         getCurrentOrders();
       }
     } else {
       // Initialize current order list if null
       _currentOrderList = [orderModel];
-      debugPrint('Initialized current order list with order ${orderModel.id}');
+      assert(() {
+        debugPrint(
+            'Initialized current order list with order ${orderModel.id}');
+        return true;
+      }());
     }
   }
 
@@ -662,9 +743,15 @@ class OrderController extends GetxController implements GetxService {
     if (_currentOrderList != null && orderID != null) {
       try {
         _currentOrderList!.removeWhere((order) => order.id == orderID);
-        debugPrint('Removed order $orderID from current order list');
+        assert(() {
+          debugPrint('Removed order $orderID from current order list');
+          return true;
+        }());
       } catch (e) {
-        debugPrint('Error removing order from current list: $e');
+        assert(() {
+          debugPrint('Error removing order from current list: $e');
+          return true;
+        }());
         getCurrentOrders();
       }
     }
@@ -693,15 +780,24 @@ class OrderController extends GetxController implements GetxService {
             .add(IgnoreModel(id: orderToIgnore.id, time: DateTime.now()));
         _latestOrderList!.removeAt(index);
         orderServiceInterface.setIgnoreList(_ignoredRequests);
-        debugPrint('Ignored order ${orderToIgnore.id}');
+        assert(() {
+          debugPrint('Ignored order ${orderToIgnore.id}');
+          return true;
+        }());
       } catch (e) {
-        debugPrint('Error ignoring order at index $index: $e');
+        assert(() {
+          debugPrint('Error ignoring order at index $index: $e');
+          return true;
+        }());
         // If ignore fails, refresh the latest orders list
         getLatestOrders();
       }
     } else {
-      debugPrint(
-          'Invalid index $index for ignoring order. List length: ${_latestOrderList?.length ?? 0}');
+      assert(() {
+        debugPrint(
+            'Invalid index $index for ignoring order. List length: ${_latestOrderList?.length ?? 0}');
+        return true;
+      }());
     }
     update();
   }
@@ -784,7 +880,10 @@ class OrderController extends GetxController implements GetxService {
             DateTime(orderDate.year, orderDate.month, orderDate.day);
         return orderDay.isAtSameMomentAs(today);
       } catch (e) {
-        debugPrint('Error parsing order date: ${order.createdAt}');
+        assert(() {
+          debugPrint('Error parsing order date: ${order.createdAt}');
+          return true;
+        }());
         return false;
       }
     }).toList();
@@ -808,7 +907,10 @@ class OrderController extends GetxController implements GetxService {
         return orderDate.isAfter(startDate.subtract(const Duration(days: 1))) &&
             orderDate.isBefore(now.add(const Duration(days: 1)));
       } catch (e) {
-        debugPrint('Error parsing order date: ${order.createdAt}');
+        assert(() {
+          debugPrint('Error parsing order date: ${order.createdAt}');
+          return true;
+        }());
         return false;
       }
     }).toList();
