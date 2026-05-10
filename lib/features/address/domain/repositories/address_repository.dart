@@ -12,13 +12,28 @@ class AddressRepository implements AddressRepositoryInterface {
 
   @override
   Future<List<ZoneModel>?> getList() async {
-    List<ZoneModel>? zoneList;
     Response response = await apiClient.getData(AppConstants.zoneListUri);
     if (response.statusCode == 200) {
-      zoneList = [];
-      response.body.forEach((zone) => zoneList!.add(ZoneModel.fromJson(zone)));
+      final List<dynamic> zones = _extractZones(response.body);
+      return zones
+          .whereType<Map>()
+          .map((zone) => ZoneModel.fromJson(Map<String, dynamic>.from(zone)))
+          .toList();
     }
-    return zoneList;
+    return null;
+  }
+
+  List<dynamic> _extractZones(dynamic responseBody) {
+    if (responseBody is List) {
+      return responseBody;
+    }
+    if (responseBody is Map) {
+      final dynamic zones = responseBody['zones'];
+      if (zones is List) {
+        return zones;
+      }
+    }
+    return <dynamic>[];
   }
 
   @override

@@ -11,6 +11,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 
+const int _dmForgotPasswordOtpLength = 6;
+
 class VerificationScreen extends StatefulWidget {
   final String? number;
   const VerificationScreen({super.key, required this.number});
@@ -31,6 +33,7 @@ class VerificationScreenState extends State<VerificationScreen> {
     _number = widget.number!.startsWith('+')
         ? widget.number
         : '+${widget.number!.substring(1, widget.number!.length)}';
+    debugPrint('[DM_FORGOT_OTP_SCREEN_OPEN] number_present=${_number != null}');
     _startTimer();
   }
 
@@ -88,44 +91,56 @@ class VerificationScreenState extends State<VerificationScreen> {
                                         .color)),
                           ])),
                     Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 39, vertical: 35),
-                      child: Directionality(
-                        textDirection: TextDirection.ltr,
-                        child: PinCodeTextField(
-                          length: 4,
-                          appContext: context,
-                          keyboardType: TextInputType.number,
-                          animationType: AnimationType.slide,
-                          pinTheme: PinTheme(
-                            shape: PinCodeFieldShape.box,
-                            fieldHeight: 60,
-                            fieldWidth: 60,
-                            borderWidth: 1,
-                            borderRadius:
-                                BorderRadius.circular(Dimensions.radiusSmall),
-                            selectedColor:
-                                Theme.of(context).primaryColor.withValues(alpha: 0.2),
-                            selectedFillColor: Colors.white,
-                            inactiveFillColor: Theme.of(context)
-                                .disabledColor
-                                .withValues(alpha: 0.2),
-                            inactiveColor:
-                                Theme.of(context).primaryColor.withValues(alpha: 0.2),
-                            activeColor:
-                                Theme.of(context).primaryColor.withValues(alpha: 0.4),
-                            activeFillColor: Theme.of(context)
-                                .disabledColor
-                                .withValues(alpha: 0.2),
+                      padding: const EdgeInsets.symmetric(vertical: 35),
+                      child: LayoutBuilder(builder: (context, constraints) {
+                        final double availableWidth =
+                            constraints.maxWidth.isFinite
+                                ? constraints.maxWidth
+                                : MediaQuery.of(context).size.width;
+                        final double fieldWidth =
+                            ((availableWidth - 48) / _dmForgotPasswordOtpLength)
+                                .clamp(34.0, 45.0);
+                        return Directionality(
+                          textDirection: TextDirection.ltr,
+                          child: PinCodeTextField(
+                            length: _dmForgotPasswordOtpLength,
+                            appContext: context,
+                            keyboardType: TextInputType.number,
+                            animationType: AnimationType.slide,
+                            pinTheme: PinTheme(
+                              shape: PinCodeFieldShape.box,
+                              fieldHeight: 60,
+                              fieldWidth: fieldWidth,
+                              borderWidth: 1,
+                              borderRadius:
+                                  BorderRadius.circular(Dimensions.radiusSmall),
+                              selectedColor: Theme.of(context)
+                                  .primaryColor
+                                  .withValues(alpha: 0.2),
+                              selectedFillColor: Colors.white,
+                              inactiveFillColor: Theme.of(context)
+                                  .disabledColor
+                                  .withValues(alpha: 0.2),
+                              inactiveColor: Theme.of(context)
+                                  .primaryColor
+                                  .withValues(alpha: 0.2),
+                              activeColor: Theme.of(context)
+                                  .primaryColor
+                                  .withValues(alpha: 0.4),
+                              activeFillColor: Theme.of(context)
+                                  .disabledColor
+                                  .withValues(alpha: 0.2),
+                            ),
+                            animationDuration:
+                                const Duration(milliseconds: 300),
+                            backgroundColor: Colors.transparent,
+                            enableActiveFill: true,
+                            onChanged:
+                                forgotPasswordController.updateVerificationCode,
+                            beforeTextPaste: (text) => true,
                           ),
-                          animationDuration: const Duration(milliseconds: 300),
-                          backgroundColor: Colors.transparent,
-                          enableActiveFill: true,
-                          onChanged:
-                              forgotPasswordController.updateVerificationCode,
-                          beforeTextPaste: (text) => true,
-                        ),
-                      ),
+                        );
+                      }),
                     ),
                     Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                       Text(
@@ -153,32 +168,34 @@ class VerificationScreenState extends State<VerificationScreen> {
                             '${'resend'.tr}${_seconds > 0 ? ' ($_seconds)' : ''}'),
                       ),
                     ]),
-                    forgotPasswordController.verificationCode.length == 4
-                        ? !forgotPasswordController.isLoading
-                            ? CustomButtonWidget(
-                                buttonText: 'verify'.tr,
-                                onPressed: () {
-                                  forgotPasswordController
-                                      .verifyToken(_number)
-                                      .then((value) {
-                                    if (value.isSuccess) {
-                                      Get.toNamed(
-                                          RouteHelper.getResetPasswordRoute(
-                                              _number,
-                                              forgotPasswordController
-                                                  .verificationCode,
-                                              'reset-password'));
-                                    } else {
-                                      showCustomSnackBar(value.message);
-                                    }
-                                  });
-                                },
-                              )
-                            : const Center(child: CircularProgressIndicator())
-                        : const SizedBox.shrink(),
+                    !forgotPasswordController.isLoading
+                        ? CustomButtonWidget(
+                            buttonText: 'verify'.tr,
+                            onPressed: () =>
+                                _verifyOtp(forgotPasswordController),
+                          )
+                        : const Center(child: CircularProgressIndicator()),
                   ]);
                 }))),
       ))),
     );
+  }
+
+  void _verifyOtp(ForgotPasswordController forgotPasswordController) {
+    final String otp = forgotPasswordController.verificationCode.trim();
+    debugPrint('[DM_FORGOT_OTP_SUBMIT] length=${otp.length}');
+    if (otp.length < _dmForgotPasswordOtpLength) {
+      showCustomSnackBar('يرجى إدخال رمز التحقق المكون من 6 أرقام');
+      return;
+    }
+    forgotPasswordController.verifyToken(_number).then((value) {
+      if (value.isSuccess) {
+        showCustomSnackBar(value.message, isError: false);
+        Get.toNamed(RouteHelper.getResetPasswordRoute(_number,
+            forgotPasswordController.verificationCode, 'reset-password'));
+      } else {
+        showCustomSnackBar(value.message);
+      }
+    });
   }
 }

@@ -48,6 +48,7 @@ class _DeliveryManRegistrationScreenState
   final FocusNode _passwordNode = FocusNode();
   final FocusNode _identityNumberNode = FocusNode();
   String? _countryDialCode;
+  bool _hasRequestedRegistrationLookups = false;
 
   @override
   void initState() {
@@ -65,6 +66,14 @@ class _DeliveryManRegistrationScreenState
     Get.find<AuthController>().setIdentityTypeIndex(
         Get.find<AuthController>().identityTypeList[0], false);
     Get.find<AuthController>().setDMTypeIndex(0, false);
+    _loadRegistrationLookups();
+  }
+
+  void _loadRegistrationLookups() {
+    if (_hasRequestedRegistrationLookups) {
+      return;
+    }
+    _hasRequestedRegistrationLookups = true;
     Get.find<AddressController>().getZoneList();
     Get.find<AuthController>().getVehicleList();
   }
@@ -427,54 +436,59 @@ class _DeliveryManRegistrationScreenState
                                     width: Dimensions.paddingSizeLarge),
                                 Expanded(
                                     child: addressController.zoneList != null
-                                        ? Container(
-                                            decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(
-                                                      Dimensions.radiusDefault),
-                                              color:
-                                                  Theme.of(context).cardColor,
-                                              border: Border.all(
+                                        ? addressController.zoneList!.isNotEmpty
+                                            ? Container(
+                                                decoration: BoxDecoration(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          Dimensions
+                                                              .radiusDefault),
                                                   color: Theme.of(context)
-                                                      .primaryColor,
-                                                  width: 0.3),
-                                            ),
-                                            child: CustomDropdown<int>(
-                                              onChange:
-                                                  (int? value, int index) {
-                                                addressController
-                                                    .setZoneIndex(value);
-                                              },
-                                              dropdownButtonStyle:
-                                                  DropdownButtonStyle(
-                                                height: 45,
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                  vertical: Dimensions
-                                                      .paddingSizeExtraSmall,
-                                                  horizontal: Dimensions
-                                                      .paddingSizeExtraSmall,
+                                                      .cardColor,
+                                                  border: Border.all(
+                                                      color: Theme.of(context)
+                                                          .primaryColor,
+                                                      width: 0.3),
                                                 ),
-                                                primaryColor: Theme.of(context)
-                                                    .textTheme
-                                                    .bodyLarge!
-                                                    .color,
-                                              ),
-                                              dropdownStyle: DropdownStyle(
-                                                elevation: 10,
-                                                borderRadius:
-                                                    BorderRadius.circular(
-                                                        Dimensions
-                                                            .radiusDefault),
-                                                padding: const EdgeInsets.all(
-                                                    Dimensions
-                                                        .paddingSizeExtraSmall),
-                                              ),
-                                              items: zoneList,
-                                              child: Text(
-                                                  '${addressController.zoneList![0].name}'),
-                                            ),
-                                          )
+                                                child: CustomDropdown<int>(
+                                                  onChange:
+                                                      (int? value, int index) {
+                                                    addressController
+                                                        .setZoneIndex(value);
+                                                  },
+                                                  dropdownButtonStyle:
+                                                      DropdownButtonStyle(
+                                                    height: 45,
+                                                    padding: const EdgeInsets
+                                                        .symmetric(
+                                                      vertical: Dimensions
+                                                          .paddingSizeExtraSmall,
+                                                      horizontal: Dimensions
+                                                          .paddingSizeExtraSmall,
+                                                    ),
+                                                    primaryColor:
+                                                        Theme.of(context)
+                                                            .textTheme
+                                                            .bodyLarge!
+                                                            .color,
+                                                  ),
+                                                  dropdownStyle: DropdownStyle(
+                                                    elevation: 10,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            Dimensions
+                                                                .radiusDefault),
+                                                    padding: const EdgeInsets
+                                                        .all(Dimensions
+                                                            .paddingSizeExtraSmall),
+                                                  ),
+                                                  items: zoneList,
+                                                  child: Text(
+                                                      '${addressController.zoneList![0].name}'),
+                                                ),
+                                              )
+                                            : _buildUnavailableDropdown(
+                                                'لا توجد مناطق متاحة')
                                         : const Center(
                                             child:
                                                 CircularProgressIndicator())),
@@ -482,46 +496,54 @@ class _DeliveryManRegistrationScreenState
                               const SizedBox(
                                   height: Dimensions.paddingSizeExtraLarge),
                               authController.vehicleIds != null
-                                  ? Container(
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(
-                                            Dimensions.radiusDefault),
-                                        color: Theme.of(context).cardColor,
-                                        border: Border.all(
-                                            color:
-                                                Theme.of(context).primaryColor,
-                                            width: 0.3),
-                                      ),
-                                      child: CustomDropdown<int>(
-                                        onChange: (int? value, int index) {
-                                          authController.setVehicleIndex(
-                                              value, true);
-                                        },
-                                        dropdownButtonStyle:
-                                            DropdownButtonStyle(
-                                          height: 45,
-                                          padding: const EdgeInsets.symmetric(
-                                            vertical: Dimensions
-                                                .paddingSizeExtraSmall,
-                                            horizontal: Dimensions
-                                                .paddingSizeExtraSmall,
+                                  ? authController.vehicles != null &&
+                                          authController.vehicles!.isNotEmpty
+                                      ? Container(
+                                          decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(
+                                                Dimensions.radiusDefault),
+                                            color: Theme.of(context).cardColor,
+                                            border: Border.all(
+                                                color: Theme.of(context)
+                                                    .primaryColor,
+                                                width: 0.3),
                                           ),
-                                          primaryColor: Theme.of(context)
-                                              .textTheme
-                                              .bodyLarge!
-                                              .color,
-                                        ),
-                                        dropdownStyle: DropdownStyle(
-                                          elevation: 10,
-                                          borderRadius: BorderRadius.circular(
-                                              Dimensions.radiusDefault),
-                                          padding: const EdgeInsets.all(
-                                              Dimensions.paddingSizeExtraSmall),
-                                        ),
-                                        items: vehicleList,
-                                        child: Text('select_vehicle_type'.tr),
-                                      ),
-                                    )
+                                          child: CustomDropdown<int>(
+                                            onChange: (int? value, int index) {
+                                              authController.setVehicleIndex(
+                                                  value, true);
+                                            },
+                                            dropdownButtonStyle:
+                                                DropdownButtonStyle(
+                                              height: 45,
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                vertical: Dimensions
+                                                    .paddingSizeExtraSmall,
+                                                horizontal: Dimensions
+                                                    .paddingSizeExtraSmall,
+                                              ),
+                                              primaryColor: Theme.of(context)
+                                                  .textTheme
+                                                  .bodyLarge!
+                                                  .color,
+                                            ),
+                                            dropdownStyle: DropdownStyle(
+                                              elevation: 10,
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                      Dimensions.radiusDefault),
+                                              padding: const EdgeInsets.all(
+                                                  Dimensions
+                                                      .paddingSizeExtraSmall),
+                                            ),
+                                            items: vehicleList,
+                                            child:
+                                                Text('select_vehicle_type'.tr),
+                                          ),
+                                        )
+                                      : _buildUnavailableDropdown(
+                                          'لا توجد مركبات متاحة')
                                   : const CircularProgressIndicator(),
                               const SizedBox(
                                   height: Dimensions.paddingSizeExtraLarge),
@@ -576,6 +598,9 @@ class _DeliveryManRegistrationScreenState
                                 controller: _identityNumberController,
                                 focusNode: _identityNumberNode,
                                 inputAction: TextInputAction.done,
+                                inputType: TextInputType.text,
+                                enableSuggestions: false,
+                                autocorrect: false,
                               ),
                               const SizedBox(
                                   height: Dimensions.paddingSizeExtraLarge),
@@ -616,8 +641,7 @@ class _DeliveryManRegistrationScreenState
                                         options: RoundedRectDottedBorderOptions(
                                           radius: const Radius.circular(
                                               Dimensions.radiusDefault),
-                                          color:
-                                              Theme.of(context).primaryColor,
+                                          color: Theme.of(context).primaryColor,
                                           strokeWidth: 1,
                                           strokeCap: StrokeCap.butt,
                                           dashPattern: const [5, 5],
@@ -634,7 +658,9 @@ class _DeliveryManRegistrationScreenState
                                                     color: Theme.of(context)
                                                         .disabledColor,
                                                     size: 38),
-                                                Text('upload_identity_image'.tr,
+                                                Text(
+                                                    _getDocumentUploadLabel(
+                                                        authController),
                                                     style: robotoMedium.copyWith(
                                                         color: Theme.of(context)
                                                             .disabledColor)),
@@ -709,71 +735,8 @@ class _DeliveryManRegistrationScreenState
                           : 'submit'.tr,
                       margin: const EdgeInsets.all(Dimensions.paddingSizeSmall),
                       height: 50,
-                      onPressed: !authController.acceptTerms
-                          ? null
-                          : () async {
-                              if (authController.dmStatus == 0.4) {
-                                String fName = _fNameController.text.trim();
-                                String lName = _lNameController.text.trim();
-                                String email = _emailController.text.trim();
-                                String phone = _phoneController.text.trim();
-                                String password =
-                                    _passwordController.text.trim();
-                                String numberWithCountryCode =
-                                    _countryDialCode! + phone;
-                                bool isValid =
-                                    GetPlatform.isAndroid ? false : true;
-
-                                try {
-                                  PhoneNumber phoneNumber =
-                                      PhoneNumber.parse(numberWithCountryCode);
-                                  numberWithCountryCode =
-                                      phoneNumber.international;
-                                  isValid = phoneNumber.isValid();
-                                } catch (e) {
-                                  debugPrint(
-                                      'Number is not valid ${e.toString()}');
-                                }
-
-                                if (fName.isEmpty) {
-                                  showCustomSnackBar(
-                                      'enter_delivery_man_first_name'.tr);
-                                } else if (lName.isEmpty) {
-                                  showCustomSnackBar(
-                                      'enter_delivery_man_last_name'.tr);
-                                } else if (authController.pickedImage == null) {
-                                  showCustomSnackBar(
-                                      'pick_delivery_man_profile_image'.tr);
-                                } else if (email.isEmpty) {
-                                  showCustomSnackBar(
-                                      'enter_delivery_man_email_address'.tr);
-                                } else if (!GetUtils.isEmail(email)) {
-                                  showCustomSnackBar(
-                                      'enter_a_valid_email_address'.tr);
-                                } else if (phone.isEmpty) {
-                                  showCustomSnackBar(
-                                      'enter_delivery_man_phone_number'.tr);
-                                } else if (!isValid) {
-                                  showCustomSnackBar(
-                                      'enter_a_valid_phone_number'.tr);
-                                } else if (password.isEmpty) {
-                                  showCustomSnackBar(
-                                      'enter_password_for_delivery_man'.tr);
-                                } else if (!authController.spatialCheck ||
-                                    !authController.lowercaseCheck ||
-                                    !authController.uppercaseCheck ||
-                                    !authController.numberCheck ||
-                                    !authController.lengthCheck) {
-                                  showCustomSnackBar(
-                                      'provide_valid_password'.tr);
-                                } else {
-                                  authController.dmStatusChange(0.8);
-                                }
-                              } else {
-                                _addDeliveryMan(
-                                    authController, addressController);
-                              }
-                            },
+                      onPressed: () => _handleRegisterButtonTap(
+                          authController, addressController),
                     )
                   : const Center(child: CircularProgressIndicator()),
             ]);
@@ -783,8 +746,110 @@ class _DeliveryManRegistrationScreenState
     );
   }
 
-  void _addDeliveryMan(AuthController authController,
+  Widget _buildUnavailableDropdown(String message) {
+    return Container(
+      height: 45,
+      alignment: Alignment.center,
+      padding:
+          const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeSmall),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
+        color: Theme.of(context).cardColor,
+        border: Border.all(
+          color: Theme.of(context).primaryColor,
+          width: 0.3,
+        ),
+      ),
+      child: Text(
+        message,
+        style: robotoRegular.copyWith(
+          color: Theme.of(context).disabledColor,
+          fontSize: Dimensions.fontSizeSmall,
+        ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+    );
+  }
+
+  Future<void> _handleRegisterButtonTap(AuthController authController,
       AddressController addressController) async {
+    debugPrint(
+        '[DM_REGISTER_TAP] step=${authController.dmStatus == 0.4 ? 'basic_info' : 'documents'}');
+    if (authController.dmStatus == 0.4) {
+      if (_validateBasicRegistrationStep(authController)) {
+        debugPrint('[DM_REGISTER_VALIDATION_PASS] basic_info');
+        authController.dmStatusChange(0.8);
+      }
+      return;
+    }
+    await _addDeliveryMan(authController, addressController);
+  }
+
+  bool _validateBasicRegistrationStep(AuthController authController) {
+    debugPrint('[DM_REGISTER_VALIDATION_START] basic_info');
+    final String fName = _fNameController.text.trim();
+    final String lName = _lNameController.text.trim();
+    final String email = _emailController.text.trim();
+    final String phone = _phoneController.text.trim();
+    final String password = _passwordController.text.trim();
+    if (!authController.acceptTerms) {
+      return _failRegistrationValidation('يرجى الموافقة على الشروط والأحكام');
+    }
+    if (fName.isEmpty) {
+      return _failRegistrationValidation('يرجى إدخال الاسم الأول');
+    }
+    if (lName.isEmpty) {
+      return _failRegistrationValidation('يرجى إدخال الاسم الأخير');
+    }
+    if (phone.isEmpty) {
+      return _failRegistrationValidation('يرجى إدخال رقم الجوال');
+    }
+    if (!_isPhoneValid(phone)) {
+      return _failRegistrationValidation('يرجى إدخال رقم جوال صحيح');
+    }
+    if (email.isEmpty) {
+      return _failRegistrationValidation('يرجى إدخال البريد الإلكتروني');
+    }
+    if (!GetUtils.isEmail(email)) {
+      return _failRegistrationValidation('يرجى إدخال بريد إلكتروني صحيح');
+    }
+    if (password.isEmpty) {
+      return _failRegistrationValidation('يرجى إدخال كلمة المرور');
+    }
+    if (!authController.spatialCheck ||
+        !authController.lowercaseCheck ||
+        !authController.uppercaseCheck ||
+        !authController.numberCheck ||
+        !authController.lengthCheck) {
+      return _failRegistrationValidation('يرجى إدخال كلمة مرور صالحة');
+    }
+    if (authController.pickedImage == null) {
+      return _failRegistrationValidation('يرجى تحميل الصورة الشخصية');
+    }
+    return true;
+  }
+
+  bool _isPhoneValid(String phone) {
+    final String numberWithCountryCode = (_countryDialCode ?? '') + phone;
+    try {
+      final PhoneNumber phoneNumber = PhoneNumber.parse(numberWithCountryCode);
+      return phoneNumber.isValid();
+    } catch (error) {
+      debugPrint('[DM_REGISTER_VALIDATION_FAIL] invalid_phone');
+      return false;
+    }
+  }
+
+  bool _failRegistrationValidation(String message) {
+    debugPrint('[DM_REGISTER_VALIDATION_FAIL] $message');
+    showCustomSnackBar(message);
+    return false;
+  }
+
+  Future<void> _addDeliveryMan(AuthController authController,
+      AddressController addressController) async {
+    debugPrint('[DM_REGISTER_VALIDATION_START] documents');
     String fName = _fNameController.text.trim();
     String lName = _lNameController.text.trim();
     String email = _emailController.text.trim();
@@ -797,18 +862,39 @@ class _DeliveryManRegistrationScreenState
         await CustomValidatorHelper.isPhoneValid(numberWithCountryCode);
     numberWithCountryCode = phoneValid.phone;
 
-    if (identityNumber.isEmpty) {
-      showCustomSnackBar('enter_delivery_man_identity_number'.tr);
-    } else if (authController.pickedImage == null) {
-      showCustomSnackBar('upload_delivery_man_image'.tr);
+    if (!authController.acceptTerms) {
+      _failRegistrationValidation('يرجى الموافقة على الشروط والأحكام');
+    } else if (fName.isEmpty) {
+      _failRegistrationValidation('يرجى إدخال الاسم الأول');
+    } else if (lName.isEmpty) {
+      _failRegistrationValidation('يرجى إدخال الاسم الأخير');
+    } else if (phone.isEmpty) {
+      _failRegistrationValidation('يرجى إدخال رقم الجوال');
     } else if (!phoneValid.isValid) {
-      showCustomSnackBar('invalid_phone_number'.tr);
-    } else if (authController.vehicleIndex! - 1 == -1) {
-      showCustomSnackBar('please_select_vehicle_for_the_deliveryman'.tr);
+      _failRegistrationValidation('يرجى إدخال رقم جوال صحيح');
+    } else if (email.isEmpty) {
+      _failRegistrationValidation('يرجى إدخال البريد الإلكتروني');
+    } else if (!GetUtils.isEmail(email)) {
+      _failRegistrationValidation('يرجى إدخال بريد إلكتروني صحيح');
+    } else if (password.isEmpty) {
+      _failRegistrationValidation('يرجى إدخال كلمة المرور');
+    } else if (authController.pickedImage == null) {
+      _failRegistrationValidation('يرجى تحميل الصورة الشخصية');
+    } else if (identityNumber.isEmpty) {
+      _failRegistrationValidation('يرجى إدخال رقم الهوية');
+    } else if (addressController.zoneList == null ||
+        addressController.zoneList!.isEmpty) {
+      _failRegistrationValidation('يرجى اختيار المنطقة');
+    } else if (authController.vehicleIndex == null ||
+        authController.vehicleIndex! - 1 == -1 ||
+        authController.vehicles == null ||
+        authController.vehicles!.isEmpty) {
+      _failRegistrationValidation('يرجى اختيار نوع المركبة');
     } else if (authController.pickedIdentities.isEmpty) {
-      showCustomSnackBar('please_upload_identity_image'.tr);
+      _failRegistrationValidation(_getMissingDocumentMessage(authController));
     } else {
-      authController.registerDeliveryMan(DeliveryManBodyModel(
+      debugPrint('[DM_REGISTER_VALIDATION_PASS] documents');
+      await authController.registerDeliveryMan(DeliveryManBodyModel(
         fName: fName,
         lName: lName,
         password: password,
@@ -825,5 +911,19 @@ class _DeliveryManRegistrationScreenState
             .toString(),
       ));
     }
+  }
+
+  String _getDocumentUploadLabel(AuthController authController) {
+    return authController.identityTypeList[authController.identityTypeIndex] ==
+            'driving_license'
+        ? 'تحميل صورة الرخصة'
+        : 'تحميل صورة الهوية';
+  }
+
+  String _getMissingDocumentMessage(AuthController authController) {
+    return authController.identityTypeList[authController.identityTypeIndex] ==
+            'driving_license'
+        ? 'يرجى تحميل صورة الرخصة'
+        : 'يرجى تحميل صورة الهوية';
   }
 }

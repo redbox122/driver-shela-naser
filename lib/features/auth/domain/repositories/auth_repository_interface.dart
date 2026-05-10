@@ -1,4 +1,5 @@
 import 'package:shellafood_delivery/api/api_client.dart';
+import 'package:shellafood_delivery/common/models/response_model.dart';
 import 'package:shellafood_delivery/features/auth/domain/models/delivery_man_body_model.dart';
 import 'package:shellafood_delivery/interface/repository_interface.dart';
 
@@ -17,6 +18,6 @@ abstract class AuthRepositoryInterface implements RepositoryInterface {
   bool isNotificationActive();
   void setNotificationActive(bool isActive);
   Future<bool> clearUserNumberAndPassword();
-  Future<dynamic> registerDeliveryMan(
+  Future<ResponseModel> registerDeliveryMan(
       DeliveryManBodyModel deliveryManBody, List<MultipartBody> multiParts);
 }

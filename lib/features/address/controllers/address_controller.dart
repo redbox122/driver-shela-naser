@@ -47,25 +47,41 @@ class AddressController extends GetxController implements GetxService {
   bool get isLoading => _isLoading;
 
   Future<void> getZoneList() async {
-    _pickedLogo = null;
-    _pickedCover = null;
-    _selectedZoneIndex = 0;
-    _restaurantLocation = null;
-    _zoneIds = null;
-    List<ZoneModel>? zoneList = await addressServiceInterface.getZoneList();
-    if (zoneList != null) {
-      _zoneList = [];
-      _zoneList!.addAll(zoneList);
-      _setLocation(LatLng(
-        double.parse(
-            Get.find<SplashController>().configModel!.defaultLocation!.lat ??
-                '0'),
-        double.parse(
-            Get.find<SplashController>().configModel!.defaultLocation!.lng ??
-                '0'),
-      ));
-    }
+    debugPrint('[DM_REGISTER_ZONE_FETCH_START]');
+    _isLoading = true;
     update();
+    try {
+      _pickedLogo = null;
+      _pickedCover = null;
+      _selectedZoneIndex = 0;
+      _restaurantLocation = null;
+      _zoneIds = null;
+      final List<ZoneModel>? zoneList =
+          await addressServiceInterface.getZoneList();
+      _zoneList = <ZoneModel>[];
+      if (zoneList != null) {
+        _zoneList!.addAll(zoneList);
+      }
+      debugPrint('[DM_REGISTER_ZONE_COUNT] count=${_zoneList!.length}');
+      debugPrint('[DM_REGISTER_ZONE_FETCH_SUCCESS]');
+      if (_zoneList!.isNotEmpty) {
+        await _setLocation(LatLng(
+          double.parse(
+              Get.find<SplashController>().configModel!.defaultLocation!.lat ??
+                  '0'),
+          double.parse(
+              Get.find<SplashController>().configModel!.defaultLocation!.lng ??
+                  '0'),
+        ));
+      }
+    } catch (error) {
+      debugPrint('[DM_REGISTER_ZONE_FETCH_ERROR] ${error.runtimeType}');
+      _zoneList = <ZoneModel>[];
+    } finally {
+      _isLoading = false;
+      debugPrint('[DM_REGISTER_LOADING_RESET] zone_list');
+      update();
+    }
   }
 
   void setZoneIndex(int? index) {
@@ -73,7 +89,7 @@ class AddressController extends GetxController implements GetxService {
     update();
   }
 
-  void _setLocation(LatLng location) async {
+  Future<void> _setLocation(LatLng location) async {
     ZoneResponseModel? response = await getZone(
       location.latitude.toString(),
       location.longitude.toString(),
@@ -117,8 +133,7 @@ class AddressController extends GetxController implements GetxService {
             // SM-05: on success we now return a populated ZoneResponseModel
             // (previously the method returned null on success, making the
             // caller's `response != null && response.isSuccess` always false).
-            responseModel =
-                ZoneResponseModel(true, null, zoneIds, []);
+            responseModel = ZoneResponseModel(true, null, zoneIds, []);
           } else {
             _inZone = false;
             responseModel =
@@ -126,8 +141,7 @@ class AddressController extends GetxController implements GetxService {
           }
         } else {
           _inZone = false;
-          responseModel =
-              ZoneResponseModel(false, response.statusText, [], []);
+          responseModel = ZoneResponseModel(false, response.statusText, [], []);
         }
       } catch (e) {
         debugPrint('getZone parse error: $e');

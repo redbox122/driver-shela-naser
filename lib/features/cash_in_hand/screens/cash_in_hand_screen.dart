@@ -4,6 +4,7 @@ import 'package:shellafood_delivery/features/auth/controllers/auth_controller.da
 import 'package:shellafood_delivery/features/profile/controllers/profile_controller.dart';
 import 'package:shellafood_delivery/features/splash/controllers/splash_controller.dart';
 import 'package:shellafood_delivery/features/cash_in_hand/controllers/cash_in_hand_controller.dart';
+import 'package:shellafood_delivery/features/cash_in_hand/domain/models/wallet_payment_model.dart';
 import 'package:shellafood_delivery/helper/price_converter_helper.dart';
 import 'package:shellafood_delivery/helper/route_helper.dart';
 import 'package:shellafood_delivery/util/dimensions.dart';
@@ -32,10 +33,19 @@ class _CashInHandScreenState extends State<CashInHandScreen> {
 
   @override
   void initState() {
-    Get.find<ProfileController>().getProfile();
-    Get.find<CashInHandController>().getWalletPaymentList();
-    Get.find<CashInHandController>().getWalletProvidedEarningList();
     super.initState();
+    _refreshWalletData();
+  }
+
+  Future<void> _refreshWalletData() async {
+    debugPrint('[DM_WALLET_REFRESH_ON_OPEN]');
+    debugPrint('[DM_ACCOUNT_FETCH_START] account_screen_refresh');
+    debugPrint('[DM_WALLET_FETCH_START] account_screen_refresh');
+    await Get.find<ProfileController>().getProfile();
+    await Get.find<CashInHandController>().getWalletPaymentList();
+    await Get.find<CashInHandController>().getWalletProvidedEarningList();
+    debugPrint('[DM_ACCOUNT_FETCH_SUCCESS] account_screen_refresh');
+    debugPrint('[DM_WALLET_FETCH_SUCCESS] account_screen_refresh');
   }
 
   @override
@@ -73,16 +83,14 @@ class _CashInHandScreenState extends State<CashInHandScreen> {
         }),
       ),
       body: GetBuilder<CashInHandController>(builder: (cashInHandController) {
+        debugPrint('[DM_WALLET_UI_BUILD] cash_in_hand_screen');
         return GetBuilder<ProfileController>(builder: (profileController) {
           return (profileController.profileModel != null &&
-                  cashInHandController.transactions != null)
+                  cashInHandController.transactions != null &&
+                  cashInHandController.walletProvidedTransactions != null)
               ? RefreshIndicator(
                   onRefresh: () async {
-                    profileController.getProfile();
-                    Get.find<CashInHandController>().getWalletPaymentList();
-                    Get.find<CashInHandController>()
-                        .getWalletProvidedEarningList();
-                    return await Future.delayed(const Duration(seconds: 1));
+                    await _refreshWalletData();
                   },
                   child: Padding(
                     padding: const EdgeInsets.all(Dimensions.paddingSizeLarge),
@@ -124,30 +132,46 @@ class _CashInHandScreenState extends State<CashInHandScreen> {
                                                   const SizedBox(
                                                       width: Dimensions
                                                           .paddingSizeSmall),
-                                                  Text('payable_amount'.tr,
+                                                  Flexible(
+                                                    child: Text(
+                                                      'المبلغ المطلوب سداده للإدارة',
                                                       style:
                                                           robotoMedium.copyWith(
                                                               color: Theme.of(
                                                                       context)
-                                                                  .cardColor)),
+                                                                  .cardColor),
+                                                      maxLines: 2,
+                                                    ),
+                                                  ),
                                                 ],
                                               ),
                                               const SizedBox(
                                                   height: Dimensions
                                                       .paddingSizeDefault),
-                                              Text(
-                                                  PriceConverterHelper
-                                                      .convertPrice(
-                                                          profileController
-                                                              .profileModel!
-                                                              .payableBalance),
-                                                  style:
-                                                      robotoBold.copyWith(
-                                                          fontSize: Dimensions
-                                                              .fontSizeOverLarge,
-                                                          color:
-                                                              Theme.of(context)
-                                                                  .cardColor)),
+                                              Directionality(
+                                                textDirection:
+                                                    TextDirection.ltr,
+                                                child: FittedBox(
+                                                  fit: BoxFit.scaleDown,
+                                                  alignment:
+                                                      Alignment.centerLeft,
+                                                  child: Text(
+                                                    _logAndConvertAccountAmount(
+                                                      amount: profileController
+                                                          .profileModel!
+                                                          .payableBalance,
+                                                      label: 'payable_to_admin',
+                                                    ),
+                                                    style: robotoBold.copyWith(
+                                                        fontSize: Dimensions
+                                                            .fontSizeOverLarge,
+                                                        color: Theme.of(context)
+                                                            .cardColor),
+                                                    maxLines: 1,
+                                                    softWrap: false,
+                                                  ),
+                                                ),
+                                              ),
                                             ]),
                                       ),
                                       Column(
@@ -158,7 +182,8 @@ class _CashInHandScreenState extends State<CashInHandScreen> {
                                                     .profileModel!.adjustable!
                                                 ? InkWell(
                                                     onTap: () {
-                                                      _logCashInHandAction('Tap: adjust_payments');
+                                                      _logCashInHandAction(
+                                                          'Tap: adjust_payments');
                                                       showDialog(
                                                           context: context,
                                                           builder: (BuildContext
@@ -263,7 +288,8 @@ class _CashInHandScreenState extends State<CashInHandScreen> {
                                                     : 0),
                                             InkWell(
                                               onTap: () {
-                                                _logCashInHandAction('Tap: pay_now');
+                                                _logCashInHandAction(
+                                                    'Tap: pay_now');
                                                 if (profileController
                                                     .profileModel!
                                                     .showPayNowButton!) {
@@ -347,17 +373,27 @@ class _CashInHandScreenState extends State<CashInHandScreen> {
                                                           .primaryColor
                                                       : Theme.of(context)
                                                           .disabledColor
-                                                          .withValues(alpha: 0.8),
+                                                          .withValues(
+                                                              alpha: 0.8),
                                                 ),
-                                                child: Text('pay_now'.tr,
-                                                    textAlign: TextAlign.center,
-                                                    style:
-                                                        robotoMedium.copyWith(
-                                                            fontSize: Dimensions
-                                                                .fontSizeSmall,
-                                                            color: Theme.of(
-                                                                    context)
-                                                                .cardColor)),
+                                                child: Center(
+                                                  child: FittedBox(
+                                                    fit: BoxFit.scaleDown,
+                                                    child: Text(
+                                                      'pay_now'.tr,
+                                                      textAlign:
+                                                          TextAlign.center,
+                                                      maxLines: 1,
+                                                      softWrap: false,
+                                                      style: robotoMedium.copyWith(
+                                                          fontSize: Dimensions
+                                                              .fontSizeSmall,
+                                                          color:
+                                                              Theme.of(context)
+                                                                  .cardColor),
+                                                    ),
+                                                  ),
+                                                ),
                                               ),
                                             ),
                                           ]),
@@ -388,20 +424,16 @@ class _CashInHandScreenState extends State<CashInHandScreen> {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.center,
                                       children: [
-                                        Text(
-                                          PriceConverterHelper.convertPrice(
-                                              profileController
-                                                  .profileModel!.cashInHands),
-                                          style: robotoBold.copyWith(
-                                              fontSize:
-                                                  Dimensions.fontSizeLarge,
-                                              color: Theme.of(context)
-                                                  .primaryColor),
+                                        _renderAccountAmount(
+                                          amount: profileController
+                                              .profileModel!.cashInHands,
+                                          label: 'cash_in_hand',
+                                          context: context,
                                         ),
                                         const SizedBox(
                                             height:
                                                 Dimensions.paddingSizeSmall),
-                                        Text('cash_in_hand'.tr,
+                                        Text('النقد في اليد',
                                             style: robotoRegular.copyWith(
                                                 color: Theme.of(context)
                                                     .disabledColor)),
@@ -431,20 +463,16 @@ class _CashInHandScreenState extends State<CashInHandScreen> {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.center,
                                       children: [
-                                        Text(
-                                          PriceConverterHelper.convertPrice(
-                                              profileController.profileModel!
-                                                  .totalWithdrawn),
-                                          style: robotoBold.copyWith(
-                                              fontSize:
-                                                  Dimensions.fontSizeLarge,
-                                              color: Theme.of(context)
-                                                  .primaryColor),
+                                        _renderAccountAmount(
+                                          amount: profileController
+                                              .profileModel!.balance,
+                                          label: 'balance',
+                                          context: context,
                                         ),
                                         const SizedBox(
                                             height:
                                                 Dimensions.paddingSizeSmall),
-                                        Text('total_withdrawn'.tr,
+                                        Text('الرصيد',
                                             style: robotoRegular.copyWith(
                                                 color: Theme.of(context)
                                                     .disabledColor)),
@@ -558,10 +586,11 @@ class _CashInHandScreenState extends State<CashInHandScreen> {
                                               cashInHandController
                                                   .walletProvidedTransactions!
                                                   .isEmpty)
-                                          ? const SizedBox()
-                                          : InkWell(
+                                      ? const SizedBox()
+                                      : InkWell(
                                           onTap: () {
-                                            _logCashInHandAction('Tap: view_all');
+                                            _logCashInHandAction(
+                                                'Tap: view_all');
                                             if (cashInHandController
                                                     .selectedIndex ==
                                                 0) {
@@ -617,21 +646,25 @@ class _CashInHandScreenState extends State<CashInHandScreen> {
                                                             CrossAxisAlignment
                                                                 .start,
                                                         children: [
-                                                          Text(
-                                                            PriceConverterHelper
-                                                                .convertPrice(
-                                                                    cashInHandController
-                                                                        .transactions![
-                                                                            index]
-                                                                        .amount),
-                                                            style: robotoMedium
-                                                                .copyWith(
-                                                                    fontSize:
-                                                                        Dimensions
-                                                                            .fontSizeDefault),
+                                                          Directionality(
                                                             textDirection:
                                                                 TextDirection
                                                                     .ltr,
+                                                            child: Text(
+                                                              _logAndConvertAccountAmount(
+                                                                amount: cashInHandController
+                                                                    .transactions![
+                                                                        index]
+                                                                    .amount,
+                                                                label:
+                                                                    'payment_history',
+                                                              ),
+                                                              style: robotoMedium
+                                                                  .copyWith(
+                                                                      fontSize:
+                                                                          Dimensions
+                                                                              .fontSizeDefault),
+                                                            ),
                                                           ),
                                                           const SizedBox(
                                                               height: Dimensions
@@ -686,13 +719,8 @@ class _CashInHandScreenState extends State<CashInHandScreen> {
                                           .isNotEmpty
                                       ? ListView.builder(
                                           itemCount: cashInHandController
-                                                      .walletProvidedTransactions!
-                                                      .length >
-                                                  25
-                                              ? 25
-                                              : cashInHandController
-                                                  .walletProvidedTransactions!
-                                                  .length,
+                                              .walletProvidedTransactions!
+                                              .length,
                                           shrinkWrap: true,
                                           physics:
                                               const NeverScrollableScrollPhysics(),
@@ -710,27 +738,35 @@ class _CashInHandScreenState extends State<CashInHandScreen> {
                                                             CrossAxisAlignment
                                                                 .start,
                                                         children: [
-                                                          Text(
-                                                            PriceConverterHelper
-                                                                .convertPrice(
-                                                                    cashInHandController
-                                                                        .walletProvidedTransactions![
-                                                                            index]
-                                                                        .amount),
-                                                            style: robotoMedium
-                                                                .copyWith(
-                                                                    fontSize:
-                                                                        Dimensions
-                                                                            .fontSizeDefault),
+                                                          Directionality(
                                                             textDirection:
                                                                 TextDirection
                                                                     .ltr,
+                                                            child: Text(
+                                                              _logAndConvertAccountAmount(
+                                                                amount: cashInHandController
+                                                                    .walletProvidedTransactions![
+                                                                        index]
+                                                                    .amount,
+                                                                label:
+                                                                    'earning_history',
+                                                              ),
+                                                              style: robotoMedium
+                                                                  .copyWith(
+                                                                      fontSize:
+                                                                          Dimensions
+                                                                              .fontSizeDefault),
+                                                            ),
                                                           ),
                                                           const SizedBox(
                                                               height: Dimensions
                                                                   .paddingSizeExtraSmall),
                                                           Text(
-                                                              '${'wallet'.tr} ${cashInHandController.walletProvidedTransactions![index].method?.replaceAll('_', ' ').capitalize ?? ''}',
+                                                              _getWalletProvidedMethodLabel(
+                                                                cashInHandController
+                                                                        .walletProvidedTransactions![
+                                                                    index],
+                                                              ),
                                                               style:
                                                                   robotoRegular
                                                                       .copyWith(
@@ -824,5 +860,59 @@ class _CashInHandScreenState extends State<CashInHandScreen> {
         });
       }),
     );
+  }
+
+  Widget _renderAccountAmount({
+    required double? amount,
+    required String label,
+    required BuildContext context,
+  }) {
+    return Directionality(
+      textDirection: TextDirection.ltr,
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Text(
+          _logAndConvertAccountAmount(amount: amount, label: label),
+          style: robotoBold.copyWith(
+            fontSize: Dimensions.fontSizeLarge,
+            color: Theme.of(context).primaryColor,
+          ),
+          maxLines: 1,
+          softWrap: false,
+        ),
+      ),
+    );
+  }
+
+  String _logAndConvertAccountAmount({
+    required double? amount,
+    required String label,
+  }) {
+    debugPrint('[DM_ACCOUNT_AMOUNT_RENDER] label=$label amount=$amount');
+    return PriceConverterHelper.convertPrice(amount);
+  }
+
+  String _getWalletProvidedMethodLabel(Transactions transaction) {
+    final String? method = transaction.method;
+    final String label;
+    if (method == 'order_delivery') {
+      final String? orderId = _extractOrderId(transaction.ref);
+      label = orderId == null ? 'أرباح توصيل طلب' : 'أرباح توصيل طلب #$orderId';
+    } else if (method == 'adjustment') {
+      label = 'تسوية محفظة';
+    } else {
+      label = '${'wallet'.tr} ${method?.replaceAll('_', ' ').capitalize ?? ''}';
+    }
+    debugPrint('[DM_EARNING_METHOD_MAPPED] method=$method label=$label');
+    return label;
+  }
+
+  String? _extractOrderId(String? ref) {
+    if (ref == null) {
+      return null;
+    }
+    final RegExpMatch? match =
+        RegExp(r'order_(\d+)_delivery_earning').firstMatch(ref);
+    return match?.group(1);
   }
 }

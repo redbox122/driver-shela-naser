@@ -28,6 +28,8 @@ class CustomTextFieldWidget extends StatefulWidget {
   final String? countryDialCode;
   final Function(CountryCode countryCode)? onCountryChanged;
   final bool border;
+  final bool enableSuggestions;
+  final bool autocorrect;
 
   const CustomTextFieldWidget({
     super.key,
@@ -53,6 +55,8 @@ class CustomTextFieldWidget extends StatefulWidget {
     this.countryDialCode,
     this.onCountryChanged,
     this.border = true,
+    this.enableSuggestions = true,
+    this.autocorrect = true,
   });
 
   @override
@@ -81,6 +85,8 @@ class CustomTextFieldWidgetState extends State<CustomTextFieldWidget> {
         textCapitalization: widget.capitalization,
         enabled: widget.isEnabled,
         autofocus: false,
+        enableSuggestions: widget.enableSuggestions,
+        autocorrect: widget.autocorrect,
         obscureText: widget.isPassword ? _obscureText : false,
         inputFormatters: widget.inputType == TextInputType.phone
             ? <TextInputFormatter>[
@@ -168,7 +174,8 @@ class CustomTextFieldWidgetState extends State<CustomTextFieldWidget> {
               ? IconButton(
                   icon: Icon(
                       _obscureText ? Icons.visibility_off : Icons.visibility,
-                      color: Theme.of(context).hintColor.withValues(alpha: 0.3)),
+                      color:
+                          Theme.of(context).hintColor.withValues(alpha: 0.3)),
                   onPressed: _toggle,
                 )
               : null,

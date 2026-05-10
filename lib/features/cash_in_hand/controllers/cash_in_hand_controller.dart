@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'dart:async';
 import 'package:shellafood_delivery/common/models/response_model.dart';
@@ -41,6 +42,7 @@ class CashInHandController extends GetxController implements GetxService {
   }
 
   Future<void> getWalletPaymentList() async {
+    debugPrint('[DM_WALLET_FETCH_START] wallet_payment_list');
     _transactions = null;
     List<Transactions>? transactions =
         await cashInHandServiceInterface.getWalletPaymentList();
@@ -48,16 +50,35 @@ class CashInHandController extends GetxController implements GetxService {
       _transactions = [];
       _transactions!.addAll(transactions);
     }
+    debugPrint(
+        '[DM_WALLET_FETCH_SUCCESS] wallet_payment_count=${_transactions?.length ?? 0}');
     update();
   }
 
   Future<void> getWalletProvidedEarningList() async {
+    debugPrint('[DM_ACCOUNT_FETCH_START] wallet_provided_earning_list');
+    debugPrint('[DM_WALLET_FETCH_START] wallet_provided_earning_list');
     _walletProvidedTransactions = null;
     List<Transactions>? walletProvidedTransactions =
         await cashInHandServiceInterface.getWalletProvidedEarningList();
     if (walletProvidedTransactions != null) {
       _walletProvidedTransactions = [];
       _walletProvidedTransactions!.addAll(walletProvidedTransactions);
+    }
+    debugPrint(
+        '[DM_WALLET_FETCH_SUCCESS] wallet_provided_earning_count=${_walletProvidedTransactions?.length ?? 0}');
+    debugPrint(
+        '[DM_ACCOUNT_FETCH_SUCCESS] wallet_provided_earning_count=${_walletProvidedTransactions?.length ?? 0}');
+    debugPrint(
+        '[DM_WALLET_HISTORY_COUNT] count=${_walletProvidedTransactions?.length ?? 0}');
+    debugPrint(
+        '[DM_EARNING_HISTORY_COUNT] count=${_walletProvidedTransactions?.length ?? 0}');
+    for (final Transactions transaction
+        in _walletProvidedTransactions ?? <Transactions>[]) {
+      debugPrint(
+          '[DM_WALLET_HISTORY_ITEM] id=${transaction.id} amount=${transaction.amount} method=${transaction.method} status=${transaction.status}');
+      debugPrint(
+          '[DM_EARNING_HISTORY_ITEM] id=${transaction.id} amount=${transaction.amount} method=${transaction.method} ref=${transaction.ref} status=${transaction.status}');
     }
     update();
   }

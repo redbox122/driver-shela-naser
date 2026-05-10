@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shellafood_delivery/api/api_client.dart';
+import 'package:shellafood_delivery/common/models/response_model.dart';
 import 'package:shellafood_delivery/features/auth/domain/models/delivery_man_body_model.dart';
 import 'package:shellafood_delivery/features/auth/domain/models/vehicle_model.dart';
 import 'package:shellafood_delivery/features/auth/domain/repositories/auth_repository_interface.dart';
@@ -21,11 +22,16 @@ class AuthRepository implements AuthRepositoryInterface {
   }
 
   @override
-  Future<bool> registerDeliveryMan(DeliveryManBodyModel deliveryManBody,
+  Future<ResponseModel> registerDeliveryMan(
+      DeliveryManBodyModel deliveryManBody,
       List<MultipartBody> multiParts) async {
     Response response = await apiClient.postMultipartData(
-        AppConstants.dmRegisterUri, deliveryManBody.toJson(), multiParts);
-    return (response.statusCode == 200);
+        AppConstants.dmRegisterUri, deliveryManBody.toJson(), multiParts,
+        handleError: false);
+    if (response.statusCode == 200) {
+      return ResponseModel(true, _responseMessage(response));
+    }
+    return ResponseModel(false, _responseMessage(response));
   }
 
   @override
@@ -196,5 +202,25 @@ class AuthRepository implements AuthRepositoryInterface {
   @override
   Future update(Map<String, dynamic> body) {
     throw UnimplementedError();
+  }
+
+  String _responseMessage(Response response) {
+    final dynamic body = response.body;
+    if (body is Map) {
+      final dynamic errors = body['errors'];
+      if (errors is List && errors.isNotEmpty) {
+        final dynamic firstError = errors.first;
+        if (firstError is Map && firstError['message'] != null) {
+          return firstError['message'].toString();
+        }
+      }
+      if (body['message'] != null) {
+        return body['message'].toString();
+      }
+      if (body['error'] != null) {
+        return body['error'].toString();
+      }
+    }
+    return response.statusText ?? 'registration_failed'.tr;
   }
 }

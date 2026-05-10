@@ -38,7 +38,7 @@ class _NewPassScreenState extends State<NewPassScreen> {
   void initState() {
     super.initState();
     if (Get.find<AuthController>().showPassView) {
-      Get.find<AuthController>().showHidePass();
+      Get.find<AuthController>().showHidePass(isUpdate: false);
     }
   }
 

@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shellafood_delivery/api/api_client.dart';
+import 'package:shellafood_delivery/common/models/response_model.dart';
 import 'package:shellafood_delivery/features/auth/domain/models/delivery_man_body_model.dart';
 import 'package:shellafood_delivery/features/auth/domain/models/vehicle_model.dart';
 
@@ -19,7 +20,7 @@ abstract class AuthServiceInterface {
   bool isNotificationActive();
   void setNotificationActive(bool isActive);
   Future<bool> clearUserNumberAndPassword();
-  Future<bool> registerDeliveryMan(
+  Future<ResponseModel> registerDeliveryMan(
       DeliveryManBodyModel deliveryManBody, List<MultipartBody> multiParts);
   Future<List<VehicleModel>?> getVehicleList();
   List<MultipartBody> prepareMultiPartsBody(

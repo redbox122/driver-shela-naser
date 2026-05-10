@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shellafood_delivery/api/api_client.dart';
@@ -132,19 +133,21 @@ class ChatController extends GetxController implements GetxService {
       required NotificationBodyModel? notificationBody,
       required int? conversationId}) async {
     bool isSuccess = false;
+    final int selectedFileCount = _chatImage?.length ?? 0;
+    debugPrint(
+        '[CHAT_SEND_START] conversation_id=$conversationId has_text=${message.trim().isNotEmpty} selected_files=$selectedFileCount');
     _isLoading = true;
     update();
-
-    List<MultipartBody> chatImage =
-        chatServiceInterface.processMultipartBody(_chatImage!);
-    MessageModel? messageModel = await chatServiceInterface.processSendMessage(
-        notificationBody, chatImage, message, conversationId);
-
-    if (messageModel != null) {
-      _imageFiles = [];
-      _chatImage = [];
-      _isSendButtonActive = false;
-      _isLoading = false;
+    try {
+      final List<MultipartBody> chatImage =
+          chatServiceInterface.processMultipartBody(_chatImage ?? <XFile>[]);
+      final MessageModel? messageModel =
+          await chatServiceInterface.processSendMessage(
+              notificationBody, chatImage, message, conversationId);
+      if (messageModel == null) {
+        debugPrint('[CHAT_SEND_ERROR] empty_response_model');
+        return false;
+      }
       _messageModel = messageModel;
       if (_messageModel!.conversation != null &&
           _messageModel!.conversation!.receiverType == 'delivery_man') {
@@ -153,34 +156,55 @@ class ChatController extends GetxController implements GetxService {
             _messageModel!.conversation!.sender;
         _messageModel!.conversation!.sender = receiver;
       }
+      _clearSelectedFiles();
+      _isSendButtonActive = false;
       isSuccess = true;
+      debugPrint(
+          '[CHAT_SEND_SUCCESS] conversation_id=$conversationId status=${messageModel.status} messages=${messageModel.messages?.length ?? 0}');
+    } catch (error) {
+      debugPrint('[CHAT_SEND_ERROR] ${error.runtimeType}');
+    } finally {
+      _isLoading = false;
+      debugPrint(
+          '[CHAT_SEND_STATE_RESET] is_loading=$_isLoading send_button_active=$_isSendButtonActive');
+      update();
     }
-    update();
     return isSuccess;
   }
 
   void pickImage(bool isRemove) async {
     final ImagePicker picker = ImagePicker();
     if (isRemove) {
-      _imageFiles = [];
-      _chatImage = [];
+      _clearSelectedFiles();
     } else {
       _imageFiles = await picker.pickMultiImage(imageQuality: 30);
       if (_imageFiles != null) {
         _chatImage = imageFiles;
-        _isSendButtonActive = true;
+        _isSendButtonActive = _chatImage!.isNotEmpty;
       }
     }
     update();
   }
 
-  void removeImage(int index) {
+  void removeImage(int index, {bool hasText = false}) {
     chatImage!.removeAt(index);
-    update();
+    updateSendButtonActivity(hasText: hasText);
   }
 
   void toggleSendButtonActivity() {
     _isSendButtonActive = !_isSendButtonActive;
     update();
+  }
+
+  void updateSendButtonActivity({required bool hasText}) {
+    _isSendButtonActive = hasText || (_chatImage?.isNotEmpty ?? false);
+    update();
+  }
+
+  void _clearSelectedFiles() {
+    final int selectedFileCount = _chatImage?.length ?? 0;
+    _imageFiles = [];
+    _chatImage = [];
+    debugPrint('[CHAT_SELECTED_FILES_CLEAR] selected_files=$selectedFileCount');
   }
 }

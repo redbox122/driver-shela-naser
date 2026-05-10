@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:shellafood_delivery/features/profile/domain/models/profile_model.dart';
 import 'package:shellafood_delivery/common/models/response_model.dart';
 import 'package:shellafood_delivery/common/widgets/custom_snackbar_widget.dart';
@@ -43,13 +44,25 @@ class ForgotPasswordController extends GetxController implements GetxService {
   }
 
   Future<ResponseModel> verifyToken(String? number) async {
+    debugPrint('[DM_FORGOT_OTP_API_START] length=${_verificationCode.length}');
     _isLoading = true;
     update();
-    ResponseModel responseModel = await forgotPasswordServiceInterface
-        .verifyToken(number, _verificationCode);
-    _isLoading = false;
-    update();
-    return responseModel;
+    try {
+      ResponseModel responseModel = await forgotPasswordServiceInterface
+          .verifyToken(number, _verificationCode);
+      if (responseModel.isSuccess) {
+        debugPrint('[DM_FORGOT_OTP_API_SUCCESS]');
+      } else {
+        debugPrint('[DM_FORGOT_OTP_API_ERROR] ${responseModel.message}');
+      }
+      return responseModel;
+    } catch (error) {
+      debugPrint('[DM_FORGOT_OTP_API_ERROR] ${error.runtimeType}');
+      return ResponseModel(false, 'verification_failed'.tr);
+    } finally {
+      _isLoading = false;
+      update();
+    }
   }
 
   Future<ResponseModel> resetPassword(String? resetToken, String phone,
@@ -65,6 +78,7 @@ class ForgotPasswordController extends GetxController implements GetxService {
 
   void updateVerificationCode(String query) {
     _verificationCode = query;
+    debugPrint('[DM_FORGOT_OTP_CHANGED] length=${query.length}');
     update();
   }
 }

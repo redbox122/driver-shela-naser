@@ -59,7 +59,7 @@ class ForgotPasswordRepository implements ForgotPasswordRepositoryInterface {
     if (response.statusCode == 200) {
       responseModel = ResponseModel(true, response.body["message"]);
     } else {
-      responseModel = ResponseModel(false, response.statusText);
+      responseModel = ResponseModel(false, _responseMessage(response));
     }
     return responseModel;
   }
@@ -88,6 +88,26 @@ class ForgotPasswordRepository implements ForgotPasswordRepositoryInterface {
 
   String _getUserToken() {
     return sharedPreferences.getString(AppConstants.token) ?? "";
+  }
+
+  String _responseMessage(Response response) {
+    final dynamic body = response.body;
+    if (body is Map) {
+      final dynamic errors = body['errors'];
+      if (errors is List && errors.isNotEmpty) {
+        final dynamic firstError = errors.first;
+        if (firstError is Map && firstError['message'] != null) {
+          return firstError['message'].toString();
+        }
+      }
+      if (body['message'] != null) {
+        return body['message'].toString();
+      }
+      if (body['error'] != null) {
+        return body['error'].toString();
+      }
+    }
+    return response.statusText ?? 'verification_failed'.tr;
   }
 
   @override

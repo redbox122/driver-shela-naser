@@ -40,6 +40,7 @@ class FinancialOverviewWidget extends StatelessWidget {
     if (isLoading) {
       return const FinancialOverviewShimmerWidget();
     }
+    debugPrint('[DM_WALLET_UI_BUILD] financial_overview');
 
     return Semantics(
       label: 'financial_overview'.tr,
@@ -97,13 +98,14 @@ class FinancialOverviewWidget extends StatelessWidget {
                                           padding: const EdgeInsets.all(
                                               Dimensions.paddingSizeSmall),
                                           decoration: BoxDecoration(
-                                            color: Colors.white.withValues(alpha: 
-                                                0.1), // Light background for dark card
+                                            color: Colors.white.withValues(
+                                                alpha:
+                                                    0.1), // Light background for dark card
                                             borderRadius: BorderRadius.circular(
                                                 Dimensions.radiusModern),
                                             border: Border.all(
-                                              color:
-                                                  Colors.white.withValues(alpha: 0.2),
+                                              color: Colors.white
+                                                  .withValues(alpha: 0.2),
                                               width: 1.0,
                                             ),
                                           ),
@@ -121,26 +123,22 @@ class FinancialOverviewWidget extends StatelessWidget {
                                           'balance'.tr,
                                           style: robotoMedium.copyWith(
                                             fontSize: Dimensions.fontSizeSmall,
-                                            color: Colors.white.withValues(alpha: 
-                                                0.8), // White text for visibility
+                                            color: Colors.white.withValues(
+                                                alpha:
+                                                    0.8), // White text for visibility
                                           ),
                                         ),
                                       ],
                                     ),
                                     const SizedBox(
                                         height: Dimensions.paddingSizeSmall),
-                                    Text(
-                                      balance != null
-                                          ? PriceConverterHelper.convertPrice(
-                                              balance!)
-                                          : '0.00',
+                                    _CurrencyAmountText(
+                                      amount: balance,
+                                      label: 'balance',
                                       style: robotoBold.copyWith(
                                         fontSize: Dimensions.fontSizeDisplay,
-                                        color: Colors
-                                            .white, // White text for visibility
+                                        color: Colors.white,
                                       ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
                                     ),
                                   ],
                                 ),
@@ -155,8 +153,9 @@ class FinancialOverviewWidget extends StatelessWidget {
                                   end: Alignment.bottomCenter,
                                   colors: [
                                     Colors.transparent,
-                                    Colors.white.withValues(alpha: 
-                                        0.2), // White separator for dark card
+                                    Colors.white.withValues(
+                                        alpha:
+                                            0.2), // White separator for dark card
                                     Colors.transparent,
                                   ],
                                 ),
@@ -174,13 +173,14 @@ class FinancialOverviewWidget extends StatelessWidget {
                                           padding: const EdgeInsets.all(
                                               Dimensions.paddingSizeSmall),
                                           decoration: BoxDecoration(
-                                            color: Colors.white.withValues(alpha: 
-                                                0.1), // Light background for dark card
+                                            color: Colors.white.withValues(
+                                                alpha:
+                                                    0.1), // Light background for dark card
                                             borderRadius: BorderRadius.circular(
                                                 Dimensions.radiusModern),
                                             border: Border.all(
-                                              color:
-                                                  Colors.white.withValues(alpha: 0.2),
+                                              color: Colors.white
+                                                  .withValues(alpha: 0.2),
                                               width: 1.0,
                                             ),
                                           ),
@@ -197,8 +197,9 @@ class FinancialOverviewWidget extends StatelessWidget {
                                           'cash_in_hand'.tr,
                                           style: robotoMedium.copyWith(
                                             fontSize: Dimensions.fontSizeSmall,
-                                            color: Colors.white.withValues(alpha: 
-                                                0.8), // White text for visibility
+                                            color: Colors.white.withValues(
+                                                alpha:
+                                                    0.8), // White text for visibility
                                           ),
                                         ),
                                         if (showWarning) ...[
@@ -230,18 +231,13 @@ class FinancialOverviewWidget extends StatelessWidget {
                                     ),
                                     const SizedBox(
                                         height: Dimensions.paddingSizeSmall),
-                                    Text(
-                                      cashInHand != null
-                                          ? PriceConverterHelper.convertPrice(
-                                              cashInHand!)
-                                          : '0.00',
+                                    _CurrencyAmountText(
+                                      amount: cashInHand,
+                                      label: 'cash_in_hand',
                                       style: robotoBold.copyWith(
                                         fontSize: Dimensions.fontSizeOverLarge,
-                                        color: Colors
-                                            .white, // White text for visibility
+                                        color: Colors.white,
                                       ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
                                     ),
                                   ],
                                 ),
@@ -268,8 +264,9 @@ class FinancialOverviewWidget extends StatelessWidget {
                                   end: Alignment.bottomCenter,
                                   colors: [
                                     Colors.transparent,
-                                    Colors.white.withValues(alpha: 
-                                        0.15), // White separator for dark card
+                                    Colors.white.withValues(
+                                        alpha:
+                                            0.15), // White separator for dark card
                                     Colors.transparent,
                                   ],
                                 ),
@@ -290,8 +287,9 @@ class FinancialOverviewWidget extends StatelessWidget {
                                   end: Alignment.bottomCenter,
                                   colors: [
                                     Colors.transparent,
-                                    Colors.white.withValues(alpha: 
-                                        0.15), // White separator for dark card
+                                    Colors.white.withValues(
+                                        alpha:
+                                            0.15), // White separator for dark card
                                     Colors.transparent,
                                   ],
                                 ),
@@ -336,18 +334,18 @@ class _EarningItemWidget extends StatelessWidget {
           title,
           style: robotoMedium.copyWith(
             fontSize: Dimensions.fontSizeSmall,
-            color: Colors.white.withValues(alpha: 0.8), // White text for visibility
+            color: Colors.white
+                .withValues(alpha: 0.8), // White text for visibility
           ),
         ),
         const SizedBox(height: Dimensions.paddingSizeExtraSmall),
-        Text(
-          amount != null ? PriceConverterHelper.convertPrice(amount!) : '0.00',
+        _CurrencyAmountText(
+          amount: amount,
+          label: title,
           style: robotoMedium.copyWith(
             fontSize: Dimensions.fontSizeDefault,
-            color: Colors.white, // White text for visibility
+            color: Colors.white,
           ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
         ),
       ],
     );
@@ -426,18 +424,15 @@ class CompactFinancialOverviewWidget extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: Dimensions.paddingSizeExtraSmall),
-                    Text(
-                      balance != null
-                          ? PriceConverterHelper.convertPrice(balance!)
-                          : '0.00',
+                    _CurrencyAmountText(
+                      amount: balance,
+                      label: 'balance',
                       style: robotoBold.copyWith(
                         fontSize: Dimensions.fontSizeLarge,
                         color: isDark
                             ? AppColors.onSurfaceDark
                             : AppColors.onSurface,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
@@ -476,23 +471,56 @@ class CompactFinancialOverviewWidget extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: Dimensions.paddingSizeExtraSmall),
-                    Text(
-                      cashInHand != null
-                          ? PriceConverterHelper.convertPrice(cashInHand!)
-                          : '0.00',
+                    _CurrencyAmountText(
+                      amount: cashInHand,
+                      label: 'cash_in_hand',
                       style: robotoBold.copyWith(
                         fontSize: Dimensions.fontSizeLarge,
                         color: isDark
                             ? AppColors.onSurfaceDark
                             : AppColors.onSurface,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CurrencyAmountText extends StatelessWidget {
+  final double? amount;
+  final String label;
+  final TextStyle style;
+
+  const _CurrencyAmountText({
+    required this.amount,
+    required this.label,
+    required this.style,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final String renderedAmount = amount != null
+        ? PriceConverterHelper.convertPrice(amount!)
+        : PriceConverterHelper.convertPrice(0);
+    debugPrint('[DM_WALLET_UI_AMOUNT_RENDER] label=$label amount=$amount');
+    return Directionality(
+      textDirection: TextDirection.ltr,
+      child: Align(
+        alignment: AlignmentDirectional.centerStart,
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: AlignmentDirectional.centerStart,
+          child: Text(
+            renderedAmount,
+            style: style,
+            maxLines: 1,
+            softWrap: false,
           ),
         ),
       ),

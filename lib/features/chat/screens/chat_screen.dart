@@ -175,10 +175,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                     : const SizedBox()
                                 : const Center(
                                     child: CircularProgressIndicator())),
-                        (chatController.messageModel != null &&
-                                (chatController.messageModel!.status! ||
-                                    chatController
-                                        .messageModel!.messages!.isEmpty))
+                        chatController.messageModel != null
                             ? Container(
                                 color: Theme.of(context).cardColor,
                                 child: Column(children: [
@@ -252,7 +249,13 @@ class _ChatScreenState extends State<ChatScreen> {
                                                               onTap: () =>
                                                                   chatController
                                                                       .removeImage(
-                                                                          index),
+                                                                index,
+                                                                hasText:
+                                                                    _inputMessageController
+                                                                        .text
+                                                                        .trim()
+                                                                        .isNotEmpty,
+                                                              ),
                                                               child: Container(
                                                                 decoration:
                                                                     const BoxDecoration(
@@ -334,30 +337,16 @@ class _ChatScreenState extends State<ChatScreen> {
                                                   Dimensions.fontSizeLarge),
                                         ),
                                         onSubmitted: (String newText) {
-                                          if (newText.trim().isNotEmpty &&
-                                              !Get.find<ChatController>()
-                                                  .isSendButtonActive) {
-                                            Get.find<ChatController>()
-                                                .toggleSendButtonActivity();
-                                          } else if (newText.isEmpty &&
-                                              Get.find<ChatController>()
-                                                  .isSendButtonActive) {
-                                            Get.find<ChatController>()
-                                                .toggleSendButtonActivity();
-                                          }
+                                          Get.find<ChatController>()
+                                              .updateSendButtonActivity(
+                                            hasText: newText.trim().isNotEmpty,
+                                          );
                                         },
                                         onChanged: (String newText) {
-                                          if (newText.trim().isNotEmpty &&
-                                              !Get.find<ChatController>()
-                                                  .isSendButtonActive) {
-                                            Get.find<ChatController>()
-                                                .toggleSendButtonActivity();
-                                          } else if (newText.isEmpty &&
-                                              Get.find<ChatController>()
-                                                  .isSendButtonActive) {
-                                            Get.find<ChatController>()
-                                                .toggleSendButtonActivity();
-                                          }
+                                          Get.find<ChatController>()
+                                              .updateSendButtonActivity(
+                                            hasText: newText.trim().isNotEmpty,
+                                          );
                                         },
                                       ),
                                     ),
@@ -366,11 +355,15 @@ class _ChatScreenState extends State<ChatScreen> {
                                       return !chatController.isLoading
                                           ? InkWell(
                                               onTap: () async {
+                                                debugPrint(
+                                                    '[CHAT_SEND_TAP] conversation_id=${widget.conversationId} has_text=${_inputMessageController.text.trim().isNotEmpty} selected_files=${chatController.chatImage?.length ?? 0}');
                                                 if (chatController
                                                     .isSendButtonActive) {
                                                   if (chatController
                                                           .chatImage!.length >
                                                       3) {
+                                                    debugPrint(
+                                                        '[CHAT_SEND_BLOCKED_REASON] too_many_selected_files');
                                                     showCustomSnackBar(
                                                         'you_do_not_send_more_then_3_photos'
                                                             .tr);
@@ -386,9 +379,15 @@ class _ChatScreenState extends State<ChatScreen> {
                                                           widget.conversationId,
                                                     )
                                                         .then((success) {
-                                                      _inputMessageController
-                                                          .clear();
                                                       if (success) {
+                                                        _inputMessageController
+                                                            .clear();
+                                                        debugPrint(
+                                                            '[CHAT_INPUT_CLEAR]');
+                                                        chatController
+                                                            .updateSendButtonActivity(
+                                                          hasText: false,
+                                                        );
                                                         Future.delayed(
                                                             const Duration(
                                                                 seconds: 2),
@@ -405,6 +404,8 @@ class _ChatScreenState extends State<ChatScreen> {
                                                     });
                                                   }
                                                 } else {
+                                                  debugPrint(
+                                                      '[CHAT_SEND_BLOCKED_REASON] empty_message_and_no_selected_files');
                                                   showCustomSnackBar(
                                                       'write_somethings'.tr);
                                                 }

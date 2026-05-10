@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shellafood_delivery/api/api_client.dart';
+import 'package:shellafood_delivery/common/models/response_model.dart';
 import 'package:shellafood_delivery/common/widgets/custom_snackbar_widget.dart';
 import 'package:shellafood_delivery/features/auth/domain/models/delivery_man_body_model.dart';
 import 'package:shellafood_delivery/features/auth/domain/models/vehicle_model.dart';
@@ -17,7 +18,8 @@ class AuthService implements AuthServiceInterface {
   }
 
   @override
-  Future<bool> registerDeliveryMan(DeliveryManBodyModel deliveryManBody,
+  Future<ResponseModel> registerDeliveryMan(
+      DeliveryManBodyModel deliveryManBody,
       List<MultipartBody> multiParts) async {
     return await authRepositoryInterface.registerDeliveryMan(
         deliveryManBody, multiParts);

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:shellafood_delivery/api/api_client.dart';
 import 'package:shellafood_delivery/features/auth/domain/models/delivery_man_body_model.dart';
 import 'package:shellafood_delivery/common/models/response_model.dart';
@@ -94,30 +95,62 @@ class AuthController extends GetxController implements GetxService {
   }
 
   Future<void> registerDeliveryMan(DeliveryManBodyModel deliveryManBody) async {
+    final int identityImagesCount = _pickedIdentities.length;
+    final bool isLicenseIdentity =
+        deliveryManBody.identityType == 'driving_license';
+    debugPrint(
+        '[DM_REGISTER_API_START] first_name_present=${deliveryManBody.fName?.trim().isNotEmpty ?? false} '
+        'last_name_present=${deliveryManBody.lName?.trim().isNotEmpty ?? false} '
+        'phone_present=${deliveryManBody.phone?.trim().isNotEmpty ?? false} '
+        'email_present=${deliveryManBody.email?.trim().isNotEmpty ?? false} '
+        'identity_images_count=$identityImagesCount '
+        'license_images_count=${isLicenseIdentity ? identityImagesCount : 0} '
+        'profile_image_selected=${_pickedImage != null}');
     _isLoading = true;
     update();
     List<MultipartBody> multiParts = authServiceInterface.prepareMultiPartsBody(
         _pickedImage, _pickedIdentities);
-    bool isSuccess = await authServiceInterface.registerDeliveryMan(
-        deliveryManBody, multiParts);
-    if (isSuccess) {
-      Get.offAllNamed(RouteHelper.getSignInRoute());
-      showCustomSnackBar('delivery_man_registration_successful'.tr,
-          isError: false);
+    try {
+      ResponseModel responseModel = await authServiceInterface
+          .registerDeliveryMan(deliveryManBody, multiParts);
+      if (responseModel.isSuccess) {
+        debugPrint('[DM_REGISTER_API_SUCCESS]');
+        Get.offAllNamed(RouteHelper.getSignInRoute());
+        showCustomSnackBar('delivery_man_registration_successful'.tr,
+            isError: false);
+      } else {
+        debugPrint('[DM_REGISTER_API_ERROR] ${responseModel.message}');
+        showCustomSnackBar(responseModel.message ?? 'registration_failed'.tr);
+      }
+    } catch (error) {
+      debugPrint('[DM_REGISTER_API_ERROR] ${error.runtimeType}');
+      showCustomSnackBar('registration_failed'.tr);
+    } finally {
+      _isLoading = false;
+      update();
     }
-    _isLoading = false;
-    update();
   }
 
   Future<void> getVehicleList() async {
-    List<VehicleModel>? vehicles = await authServiceInterface.getVehicleList();
-    if (vehicles != null) {
+    try {
+      List<VehicleModel>? vehicles =
+          await authServiceInterface.getVehicleList();
       _vehicles = [];
       _vehicleIds = [];
-      _vehicles!.addAll(vehicles);
-      _vehicleIds!.addAll(authServiceInterface.vehicleIds(vehicles));
+      if (vehicles != null) {
+        _vehicles!.addAll(vehicles);
+        _vehicleIds!.addAll(authServiceInterface.vehicleIds(vehicles));
+      }
+      debugPrint(
+          '[DM_REGISTER_VEHICLE_FETCH_SUCCESS] count=${_vehicles?.length ?? 0}');
+    } catch (error) {
+      debugPrint('[DM_REGISTER_ZONE_FETCH_ERROR] vehicle_${error.runtimeType}');
+      _vehicles = <VehicleModel>[];
+      _vehicleIds = <int?>[0];
+    } finally {
+      debugPrint('[DM_REGISTER_LOADING_RESET] vehicle_list');
+      update();
     }
-    update();
   }
 
   void setVehicleIndex(int? index, bool notify) {

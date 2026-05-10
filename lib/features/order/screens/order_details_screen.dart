@@ -27,9 +27,7 @@ import 'package:shellafood_delivery/features/order/widgets/order_item_widget.dar
 import 'package:shellafood_delivery/features/order/widgets/verify_delivery_sheet_widget.dart';
 import 'package:shellafood_delivery/features/order/widgets/info_card_widget.dart';
 import 'package:shellafood_delivery/features/order/widgets/slider_button_widget.dart';
-import 'package:shellafood_delivery/features/order/screens/order_debug_widget.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 
 class OrderDetailsScreen extends StatefulWidget {
@@ -754,11 +752,6 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                           child: SingleChildScrollView(
                         physics: const BouncingScrollPhysics(),
                         child: Column(children: [
-                          // 🔍 DEBUG WIDGET - Debug only
-                          kDebugMode
-                              ? OrderDebugWidget(order: controllerOrderModel)
-                              : const SizedBox.shrink(),
-
                           Row(children: [
                             Text(
                                 '${parcel! ? 'delivery_id'.tr : 'order_id'.tr}:',
