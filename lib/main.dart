@@ -26,6 +26,7 @@ final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
 Future<void> main() async {
   // SS-06: ensureInitialized must come before any platform-channel calls
   WidgetsFlutterBinding.ensureInitialized();
+  debugPrint('[APP_BASE_URL] ${AppConstants.baseUrl}');
   usePathUrlStrategy();
 
   await Firebase.initializeApp(
