@@ -104,6 +104,8 @@ class AppConstants {
   static const String zoneTopic = 'zone_topic';
   static const String localizationKey = 'X-localization';
   static const String langIntro = 'language_intro';
+  static const String driverQrReferralToken =
+      'shellafood_delivery_driver_qr_referral_token';
 
   // Status
   static const String pending = 'pending';

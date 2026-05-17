@@ -18,7 +18,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
+import 'helper/driver_qr_referral_helper.dart';
 import 'helper/get_di.dart' as di;
+import 'package:shared_preferences/shared_preferences.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
@@ -34,6 +36,11 @@ Future<void> main() async {
   );
 
   Map<String, Map<String, String>> languages = await di.init();
+
+  if (GetPlatform.isAndroid) {
+    await DriverQrReferralHelper.initFromInstallReferrer(
+        Get.find<SharedPreferences>());
+  }
 
   NotificationBodyModel? body;
   try {

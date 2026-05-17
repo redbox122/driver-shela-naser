@@ -7,6 +7,7 @@ import 'package:shellafood_delivery/common/models/response_model.dart';
 import 'package:shellafood_delivery/features/auth/domain/models/delivery_man_body_model.dart';
 import 'package:shellafood_delivery/features/auth/domain/models/vehicle_model.dart';
 import 'package:shellafood_delivery/features/auth/domain/repositories/auth_repository_interface.dart';
+import 'package:shellafood_delivery/helper/driver_qr_referral_helper.dart';
 import 'package:shellafood_delivery/util/app_constants.dart';
 
 class AuthRepository implements AuthRepositoryInterface {
@@ -32,10 +33,20 @@ class AuthRepository implements AuthRepositoryInterface {
   Future<ResponseModel> registerDeliveryMan(
       DeliveryManBodyModel deliveryManBody,
       List<MultipartBody> multiParts) async {
+    final Map<String, String> body = deliveryManBody.toJson();
+    final String? referralToken =
+        DriverQrReferralHelper.getStoredToken(sharedPreferences);
+    if (referralToken != null) {
+      body['referral_token'] = referralToken;
+      debugPrint(
+          '[QR_REFERRAL_DRIVER_REGISTER_PAYLOAD_ATTACHED] token=$referralToken');
+    }
     Response response = await apiClient.postMultipartData(
-        AppConstants.dmRegisterUri, deliveryManBody.toJson(), multiParts,
-        handleError: false);
+        AppConstants.dmRegisterUri, body, multiParts, handleError: false);
     if (response.statusCode == 200) {
+      if (referralToken != null) {
+        await DriverQrReferralHelper.clearStoredToken(sharedPreferences);
+      }
       return ResponseModel(true, _responseMessage(response));
     }
     return ResponseModel(false, _responseMessage(response));
