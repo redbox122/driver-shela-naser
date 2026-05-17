@@ -5,6 +5,7 @@ import 'package:shellafood_delivery/interface/repository_interface.dart';
 
 abstract class AuthRepositoryInterface implements RepositoryInterface {
   Future<dynamic> login(String phone, String password);
+  Future<dynamic> verifyLoginOtp(String phone, String otp);
   Future<dynamic> updateToken();
   Future<bool> saveUserToken(String token, String zoneTopic);
   String getUserToken();

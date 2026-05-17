@@ -521,5 +521,10 @@
   "online_short": "On",
   "offline_short": "Off",
   "currency_symbol": "SAR",
-  "off": "OFF"
+  "off": "OFF",
+  "login_failed": "Error al iniciar sesión",
+  "login_otp_cooldown": "Espere antes de solicitar un nuevo código de verificación",
+  "login_otp_not_sent": "No se pudo enviar el código de verificación. Inténtelo más tarde.",
+  "login_otp_enter_6_digits": "Introduzca el código de verificación de 6 dígitos",
+  "login_otp_resend_unavailable": "Vuelva a iniciar sesión y envíe sus credenciales de nuevo para reenviar el código"
 }

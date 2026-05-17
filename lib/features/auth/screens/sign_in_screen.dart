@@ -206,8 +206,19 @@ class SignInScreen extends StatelessWidget {
     } else {
       authController
           .login(numberWithCountryCode, password)
-          .then((status) async {
-        if (status.isSuccess) {
+          .then((result) async {
+        if (result.isOtpRequired) {
+          debugPrint(
+              '[DRIVER_LOGIN_OTP_NAVIGATE] phone=${result.otpPhone} otp_sent=${result.otpSent}');
+          Get.toNamed(
+            RouteHelper.getDriverLoginOtpRoute(),
+            arguments: <String, dynamic>{
+              'phone': result.otpPhone,
+              'otp_sent': result.otpSent,
+              'retry_after_seconds': result.retryAfterSeconds,
+            },
+          );
+        } else if (result.isSuccess) {
           if (authController.isActiveRememberMe) {
             authController.saveUserNumberAndPassword(
                 phone, password, countryCode);
@@ -216,7 +227,7 @@ class SignInScreen extends StatelessWidget {
           }
           Get.offAllNamed(RouteHelper.getInitialRoute());
         } else {
-          showCustomSnackBar(status.message);
+          showCustomSnackBar(result.message);
         }
       });
     }

@@ -163,8 +163,22 @@ class _NewPassScreenState extends State<NewPassScreen> {
           if (value.isSuccess) {
             Get.find<AuthController>()
                 .login('+${widget.number!.trim()}', password)
-                .then((value) async {
-              Get.offAllNamed(RouteHelper.getInitialRoute());
+                .then((result) async {
+              if (result.isOtpRequired) {
+                Get.offNamed(
+                  RouteHelper.getDriverLoginOtpRoute(),
+                  arguments: <String, dynamic>{
+                    'phone': result.otpPhone,
+                    'otp_sent': result.otpSent,
+                    'retry_after_seconds': result.retryAfterSeconds,
+                  },
+                );
+              } else if (result.isSuccess) {
+                Get.offAllNamed(RouteHelper.getInitialRoute());
+              } else {
+                showCustomSnackBar(result.message);
+                Get.offAllNamed(RouteHelper.getSignInRoute());
+              }
             });
           } else {
             showCustomSnackBar(value.message);

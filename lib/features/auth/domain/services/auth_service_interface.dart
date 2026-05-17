@@ -7,6 +7,7 @@ import 'package:shellafood_delivery/features/auth/domain/models/vehicle_model.da
 
 abstract class AuthServiceInterface {
   Future<Response> login(String phone, String password);
+  Future<Response> verifyLoginOtp(String phone, String otp);
   Future<Response> updateToken();
   Future<bool> saveUserToken(String token, String zoneTopic);
   String getUserToken();

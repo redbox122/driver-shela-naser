@@ -521,5 +521,10 @@
   "online_short": "অন",
   "offline_short": "অফ",
   "currency_symbol": "SAR",
-  "off": "ছাড়"
+  "off": "ছাড়",
+  "login_failed": "লগইন ব্যর্থ হয়েছে",
+  "login_otp_cooldown": "নতুন যাচাইকরণ কোড চাওয়ার আগে অপেক্ষা করুন",
+  "login_otp_not_sent": "যাচাইকরণ কোড পাঠানো যায়নি। পরে আবার চেষ্টা করুন।",
+  "login_otp_enter_6_digits": "৬ অঙ্কের যাচাইকরণ কোড লিখুন",
+  "login_otp_resend_unavailable": "কোড পুনরায় পাঠাতে সাইন ইনে ফিরে আপনার তথ্য আবার জমা দিন"
 }

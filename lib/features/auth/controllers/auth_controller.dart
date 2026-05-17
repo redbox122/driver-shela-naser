@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:shellafood_delivery/api/api_client.dart';
 import 'package:shellafood_delivery/features/auth/domain/models/delivery_man_body_model.dart';
+import 'package:shellafood_delivery/features/auth/domain/models/driver_login_result_model.dart';
 import 'package:shellafood_delivery/common/models/response_model.dart';
 import 'package:shellafood_delivery/features/auth/domain/models/vehicle_model.dart';
 import 'package:shellafood_delivery/helper/route_helper.dart';
@@ -76,22 +77,164 @@ class AuthController extends GetxController implements GetxService {
   bool _acceptTerms = true;
   bool get acceptTerms => _acceptTerms;
 
-  Future<ResponseModel> login(String phone, String password) async {
+  String _loginOtpVerificationCode = '';
+  String get loginOtpVerificationCode => _loginOtpVerificationCode;
+
+  String? _pendingLoginApiPhone;
+  String? _pendingLoginPassword;
+  String? _loginOtpDisplayPhone;
+  bool _loginOtpSent = true;
+  int? _loginOtpRetryAfterSeconds;
+
+  String? get loginOtpDisplayPhone => _loginOtpDisplayPhone;
+  bool get loginOtpSent => _loginOtpSent;
+  int? get loginOtpRetryAfterSeconds => _loginOtpRetryAfterSeconds;
+  bool get canResendLoginOtp =>
+      _pendingLoginApiPhone != null &&
+      _pendingLoginPassword != null &&
+      _pendingLoginPassword!.isNotEmpty;
+
+  Future<DriverLoginResult> login(String phone, String password) async {
+    debugPrint('[DRIVER_LOGIN_OTP_STEP1_REQUEST] phone=$phone');
     _isLoading = true;
     update();
+    _pendingLoginApiPhone = phone;
+    _pendingLoginPassword = password;
     Response response = await authServiceInterface.login(phone, password);
+    DriverLoginResult loginResult;
+    if (response.statusCode == 200) {
+      final dynamic body = response.body;
+      if (body is Map && body['otp_required'] == true) {
+        final String otpPhone = body['phone']?.toString() ?? phone;
+        final bool otpSent = body['otp_sent'] == true;
+        final int? retryAfterSeconds = _parseRetryAfterSeconds(
+            body['retry_after_seconds']);
+        _loginOtpDisplayPhone = otpPhone;
+        _loginOtpSent = otpSent;
+        _loginOtpRetryAfterSeconds = retryAfterSeconds;
+        debugPrint(
+            '[DRIVER_LOGIN_OTP_REQUIRED] phone=$otpPhone otp_sent=$otpSent retry_after_seconds=$retryAfterSeconds');
+        loginResult = DriverLoginResult.otpRequired(
+          otpPhone: otpPhone,
+          otpSent: otpSent,
+          retryAfterSeconds: retryAfterSeconds,
+        );
+      } else if (body is Map && body['token'] != null) {
+        await _saveTokenAndUpdateFcm(body);
+        loginResult = DriverLoginResult.completed();
+      } else {
+        loginResult = DriverLoginResult.failure(
+            _extractResponseMessage(response, 'login_failed'.tr));
+      }
+    } else {
+      _clearPendingLoginCredentials();
+      loginResult =
+          DriverLoginResult.failure(_extractResponseMessage(response, null));
+    }
+    _isLoading = false;
+    update();
+    return loginResult;
+  }
+
+  Future<ResponseModel> verifyLoginOtp(String phone, String otp) async {
+    debugPrint('[DRIVER_LOGIN_OTP_VERIFY_REQUEST] phone=$phone');
+    _isLoading = true;
+    update();
+    Response response =
+        await authServiceInterface.verifyLoginOtp(phone, otp);
     ResponseModel responseModel;
     if (response.statusCode == 200) {
-      authServiceInterface.saveUserToken(
-          response.body['token'], response.body['topic']);
-      await authServiceInterface.updateToken();
-      responseModel = ResponseModel(true, 'successful');
+      final dynamic body = response.body;
+      if (body is Map && body['token'] != null) {
+        debugPrint('[DRIVER_LOGIN_OTP_VERIFY_SUCCESS]');
+        await _saveTokenAndUpdateFcm(body);
+        _clearPendingLoginCredentials();
+        responseModel = ResponseModel(true, 'successful');
+      } else {
+        debugPrint('[DRIVER_LOGIN_OTP_VERIFY_FAILED] missing_token');
+        responseModel = ResponseModel(
+            false, _extractResponseMessage(response, 'login_failed'.tr));
+      }
     } else {
-      responseModel = ResponseModel(false, response.statusText);
+      debugPrint(
+          '[DRIVER_LOGIN_OTP_VERIFY_FAILED] status=${response.statusCode}');
+      responseModel =
+          ResponseModel(false, _extractResponseMessage(response, null));
     }
     _isLoading = false;
     update();
     return responseModel;
+  }
+
+  Future<DriverLoginResult> resendLoginOtp() async {
+    if (!canResendLoginOtp) {
+      return DriverLoginResult.failure('login_otp_resend_unavailable'.tr);
+    }
+    debugPrint('[DRIVER_LOGIN_OTP_STEP1_REQUEST] resend=true');
+    return login(_pendingLoginApiPhone!, _pendingLoginPassword!);
+  }
+
+  void updateLoginOtpCode(String query) {
+    _loginOtpVerificationCode = query;
+    update();
+  }
+
+  void clearLoginOtpSession() {
+    _loginOtpVerificationCode = '';
+    _loginOtpDisplayPhone = null;
+    _loginOtpSent = true;
+    _loginOtpRetryAfterSeconds = null;
+    _clearPendingLoginCredentials();
+    update();
+  }
+
+  Future<void> _saveTokenAndUpdateFcm(Map<dynamic, dynamic> body) async {
+    final String token = body['token'].toString();
+    final String zoneTopic =
+        body['zone_topic']?.toString() ?? body['topic']?.toString() ?? '';
+    await authServiceInterface.saveUserToken(token, zoneTopic);
+    debugPrint('[DRIVER_LOGIN_OTP_TOKEN_SAVED]');
+    await authServiceInterface.updateToken();
+    debugPrint('[DRIVER_LOGIN_OTP_FINAL_NAVIGATION]');
+  }
+
+  void _clearPendingLoginCredentials() {
+    _pendingLoginApiPhone = null;
+    _pendingLoginPassword = null;
+  }
+
+  int? _parseRetryAfterSeconds(dynamic value) {
+    if (value == null) {
+      return null;
+    }
+    if (value is int) {
+      return value > 0 ? value : null;
+    }
+    if (value is num) {
+      final int seconds = value.toInt();
+      return seconds > 0 ? seconds : null;
+    }
+    return int.tryParse(value.toString());
+  }
+
+  String _extractResponseMessage(Response response, String? fallback) {
+    final dynamic body = response.body;
+    if (body is Map) {
+      final dynamic errors = body['errors'];
+      if (errors is List && errors.isNotEmpty) {
+        final dynamic firstError = errors.first;
+        if (firstError is Map && firstError['message'] != null) {
+          return firstError['message'].toString();
+        }
+      }
+      if (body['message'] != null) {
+        return body['message'].toString();
+      }
+      if (body['error'] != null) {
+        return body['error'].toString();
+      }
+    }
+    return response.statusText ?? fallback ?? 'something_went_wrong'.tr;
   }
 
   Future<void> registerDeliveryMan(DeliveryManBodyModel deliveryManBody) async {

@@ -531,5 +531,10 @@
   "online_short": "On",
   "offline_short": "Off",
   "currency_symbol": "SAR",
-  "off": "OFF"
+  "off": "OFF",
+  "login_failed": "Login failed",
+  "login_otp_cooldown": "Please wait before requesting a new verification code",
+  "login_otp_not_sent": "Verification code could not be sent. Please try again later.",
+  "login_otp_enter_6_digits": "Please enter the 6-digit verification code",
+  "login_otp_resend_unavailable": "Please return to sign in and submit your credentials again to resend the code"
 }

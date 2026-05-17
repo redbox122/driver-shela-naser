@@ -22,6 +22,13 @@ class AuthRepository implements AuthRepositoryInterface {
   }
 
   @override
+  Future<Response> verifyLoginOtp(String phone, String otp) async {
+    return await apiClient.postData(
+        AppConstants.verifyLoginOtpUri, {"phone": phone, "otp": otp},
+        handleError: false);
+  }
+
+  @override
   Future<ResponseModel> registerDeliveryMan(
       DeliveryManBodyModel deliveryManBody,
       List<MultipartBody> multiParts) async {

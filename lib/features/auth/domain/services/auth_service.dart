@@ -18,6 +18,11 @@ class AuthService implements AuthServiceInterface {
   }
 
   @override
+  Future<Response> verifyLoginOtp(String phone, String otp) async {
+    return await authRepositoryInterface.verifyLoginOtp(phone, otp);
+  }
+
+  @override
   Future<ResponseModel> registerDeliveryMan(
       DeliveryManBodyModel deliveryManBody,
       List<MultipartBody> multiParts) async {

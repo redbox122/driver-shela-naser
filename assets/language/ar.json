@@ -529,5 +529,10 @@
   "online_short": "متصل",
   "offline_short": "غير متصل",
   "currency_symbol": "ر.س",
-  "off": "خصم"
+  "off": "خصم",
+  "login_failed": "فشل تسجيل الدخول",
+  "login_otp_cooldown": "يرجى الانتظار قبل طلب رمز تحقق جديد",
+  "login_otp_not_sent": "تعذر إرسال رمز التحقق. يرجى المحاولة لاحقاً.",
+  "login_otp_enter_6_digits": "يرجى إدخال رمز التحقق المكون من 6 أرقام",
+  "login_otp_resend_unavailable": "يرجى العودة لتسجيل الدخول وإعادة إرسال بيانات الاعتماد لإعادة إرسال الرمز"
 }

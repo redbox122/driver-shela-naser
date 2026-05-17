@@ -15,6 +15,8 @@ class AppConstants {
   static const String resetPasswordUri =
       '/api/v1/auth/delivery-man/reset-password';
   static const String loginUri = '/api/v1/auth/delivery-man/login';
+  static const String verifyLoginOtpUri =
+      '/api/v1/auth/delivery-man/verify-login-otp';
   static const String tokenUri = '/api/v1/delivery-man/update-fcm-token';
   static const String currentOrdersUri =
       '/api/v1/delivery-man/current-orders?token=';

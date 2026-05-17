@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:shellafood_delivery/features/notification/domain/models/notification_body_model.dart';
 import 'package:shellafood_delivery/features/chat/domain/models/conversation_model.dart';
 import 'package:shellafood_delivery/features/auth/screens/sign_in_screen.dart';
+import 'package:shellafood_delivery/features/auth/screens/driver_login_otp_screen.dart';
 import 'package:shellafood_delivery/features/auth/screens/delivery_man_registration_screen.dart';
 import 'package:shellafood_delivery/features/cash_in_hand/screens/cash_in_hand_screen.dart';
 import 'package:shellafood_delivery/features/cash_in_hand/screens/transaction_history_screen.dart';
@@ -32,6 +33,7 @@ class RouteHelper {
   static const String initial = '/';
   static const String splash = '/splash';
   static const String signIn = '/sign-in';
+  static const String driverLoginOtp = '/driver-login-otp';
   static const String verification = '/verification';
   static const String main = '/main';
   static const String forgotPassword = '/forgot-password';
@@ -69,6 +71,7 @@ class RouteHelper {
   }
 
   static String getSignInRoute() => signIn;
+  static String getDriverLoginOtpRoute() => driverLoginOtp;
   static String getVerificationRoute(String number) =>
       '$verification?number=$number';
   static String getMainRoute(String page) => '$main?page=$page';
@@ -155,6 +158,7 @@ class RouteHelper {
           return SplashScreen(body: data);
         }),
     GetPage(name: signIn, page: () => SignInScreen()),
+    GetPage(name: driverLoginOtp, page: () => const DriverLoginOtpScreen()),
     GetPage(
         name: verification,
         page: () => VerificationScreen(number: Get.parameters['number'])),
