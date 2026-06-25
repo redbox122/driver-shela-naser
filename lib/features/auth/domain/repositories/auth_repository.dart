@@ -88,8 +88,11 @@ class AuthRepository implements AuthRepositoryInterface {
     }
     if (!GetPlatform.isWeb) {
       FirebaseMessaging.instance.subscribeToTopic(AppConstants.topic);
-      FirebaseMessaging.instance.subscribeToTopic(
-          sharedPreferences.getString(AppConstants.zoneTopic)!);
+      final String? zoneTopic =
+          sharedPreferences.getString(AppConstants.zoneTopic);
+      if (zoneTopic != null && zoneTopic.isNotEmpty) {
+        FirebaseMessaging.instance.subscribeToTopic(zoneTopic);
+      }
     }
     return await apiClient.postData(AppConstants.tokenUri,
         {"_method": "put", "token": getUserToken(), "fcm_token": deviceToken},
@@ -99,7 +102,18 @@ class AuthRepository implements AuthRepositoryInterface {
   Future<String?> _saveDeviceToken() async {
     String? deviceToken = '';
     if (!GetPlatform.isWeb) {
-      deviceToken = (await FirebaseMessaging.instance.getToken())!;
+      // FCM getToken() can hang indefinitely when APNs is unavailable
+      // (iOS simulators always, and real devices when push registration
+      // fails). Guard it with a timeout + null/error fallback so login and
+      // splash never block on it — an empty device token is acceptable.
+      try {
+        deviceToken = await FirebaseMessaging.instance
+                .getToken()
+                .timeout(const Duration(seconds: 5), onTimeout: () => null) ??
+            '';
+      } catch (_) {
+        deviceToken = '';
+      }
     }
     assert(() {
       final String masked = (deviceToken == null || deviceToken.length < 8)
