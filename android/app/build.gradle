@@ -70,9 +70,9 @@ android {
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig signingConfigs.release
+            // Sign release with the debug key so a sideloadable test APK builds
+            // without a production keystore (key.properties).
+            signingConfig signingConfigs.debug
         }
     }
 }
