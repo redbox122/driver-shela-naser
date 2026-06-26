@@ -87,11 +87,13 @@ class ProfileController extends GetxController implements GetxService {
     _pickedFile = null;
   }
 
-  Future<bool> updateActiveStatus() async {
+  Future<bool> updateActiveStatus({int? targetActive}) async {
     ResponseModel responseModel =
-        await profileServiceInterface.updateActiveStatus();
+        await profileServiceInterface.updateActiveStatus(active: targetActive);
     if (responseModel.isSuccess) {
-      _profileModel!.active = _profileModel!.active == 0 ? 1 : 0;
+      // اضبط الحالة المحلية على القيمة المطلوبة صراحةً (لا قلب أعمى) لتفادي عدم التزامن
+      _profileModel!.active =
+          targetActive ?? (_profileModel!.active == 0 ? 1 : 0);
       showCustomSnackBar(responseModel.message, isError: false);
       if (_profileModel!.active == 1) {
         await _handleLocationPermissionCheck();

@@ -70,9 +70,9 @@ android {
 
     buildTypes {
         release {
-            // Sign release with the debug key so a sideloadable test APK builds
-            // without a production keystore (key.properties).
-            signingConfig signingConfigs.debug
+            // شله كابتن: التوقيع بمفتاح الإصدار (keystore) إن وُجد key.properties،
+            // وإلا التوقيع بمفتاح debug (لبناء APK تجريبي).
+            signingConfig keystorePropertiesFile.exists() ? signingConfigs.release : signingConfigs.debug
         }
     }
 }

@@ -30,6 +30,9 @@ class AppConstants {
       '/api/v1/delivery-man/update-order-status';
   static const String updatePaymentStatusUri =
       '/api/v1/delivery-man/update-payment-status';
+  // كابتن شله: الكابتن يُصدر فاتورة المتجر (مبلغ + صورة) — للمحاسبة بالداش بورد
+  static const String submitInvoiceUri =
+      '/api/v1/delivery-man/submit-invoice';
   static const String orderDetailsUri =
       '/api/v1/delivery-man/order-details?token=';
   static const String acceptOrderUri = '/api/v1/delivery-man/accept-order';

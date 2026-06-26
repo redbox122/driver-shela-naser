@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shellafood_delivery/api/api_client.dart';
 import 'package:shellafood_delivery/common/models/response_model.dart';
@@ -363,6 +364,28 @@ class OrderRepository implements OrderRepositoryInterface {
   @override
   Future update(Map<String, dynamic> body) {
     throw UnimplementedError();
+  }
+
+  @override
+  Future<ResponseModel> submitInvoice(
+      int orderId, double amount, XFile? image) async {
+    List<MultipartBody> attachments = [];
+    if (image != null) {
+      attachments.add(MultipartBody('image', image));
+    }
+    Response response = await apiClient.postMultipartData(
+        AppConstants.submitInvoiceUri,
+        {
+          'token': _getUserToken(),
+          'order_id': orderId.toString(),
+          'amount': amount.toString(),
+        },
+        attachments,
+        handleError: false);
+    if (response.statusCode == 200) {
+      return ResponseModel(true, response.body['message'] ?? 'success');
+    }
+    return ResponseModel(false, response.statusText ?? 'failed');
   }
 
   @override

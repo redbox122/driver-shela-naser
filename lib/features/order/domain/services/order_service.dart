@@ -123,4 +123,10 @@ class OrderService implements OrderServiceInterface {
   Future<bool> setPriceService(int orderId, double price) {
     return orderRepositoryInterface.setPriceService(orderId, price);
   }
+
+  @override
+  Future<ResponseModel> submitInvoice(
+      int orderId, double amount, XFile? image) async {
+    return await orderRepositoryInterface.submitInvoice(orderId, amount, image);
+  }
 }

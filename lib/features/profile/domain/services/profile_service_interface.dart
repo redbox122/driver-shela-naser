@@ -9,7 +9,7 @@ abstract class ProfileServiceInterface {
   Future<ProfileModel?> getProfileInfo();
   Future<ResponseModel> updateProfile(
       ProfileModel userInfoModel, XFile? data, String token);
-  Future<ResponseModel> updateActiveStatus();
+  Future<ResponseModel> updateActiveStatus({int? active});
   Future<void> recordWebSocketLocation(
       RecordLocationBodyModel recordLocationBody);
   Future<Response> recordLocation(RecordLocationBodyModel recordLocationBody);

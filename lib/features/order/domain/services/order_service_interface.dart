@@ -23,6 +23,7 @@ abstract class OrderServiceInterface {
   List<IgnoreModel> getIgnoreList();
   void setIgnoreList(List<IgnoreModel> ignoreList);
   Future<bool> setPriceService(int orderId, double price);
+  Future<ResponseModel> submitInvoice(int orderId, double amount, XFile? image);
   List<OrderModel> processLatestOrders(
       List<OrderModel> latestOrderList, List<int?> ignoredIdList);
   List<int?> prepareIgnoreIdList(List<IgnoreModel> ignoredRequests);

@@ -26,7 +26,9 @@ import 'package:shellafood_delivery/features/order/widgets/collect_money_deliver
 import 'package:shellafood_delivery/features/order/widgets/order_item_widget.dart';
 import 'package:shellafood_delivery/features/order/widgets/verify_delivery_sheet_widget.dart';
 import 'package:shellafood_delivery/features/order/widgets/info_card_widget.dart';
-import 'package:shellafood_delivery/features/order/widgets/slider_button_widget.dart';
+import 'package:shellafood_delivery/features/order/widgets/invoice_sheet_widget.dart';
+import 'package:shellafood_delivery/features/order/widgets/captain_stepper_widget.dart';
+import 'package:shellafood_delivery/helper/price_converter_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -751,7 +753,66 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                       Expanded(
                           child: SingleChildScrollView(
                         physics: const BouncingScrollPhysics(),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: Dimensions.paddingSizeDefault,
+                            vertical: Dimensions.paddingSizeSmall),
                         child: Column(children: [
+                          if (parcel != true &&
+                              const [
+                                'accepted',
+                                'confirmed',
+                                'processing',
+                                'handover',
+                                'picked_up'
+                              ].contains((controllerOrderModel.orderStatus ?? '')
+                                  .toLowerCase()))
+                            CaptainStepperWidget(
+                              orderStatus: controllerOrderModel.orderStatus,
+                              invoiceIssued:
+                                  controllerOrderModel.captainInvoiceAmount !=
+                                      null,
+                            ),
+                          // شله كابتن: إيرادات التوصيل (أرباح الكابتن) بارزة كالتصميم المرجعي
+                          if (parcel != true)
+                            Container(
+                              width: double.infinity,
+                              margin: const EdgeInsets.only(
+                                  bottom: Dimensions.paddingSizeDefault),
+                              padding: const EdgeInsets.all(
+                                  Dimensions.paddingSizeDefault),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context)
+                                    .primaryColor
+                                    .withValues(alpha: 0.06),
+                                borderRadius: BorderRadius.circular(
+                                    Dimensions.radiusDefault),
+                                border: Border.all(
+                                    color: Theme.of(context)
+                                        .primaryColor
+                                        .withValues(alpha: 0.20)),
+                              ),
+                              child: Row(children: [
+                                Icon(Icons.account_balance_wallet_outlined,
+                                    color: Theme.of(context).primaryColor,
+                                    size: 22),
+                                const SizedBox(
+                                    width: Dimensions.paddingSizeSmall),
+                                Text('إيرادات التوصيل',
+                                    style: robotoMedium.copyWith(
+                                        fontSize: Dimensions.fontSizeDefault)),
+                                const Spacer(),
+                                Text(
+                                  PriceConverterHelper.convertPrice(
+                                      (controllerOrderModel
+                                                  .originalDeliveryCharge ??
+                                              0) +
+                                          (controllerOrderModel.dmTips ?? 0)),
+                                  style: robotoBold.copyWith(
+                                      fontSize: Dimensions.fontSizeLarge,
+                                      color: Theme.of(context).primaryColor),
+                                ),
+                              ]),
+                            ),
                           Row(children: [
                             Text(
                                 '${parcel! ? 'delivery_id'.tr : 'order_id'.tr}:',
@@ -816,29 +877,8 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                               ),
                             ),
                           ]),
-                          orderController.orderDetailsModel!.isNotEmpty &&
-                                  orderController
-                                          .orderDetailsModel![0].itemDetails !=
-                                      null &&
-                                  orderController.orderDetailsModel![0]
-                                          .itemDetails!.moduleType ==
-                                      'food'
-                              ? Column(children: [
-                                  const Divider(
-                                      height: Dimensions.paddingSizeLarge),
-                                  Row(children: [
-                                    Text('${'cutlery'.tr}: ',
-                                        style: robotoRegular),
-                                    const Expanded(child: SizedBox()),
-                                    Text(
-                                      (controllerOrderModel.cutlery ?? false)
-                                          ? 'yes'.tr
-                                          : 'no'.tr,
-                                      style: robotoRegular,
-                                    ),
-                                  ]),
-                                ])
-                              : const SizedBox(),
+                          // شله كابتن: حُذف صف «السكاكين» بناءً على طلب التصميم
+                          const SizedBox(),
                           controllerOrderModel.unavailableItemNote != null
                               ? Column(
                                   children: [
@@ -889,6 +929,13 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                           null
                                       ? Dimensions.paddingSizeSmall
                                       : 0),
+                          // كابتن شله: بعد استلام الطلب من المتجر (picked_up) تختفي
+                          // بطاقة المتجر ويظهر العميل فقط (الكابتن متّجه للتسليم)
+                          if (parcel == true ||
+                              !(_isStatus(controllerOrderModel.orderStatus,
+                                      AppConstants.pickedUp) ||
+                                  _isStatus(controllerOrderModel.orderStatus,
+                                      AppConstants.delivered))) ...[
                           const Divider(height: Dimensions.paddingSizeLarge),
                           const SizedBox(height: Dimensions.paddingSizeSmall),
                           InfoCardWidget(
@@ -927,6 +974,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                 !_isStatus(controllerOrderModel.orderStatus,
                                     AppConstants.refunded)),
                             isStore: true,
+                            directionLabel: 'اتجاه إلى المطعم',
                             isChatAllow: showChatPermission,
                             messageOnTap: () =>
                                 Get.toNamed(RouteHelper.getChatRoute(
@@ -945,6 +993,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                             order: order!,
                           ),
                           const SizedBox(height: Dimensions.paddingSizeLarge),
+                          ],
                           InfoCardWidget(
                             title: parcel
                                 ? 'receiver_details'.tr
@@ -986,6 +1035,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                 !_isStatus(controllerOrderModel.orderStatus,
                                     AppConstants.refunded),
                             isStore: parcel ? false : true,
+                            directionLabel: 'اتجاه إلى العميل',
                             isChatAllow: showChatPermission,
                             messageOnTap: () =>
                                 Get.toNamed(RouteHelper.getChatRoute(
@@ -1001,7 +1051,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                     controllerOrderModel.customer!.imageFullUrl,
                               ),
                             )),
-                            order: order,
+                            order: order!,
                           ),
                           const SizedBox(height: Dimensions.paddingSizeLarge),
                           _buildOtpSection(controllerOrderModel),
@@ -1658,13 +1708,101 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                                     ? Colors.grey[700]!
                                                     : Colors.grey[200]!),
                                           ),
-                                          alignment: Alignment.center,
-                                          child: Text(
-                                            processing!
-                                                ? 'order_is_preparing'.tr
-                                                : 'order_waiting_for_process'
-                                                    .tr,
-                                            style: robotoMedium,
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              CustomButtonWidget(
+                                                buttonText: controllerOrderModel
+                                                            .captainInvoiceAmount !=
+                                                        null
+                                                    ? 'تعديل فاتورة'
+                                                    : 'اصدار فاتورة',
+                                                icon: Icons.receipt_long,
+                                                onPressed: () {
+                                                  Get.bottomSheet(
+                                                    InvoiceSheetWidget(
+                                                      orderId:
+                                                          controllerOrderModel
+                                                              .id!,
+                                                      initialAmount:
+                                                          controllerOrderModel
+                                                              .captainInvoiceAmount,
+                                                      hasExistingImage:
+                                                          (controllerOrderModel
+                                                                      .captainInvoiceImage ??
+                                                                  '')
+                                                              .isNotEmpty,
+                                                    ),
+                                                    isScrollControlled: true,
+                                                  );
+                                                },
+                                              ),
+                                              // كابتن شله: التسلسل — زر «استلمت من المتجر»
+                                              // يظهر فقط بعد إصدار الفاتورة
+                                              if (controllerOrderModel
+                                                      .captainInvoiceAmount !=
+                                                  null) ...[
+                                                const SizedBox(
+                                                    height: Dimensions
+                                                        .paddingSizeSmall),
+                                                Text(
+                                                  'تم إصدار فاتورة بقيمة ${controllerOrderModel.captainInvoiceAmount!.toStringAsFixed(2)} ريال',
+                                                  style: robotoMedium.copyWith(
+                                                      fontSize: Dimensions
+                                                          .fontSizeSmall,
+                                                      color: Theme.of(context)
+                                                          .primaryColor),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                                const SizedBox(
+                                                    height: Dimensions
+                                                        .paddingSizeSmall),
+                                                CustomButtonWidget(
+                                                    buttonText:
+                                                        'استلمت طلب العميل من المتجر',
+                                                    onPressed: () {
+                                                      Get.dialog(
+                                                        ConfirmationDialogWidget(
+                                                          icon: Images.warning,
+                                                          title:
+                                                              'are_you_sure_to_confirm'
+                                                                  .tr,
+                                                          description:
+                                                              'تأكد من استلام جميع المنتجات قبل خروجك من المتجر',
+                                                          onYesPressed:
+                                                              () async {
+                                                            await orderController
+                                                                .updateOrderStatus(
+                                                              controllerOrderModel,
+                                                              AppConstants
+                                                                  .pickedUp,
+                                                            );
+                                                            await orderController
+                                                                .getOrderWithId(
+                                                                    controllerOrderModel
+                                                                        .id);
+                                                          },
+                                                        ),
+                                                        barrierDismissible:
+                                                            false,
+                                                      );
+                                                    },
+                                                  ),
+                                              ] else ...[
+                                                const SizedBox(
+                                                    height: Dimensions
+                                                        .paddingSizeSmall),
+                                                Text(
+                                                  'أصدر الفاتورة أولاً لتظهر خطوة «استلمت من المتجر»',
+                                                  style: robotoRegular.copyWith(
+                                                      fontSize: Dimensions
+                                                          .fontSizeExtraSmall,
+                                                      color: Theme.of(context)
+                                                          .hintColor),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                              ],
+                                            ],
                                           ),
                                         )
                                       : showSlider
@@ -1790,8 +1928,8 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                                     },
                                                   )),
                                                 ])
-                                              : SliderButton(
-                                                  action: () async {
+                                              : CustomButtonWidget(
+                                                  onPressed: () async {
                                                     if ((cod! &&
                                                             accepted! &&
                                                             !restConfModel &&
@@ -2130,53 +2268,17 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                                       }
                                                     }
                                                   },
-                                                  label: Text(
-                                                    _getSliderButtonText(
-                                                      parcel: parcel,
-                                                      accepted: accepted,
-                                                      cod: cod,
-                                                      restConfModel:
-                                                          restConfModel,
-                                                      selfDelivery:
-                                                          selfDelivery,
-                                                      pickedUp: pickedUp,
-                                                      handover: handover,
-                                                    ),
-                                                    style:
-                                                        robotoMedium.copyWith(
-                                                            fontSize: Dimensions
-                                                                .fontSizeLarge,
-                                                            color: Theme.of(
-                                                                    context)
-                                                                .primaryColor),
+                                                  buttonText:
+                                                      _getSliderButtonText(
+                                                    parcel: parcel,
+                                                    accepted: accepted,
+                                                    cod: cod,
+                                                    restConfModel: restConfModel,
+                                                    selfDelivery: selfDelivery,
+                                                    pickedUp: pickedUp,
+                                                    handover: handover,
                                                   ),
-                                                  dismissThresholds: 0.5,
-                                                  dismissible: false,
-                                                  shimmer: true,
-                                                  width: MediaQuery.of(context)
-                                                          .size
-                                                          .width -
-                                                      (Dimensions
-                                                              .paddingSizeDefault *
-                                                          2),
-                                                  height: 60,
-                                                  buttonSize: 50,
-                                                  radius: 10,
-                                                  icon: Center(
-                                                      child: Icon(
-                                                    Icons.double_arrow,
-                                                    color: Colors.white,
-                                                    size: 20.0,
-                                                  )),
-                                                  isLtr: true,
-                                                  boxShadow: const BoxShadow(
-                                                      blurRadius: 0),
-                                                  buttonColor: Theme.of(context)
-                                                      .primaryColor,
-                                                  backgroundColor:
-                                                      const Color(0xffF4F7FC),
-                                                  baseColor: Theme.of(context)
-                                                      .primaryColor,
+                                                  height: 55,
                                                 )
                                           : const SizedBox())
                               : const SizedBox(),

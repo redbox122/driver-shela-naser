@@ -27,8 +27,8 @@ class ProfileService implements ProfileServiceInterface {
   }
 
   @override
-  Future<ResponseModel> updateActiveStatus() async {
-    return await profileRepositoryInterface.updateActiveStatus();
+  Future<ResponseModel> updateActiveStatus({int? active}) async {
+    return await profileRepositoryInterface.updateActiveStatus(active: active);
   }
 
   @override

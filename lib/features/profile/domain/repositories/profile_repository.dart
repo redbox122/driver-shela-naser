@@ -53,10 +53,14 @@ class ProfileRepository implements ProfileRepositoryInterface {
   }
 
   @override
-  Future<ResponseModel> updateActiveStatus() async {
+  Future<ResponseModel> updateActiveStatus({int? active}) async {
     ResponseModel responseModel;
+    final Map<String, dynamic> body = {'token': _getUserToken()};
+    if (active != null) {
+      body['active'] = active;
+    }
     Response response = await apiClient.postData(
-        AppConstants.activeStatusUri, {'token': _getUserToken()},
+        AppConstants.activeStatusUri, body,
         handleError: false);
     if (response.statusCode == 200) {
       responseModel = ResponseModel(true, response.body['message']);

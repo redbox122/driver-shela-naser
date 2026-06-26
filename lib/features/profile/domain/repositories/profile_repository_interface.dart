@@ -7,7 +7,7 @@ abstract class ProfileRepositoryInterface implements RepositoryInterface {
   Future<dynamic> getProfileInfo();
   Future<dynamic> updateProfile(
       ProfileModel userInfoModel, XFile? data, String token);
-  Future<dynamic> updateActiveStatus();
+  Future<dynamic> updateActiveStatus({int? active});
   Future<void> recordWebSocketLocation(
       RecordLocationBodyModel recordLocationBody);
   Future<dynamic> recordLocation(RecordLocationBodyModel recordLocationBody);

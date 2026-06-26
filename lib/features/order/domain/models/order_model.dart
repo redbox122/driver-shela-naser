@@ -95,8 +95,12 @@ class OrderModel {
   int? storeChatPermission;
   String? otp; // Customer OTP for delivery verification
   String? otpStore; // Store OTP for pickup verification
+  double? captainInvoiceAmount; // كابتن شله: قيمة فاتورة المتجر التي أدخلها الكابتن
+  String? captainInvoiceImage; // اسم صورة الفاتورة المحفوظة (للتحقق من وجودها)
 
   OrderModel({
+    this.captainInvoiceAmount,
+    this.captainInvoiceImage,
     this.id,
     this.itemCampaignId,
     this.userId,
@@ -191,6 +195,11 @@ class OrderModel {
       mainOrder = null;
     }
     module_id = json['module_id'];
+    // DECIMAL قد يعود String ("40.00") أو num — تحليل آمن للحالتين
+    captainInvoiceAmount = json['captain_invoice_amount'] != null
+        ? double.tryParse(json['captain_invoice_amount'].toString())
+        : null;
+    captainInvoiceImage = json['captain_invoice_image'];
     orderAmount = json['order_amount']?.toDouble();
     couponDiscountAmount = json['coupon_discount_amount']?.toDouble();
     paymentStatus = json['payment_status'];

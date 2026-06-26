@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:disable_battery_optimization/disable_battery_optimization.dart';
 import 'package:shellafood_delivery/features/notification/controllers/notification_controller.dart';
 import 'package:shellafood_delivery/features/order/controllers/order_controller.dart';
@@ -14,6 +15,8 @@ import 'package:shellafood_delivery/features/home/widgets/quick_action_button_wi
 import 'package:shellafood_delivery/features/home/widgets/financial_overview_widget.dart';
 import 'package:shellafood_delivery/features/home/widgets/performance_card_widget.dart';
 import 'package:shellafood_delivery/features/home/widgets/current_orders_list_widget.dart';
+import 'package:shellafood_delivery/features/home/widgets/captain_offline_view.dart';
+import 'package:shellafood_delivery/features/order/widgets/order_requset_widget.dart';
 import 'package:shellafood_delivery/common/services/quick_action_service.dart';
 import 'package:shellafood_delivery/helper/price_converter_helper.dart';
 import 'package:flutter/material.dart';
@@ -33,11 +36,26 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  // شله كابتن: poll دوري للطلبات الجديدة المتاحة لتظهر فوراً في الرئيسية
+  Timer? _newOrdersTimer;
+
   @override
   void initState() {
     super.initState();
     // Load data once when the screen is first created.
     _loadData();
+    // استقبال واضح: جلب الطلبات الجديدة المتاحة كل 10 ثوانٍ وعرضها في الرئيسية
+    _newOrdersTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+      if (mounted) {
+        Get.find<OrderController>().getLatestOrdersIfActive();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _newOrdersTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadData() async {
@@ -45,6 +63,7 @@ class _HomeScreenState extends State<HomeScreen> {
     Get.find<OrderController>().removeFromIgnoreList();
     await Get.find<ProfileController>().getProfile();
     await Get.find<OrderController>().getCurrentOrders();
+    await Get.find<OrderController>().getLatestOrdersIfActive();
     await Get.find<NotificationController>().getNotificationList();
     if (GetPlatform.isAndroid) {
       final bool? isBatteryOptimizationDisabled =
@@ -161,7 +180,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                     description: 'are_you_sure_to_offline'.tr,
                                     onYesPressed: () {
                                       Get.back();
-                                      profileController.updateActiveStatus();
+                                      profileController.updateActiveStatus(
+                                          targetActive: 0);
                                     },
                                   ));
                                 } else {
@@ -187,12 +207,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                             Get.back();
                                             _checkPermission(() =>
                                                 profileController
-                                                    .updateActiveStatus());
+                                                    .updateActiveStatus(
+                                                        targetActive: 1));
                                           },
                                         ),
                                         barrierDismissible: false);
                                   } else {
-                                    profileController.updateActiveStatus();
+                                    profileController.updateActiveStatus(
+                                        targetActive: 1);
                                   }
                                 }
                               }
@@ -228,7 +250,65 @@ class _HomeScreenState extends State<HomeScreen> {
                           horizontal: Dimensions.paddingSizeSmall),
                       child: GetBuilder<ProfileController>(
                           builder: (profileController) {
+                        // شله كابتن: حالة «غير متاح» — لا تظهر أي طلبات وهو offline
+                        if (profileController.profileModel != null &&
+                            profileController.profileModel!.active != 1) {
+                          return CaptainOfflineView(
+                            onActivate: () =>
+                                _activateReception(profileController),
+                          );
+                        }
                         return Column(children: [
+                        // شله كابتن: «الطلبات الجديدة» المتاحة تظهر فوراً في الرئيسية
+                        GetBuilder<OrderController>(builder: (orderController) {
+                          final List<dynamic> newOrders =
+                              orderController.latestOrderList ?? [];
+                          if (newOrders.isEmpty) return const SizedBox();
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(
+                                    Dimensions.paddingSizeSmall,
+                                    Dimensions.paddingSizeDefault,
+                                    Dimensions.paddingSizeSmall,
+                                    Dimensions.paddingSizeExtraSmall),
+                                child: Row(children: [
+                                  Icon(Icons.notifications_active,
+                                      color: AppColors.success, size: 20),
+                                  const SizedBox(
+                                      width: Dimensions.paddingSizeExtraSmall),
+                                  Text('الطلبات الجديدة',
+                                      style: robotoBold.copyWith(
+                                          fontSize: Dimensions.fontSizeLarge)),
+                                  const SizedBox(
+                                      width: Dimensions.paddingSizeExtraSmall),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.success,
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: Text('${newOrders.length}',
+                                        style: robotoBold.copyWith(
+                                            color: Colors.white,
+                                            fontSize:
+                                                Dimensions.fontSizeExtraSmall)),
+                                  ),
+                                ]),
+                              ),
+                              ...List.generate(
+                                newOrders.length,
+                                (i) => OrderRequestWidget(
+                                  orderModel: newOrders[i],
+                                  index: i,
+                                  onTap: () => _loadData(),
+                                ),
+                              ),
+                            ],
+                          );
+                        }),
                         // Active Orders Section: Hero card + expandable list
                         GetBuilder<OrderController>(builder: (orderController) {
                           return CurrentOrdersListWidget(
@@ -317,6 +397,13 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
+  }
+
+  // شله كابتن: تفعيل استقبال الطلبات. نفعّل الحالة مباشرة (لا نحجبها بإذن الموقع
+  // لأن إذن الموقع يُدار بعد التفعيل داخل الكنترول بشكل غير حاجب — مهم للمحاكي
+  // وللأجهزة التي لم تُمنح الإذن بعد).
+  void _activateReception(ProfileController profileController) {
+    profileController.updateActiveStatus(targetActive: 1);
   }
 
   void _checkPermission(Function callback) async {

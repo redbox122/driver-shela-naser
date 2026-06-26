@@ -1,3 +1,4 @@
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -87,6 +88,16 @@ class OrderController extends GetxController implements GetxService {
 
   List<OrderModel>? _latestOrderList;
   List<OrderModel>? get latestOrderList => _latestOrderList;
+
+  // شله كابتن: تتبّع الطلبات الجديدة المعروفة لتشغيل صوت التنبيه مرة واحدة لكل طلب
+  Set<int> _knownLatestOrderIds = {};
+  bool _latestInitialized = false;
+
+  void _playNewOrderSound() {
+    try {
+      AudioPlayer().play(AssetSource('notification.mp3'));
+    } catch (_) {}
+  }
 
   List<OrderDetailsModel>? _orderDetailsModel;
   List<OrderDetailsModel>? get orderDetailsModel => _orderDetailsModel;
@@ -490,6 +501,16 @@ class OrderController extends GetxController implements GetxService {
 
         _latestOrderList!.addAll(filteredOrders);
 
+        // شله كابتن: شغّل صوت تنبيه عند وصول طلب جديد (id لم يُرَ من قبل)
+        final Set<int> currentIds =
+            filteredOrders.map((e) => e.id).whereType<int>().toSet();
+        if (_latestInitialized &&
+            currentIds.any((id) => !_knownLatestOrderIds.contains(id))) {
+          _playNewOrderSound();
+        }
+        _knownLatestOrderIds = currentIds;
+        _latestInitialized = true;
+
         // Log filtering results for debugging
         assert(() {
           debugPrint(
@@ -836,6 +857,82 @@ class OrderController extends GetxController implements GetxService {
       return Future.value(false);
     }
     return orderServiceInterface.setPriceService(orderId, price);
+  }
+
+  // كابتن شله: حالة صورة الفاتورة المختارة قبل الإرسال
+  XFile? _pickedInvoiceImage;
+  XFile? get pickedInvoiceImage => _pickedInvoiceImage;
+
+  void pickInvoiceImage({required bool isCamera}) async {
+    // ضغط الصورة (أبعاد وجودة) ليكون الرفع سريعاً وصغيراً — يمنع تعليق الرفع
+    XFile? xFile = await ImagePicker().pickImage(
+        source: isCamera ? ImageSource.camera : ImageSource.gallery,
+        maxWidth: 1280,
+        maxHeight: 1280,
+        imageQuality: 40);
+    if (xFile != null) {
+      _pickedInvoiceImage = xFile;
+      if (Get.isBottomSheetOpen ?? false) {
+        Get.back();
+      }
+      update();
+    }
+  }
+
+  void clearInvoiceImage() {
+    _pickedInvoiceImage = null;
+    update();
+  }
+
+  bool _invoiceLoading = false;
+  bool get invoiceLoading => _invoiceLoading;
+
+  // كابتن شله: إرسال فاتورة المتجر (مبلغ + صورة) — تُحفظ بالداش بورد فقط
+  Future<bool> submitInvoice(int? orderId, double amount,
+      {bool allowNoImage = false}) async {
+    if (orderId == null) {
+      showCustomSnackBar('invalid_order_id'.tr, isError: true);
+      return false;
+    }
+    if (amount <= 0) {
+      showCustomSnackBar('invalid_amount'.tr, isError: true);
+      return false;
+    }
+    // الصورة إلزامية عند الإصدار لأول مرة؛ عند التعديل (صورة موجودة) لا نُجبر إعادة الإرفاق
+    if (_pickedInvoiceImage == null && !allowNoImage) {
+      showCustomSnackBar('أرفق صورة فاتورة المتجر أولاً', isError: true);
+      return false;
+    }
+    _invoiceLoading = true;
+    update();
+    try {
+      ResponseModel responseModel = await orderServiceInterface
+          .submitInvoice(orderId, amount, _pickedInvoiceImage)
+          .timeout(const Duration(seconds: 60));
+      // أوقف اللودينق فوراً بعد رد السيرفر — لا ننتظر التحديثات قبل إغلاق النافذة
+      _invoiceLoading = false;
+      update();
+      if (responseModel.isSuccess) {
+        _pickedInvoiceImage = null;
+        showCustomSnackBar('✓ تم حفظ الفاتورة بنجاح', isError: false);
+        // تحديث الصفحة في الخلفية (لا يحجب إغلاق النافذة) — تظهر الفاتورة وزر الاستلام
+        getOrderWithId(orderId, closeOnError: false);
+        getOrderDetails(orderId, false);
+      } else {
+        showCustomSnackBar(responseModel.message, isError: true);
+      }
+      return responseModel.isSuccess;
+    } catch (e) {
+      _invoiceLoading = false;
+      update();
+      showCustomSnackBar('تعذّر إرسال الفاتورة، تأكد من الاتصال وحاول مرة أخرى',
+          isError: true);
+      return false;
+    } finally {
+      // ضمان رجوع اللودينق مهما صار
+      _invoiceLoading = false;
+      update();
+    }
   }
 
   /// Check if delivery man can see orders based on their status
