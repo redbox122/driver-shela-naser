@@ -136,8 +136,18 @@ class WithdrawMethod {
     deliveryManId = json['delivery_man_id'];
     withdrawalMethodId = json['withdrawal_method_id'];
     methodName = json['method_name'];
-    methodFields = json['method_fields'] != null ? MethodFields.fromJson(json['method_fields']) : null;
-    isDefault = json['is_default'];
+    // D1: الـAPI قد يرسل method_fields كمصفوفة أو كائن — نحلّل الكائن فقط ونتجاهل غيره بأمان (بدون انهيار)
+    methodFields = json['method_fields'] is Map
+        ? MethodFields.fromJson(
+            Map<String, dynamic>.from(json['method_fields'] as Map))
+        : null;
+    // is_default قد يصل bool (Laravel cast) أو int (1/0) أو null
+    final dynamic rawIsDefault = json['is_default'];
+    isDefault = rawIsDefault is bool
+        ? rawIsDefault
+        : (rawIsDefault == null
+            ? null
+            : (rawIsDefault == 1 || rawIsDefault == '1'));
     createdAt = json['created_at'];
     updatedAt = json['updated_at'];
   }

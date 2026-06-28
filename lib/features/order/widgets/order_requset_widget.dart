@@ -47,10 +47,11 @@ class OrderRequestWidget extends StatelessWidget {
     );
 
     return InkWell(
-      onTap: () async {
-        final bool canOpen = await Get.find<OrderController>()
-            .fetchOrderDetailsOnTap(orderModel.id);
-        if (!canOpen || !context.mounted) {
+      onTap: () {
+        // فتح فوري؛ شاشة التفاصيل تجلب بياناتها بنفسها — لا نعلّق الفتح على
+        // pre-fetch قد يرمي استثناءً فيبدو كأن البطاقة لا تستجيب للضغط.
+        if (orderModel.id == null || orderModel.id! <= 0) {
+          showCustomSnackBar('invalid_order_id'.tr, isError: true);
           return;
         }
         Navigator.push(

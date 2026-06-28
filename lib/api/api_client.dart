@@ -47,7 +47,7 @@ class ApiClient extends GetxService {
       bool handleError = true}) async {
     try {
       assert(() {
-        debugPrint('====> API Call: $uri');
+        debugPrint('====> API Call: ${_maskUriToken(uri)}');
         return true;
       }());
       http.Response response = await http
@@ -66,7 +66,7 @@ class ApiClient extends GetxService {
       {Map<String, String>? headers, bool handleError = true}) async {
     try {
       assert(() {
-        debugPrint('====> API Call: $uri');
+        debugPrint('====> API Call: ${_maskUriToken(uri)}');
         return true;
       }());
       http.Response response = await http
@@ -91,7 +91,7 @@ class ApiClient extends GetxService {
       {Map<String, String>? headers, bool handleError = true}) async {
     try {
       assert(() {
-        debugPrint('====> API Call: $uri (multipart, ${multipartBody.length} files)');
+        debugPrint('====> API Call: ${_maskUriToken(uri)} (multipart, ${multipartBody.length} files)');
         return true;
       }());
       http.MultipartRequest request =
@@ -135,7 +135,7 @@ class ApiClient extends GetxService {
       {Map<String, String>? headers, bool handleError = true}) async {
     try {
       assert(() {
-        debugPrint('====> API Call: $uri');
+        debugPrint('====> API Call: ${_maskUriToken(uri)}');
         return true;
       }());
       http.Response response = await http
@@ -155,7 +155,7 @@ class ApiClient extends GetxService {
       {Map<String, String>? headers, bool handleError = true}) async {
     try {
       assert(() {
-        debugPrint('====> API Call: $uri');
+        debugPrint('====> API Call: ${_maskUriToken(uri)}');
         return true;
       }());
       http.Response response = await http
@@ -262,6 +262,15 @@ void _logApiError(Response response, String uri) {
     }
     return true;
   }());
+}
+
+// S3: يخفي قيمة ?token= (أو &token=) في عنوان الـURI قبل طباعته في اللوق،
+// حتى لا يتسرّب توكن المصادقة الكامل في سجلّات debug (الطباعة أصلاً محصورة بـassert).
+String _maskUriToken(String uri) {
+  return uri.replaceAllMapped(
+    RegExp(r'(token=)[^&\s]+', caseSensitive: false),
+    (m) => '${m.group(1)}***masked***',
+  );
 }
 
 String _maskSensitiveHeaderValue(String key, String value) {

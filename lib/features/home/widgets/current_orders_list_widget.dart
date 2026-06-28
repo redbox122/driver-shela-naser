@@ -7,9 +7,9 @@ import 'package:shellafood_delivery/helper/order_helper.dart';
 import 'package:shellafood_delivery/features/home/widgets/hero_order_card_widget.dart';
 import 'package:shellafood_delivery/features/home/widgets/compact_order_card_widget.dart';
 import 'package:shellafood_delivery/features/order/screens/order_details_screen.dart';
-import 'package:shellafood_delivery/features/order/controllers/order_controller.dart';
 import 'package:shellafood_delivery/helper/route_helper.dart';
 import 'package:shellafood_delivery/common/services/quick_action_service.dart';
+import 'package:shellafood_delivery/common/widgets/custom_snackbar_widget.dart';
 import 'package:get/get.dart';
 
 /// Main widget managing all active orders display
@@ -286,10 +286,12 @@ class _CurrentOrdersListWidgetState extends State<CurrentOrdersListWidget>
     QuickActionService.navigateToActiveOrder();
   }
 
-  Future<void> _viewOrderDetails(OrderModel order, int orderIndex) async {
-    final bool canOpen =
-        await Get.find<OrderController>().fetchOrderDetailsOnTap(order.id);
-    if (!canOpen) {
+  void _viewOrderDetails(OrderModel order, int orderIndex) {
+    // الضغط على البطاقة يفتح التفاصيل فوراً. شاشة التفاصيل تجلب بياناتها بنفسها
+    // في initState (_loadData)، فلا نعلّق الفتح على pre-fetch قد يرمي استثناءً أو
+    // يتأخّر فيبدو كأن البطاقة «ما تنضغط».
+    if (order.id == null || order.id! <= 0) {
+      showCustomSnackBar('invalid_order_id'.tr, isError: true);
       return;
     }
     Get.toNamed(

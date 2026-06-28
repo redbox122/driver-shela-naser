@@ -26,8 +26,13 @@ class WidthDrawMethodModel {
         methodFields!.add(MethodFields.fromJson(v));
       });
     }
-    isDefault = json['is_default'];
-    isActive = json['is_active'];
+    // السيرفر قد يرجّع bool (true/false) أو int (1/0) — تحليل آمن للحالتين
+    isDefault = json['is_default'] is bool
+        ? (json['is_default'] ? 1 : 0)
+        : json['is_default'];
+    isActive = json['is_active'] is bool
+        ? (json['is_active'] ? 1 : 0)
+        : json['is_active'];
     createdAt = json['created_at'];
     updatedAt = json['updated_at'];
   }
