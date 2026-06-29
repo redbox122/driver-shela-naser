@@ -6,7 +6,7 @@ class AppConstants {
   static const double appVersion = 2.8; // web version: 2.8
 
   // SR-04: Production API host (HTTPS). Paths in this file are relative to this origin.
-  static const String baseUrl = 'https://shellagroup.sa';
+  static const String baseUrl = 'https://shellagroup.uaenorth.cloudapp.azure.com';
 
   static const String configUri = '/api/v1/config';
   static const String forgetPasswordUri =
