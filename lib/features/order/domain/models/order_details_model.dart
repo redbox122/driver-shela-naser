@@ -216,9 +216,21 @@ class ItemDetails {
     }
     if (json['choice_options'] != null) {
       choiceOptions = [];
-      json['choice_options'].forEach((v) {
-        choiceOptions!.add(ChoiceOptions.fromJson(v));
-      });
+      final co = json['choice_options'];
+      if (co is List) {
+        for (final v in co) {
+          choiceOptions!.add(ChoiceOptions.fromJson(v));
+        }
+      } else if (co is Map) {
+        // choice_options keyed by language {"ar": [...], "en": [...]}
+        final items = co['ar'] ?? co['en'] ??
+            (co.values.isNotEmpty ? co.values.first : null);
+        if (items is List) {
+          for (final v in items) {
+            choiceOptions!.add(ChoiceOptions.fromJson(v));
+          }
+        }
+      }
     }
     price = json['price']?.toDouble();
     tax = json['tax']?.toDouble();

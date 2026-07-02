@@ -601,6 +601,24 @@ class OrderController extends GetxController implements GetxService {
     return responseModel.isSuccess;
   }
 
+  /// يُحدّث حالة الطلب بصمت (بدون Get.back أو تنقّل) — للاستخدام البرمجي بعد اصدار الفاتورة.
+  Future<bool> updateOrderStatusSilent(int orderId, String status) async {
+    _isLoading = true;
+    update();
+    final updateStatusBody = UpdateStatusBodyModel(orderId: orderId, status: status);
+    final responseModel = await orderServiceInterface.updateOrderStatus(
+        updateStatusBody, []);
+    if (responseModel.isSuccess) {
+      getCurrentOrders();
+      getOrderWithId(orderId, closeOnError: false);
+    } else {
+      showCustomSnackBar(responseModel.message, isError: true);
+    }
+    _isLoading = false;
+    update();
+    return responseModel.isSuccess;
+  }
+
   Future<void> getOrderDetails(int? orderID, bool parcel) async {
     if (orderID == null || orderID <= 0) {
       assert(() {
@@ -872,9 +890,6 @@ class OrderController extends GetxController implements GetxService {
         imageQuality: 40);
     if (xFile != null) {
       _pickedInvoiceImage = xFile;
-      if (Get.isBottomSheetOpen ?? false) {
-        Get.back();
-      }
       update();
     }
   }
@@ -913,11 +928,15 @@ class OrderController extends GetxController implements GetxService {
       _invoiceLoading = false;
       update();
       if (responseModel.isSuccess) {
+        final hadImage = _pickedInvoiceImage != null;
         _pickedInvoiceImage = null;
-        showCustomSnackBar('✓ تم حفظ الفاتورة بنجاح', isError: false);
-        // تحديث الصفحة في الخلفية (لا يحجب إغلاق النافذة) — تظهر الفاتورة وزر الاستلام
-        getOrderWithId(orderId, closeOnError: false);
-        getOrderDetails(orderId, false);
+        // تحديث الموديل المحلي فوراً — يبدّل الأزرار بلا انتظار شبكة
+        if (_orderModel != null && _orderModel!.id == orderId) {
+          _orderModel!.captainInvoiceAmount = amount;
+          if (hadImage) _orderModel!.captainInvoiceImage = 'local_pending';
+          update();
+        }
+        // التحديث الكامل يحدث في .then() بعد إغلاق الـ sheet
       } else {
         showCustomSnackBar(responseModel.message, isError: true);
       }

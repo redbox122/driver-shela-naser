@@ -21,13 +21,13 @@ import 'package:shellafood_delivery/common/widgets/custom_button_widget.dart';
 import 'package:shellafood_delivery/common/widgets/custom_image_widget.dart';
 import 'package:shellafood_delivery/common/widgets/custom_snackbar_widget.dart';
 import 'package:shellafood_delivery/features/order/widgets/camera_button_sheet_widget.dart';
-import 'package:shellafood_delivery/features/order/widgets/cancellation_dialogue_widget.dart';
 import 'package:shellafood_delivery/features/order/widgets/collect_money_delivery_sheet_widget.dart';
 import 'package:shellafood_delivery/features/order/widgets/order_item_widget.dart';
 import 'package:shellafood_delivery/features/order/widgets/verify_delivery_sheet_widget.dart';
 import 'package:shellafood_delivery/features/order/widgets/info_card_widget.dart';
 import 'package:shellafood_delivery/features/order/widgets/invoice_sheet_widget.dart';
 import 'package:shellafood_delivery/features/order/widgets/captain_stepper_widget.dart';
+import 'package:shellafood_delivery/features/order/screens/order_location_screen.dart';
 import 'package:shellafood_delivery/helper/price_converter_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -65,23 +65,6 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
     _timer = Timer.periodic(const Duration(seconds: 10), (timer) {
       Get.find<OrderController>().getOrderWithId(widget.orderId!);
     });
-  }
-
-  void _showCancelDialog(OrderModel order) {
-    final bool isParcel = order.orderType == 'parcel';
-    Get.defaultDialog(
-      title: 'are_you_sure_to_cancel'.tr,
-      middleText: isParcel
-          ? 'you_want_to_cancel_this_delivery'.tr
-          : 'you_want_to_cancel_this_order'.tr,
-      textConfirm: 'confirm'.tr,
-      textCancel: 'cancel'.tr,
-      confirmTextColor: Colors.white,
-      onConfirm: () {
-        Get.back();
-        Get.find<OrderController>().cancelOrder(order.id);
-      },
-    );
   }
 
   Future<void> _loadData() async {
@@ -175,295 +158,6 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
     );
   }
 
-  Widget _buildOrderProofUploadSection(OrderModel order) {
-    // PICKUP PHOTOS: show for delivery orders assigned to this driver
-
-    // Hide if already picked up
-    if (_isStatus(order.orderStatus, AppConstants.pickedUp)) {
-      return const SizedBox.shrink();
-    }
-
-    assert(() {
-      debugPrint('ORDER STATUS RAW = ${order.orderStatus}');
-      debugPrint(
-          'ORDER STATUS NORMALIZED = ${_normalizeStatus(order.orderStatus)}');
-      return true;
-    }());
-
-    return GetBuilder<OrderController>(builder: (orderController) {
-      final shouldShowPhotos = orderController.canShowPickupPhotos(order);
-      if (!shouldShowPhotos) {
-        return const SizedBox.shrink();
-      }
-      final hasUploadedPhotos = order.orderProofFullUrl != null &&
-          order.orderProofFullUrl!.isNotEmpty;
-      final hasSelectedPhotos =
-          orderController.pickedOrderProofImages.isNotEmpty;
-
-      final showHelper = !hasUploadedPhotos && !hasSelectedPhotos;
-
-      return Container(
-        margin:
-            const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeDefault),
-        padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
-        decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-          border: Border.all(color: Theme.of(context).dividerColor),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (showHelper)
-              Container(
-                margin:
-                    const EdgeInsets.only(bottom: Dimensions.paddingSizeSmall),
-                padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
-                decoration: BoxDecoration(
-                  color: Colors.blue[50],
-                  border: Border.all(color: Colors.blue[300]!, width: 1),
-                  borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.camera_alt_rounded,
-                        color: Colors.blue[600], size: 28),
-                    const SizedBox(width: Dimensions.paddingSizeDefault),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'please_take_pickup_photo_first'.tr,
-                            style: robotoBold.copyWith(
-                              color: Colors.blue[700],
-                              fontSize: Dimensions.fontSizeDefault,
-                            ),
-                          ),
-                          const SizedBox(
-                              height: Dimensions.paddingSizeExtraSmall),
-                          Text(
-                            'pickup_photo_instruction'.tr,
-                            style: robotoRegular.copyWith(
-                              color: Colors.blue[600],
-                              fontSize: Dimensions.fontSizeSmall,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            Row(
-              children: [
-                Icon(Icons.camera_alt_rounded,
-                    color: Theme.of(context).primaryColor, size: 24),
-                const SizedBox(width: Dimensions.paddingSizeSmall),
-                Text('pickup_photos'.tr,
-                    style: robotoBold.copyWith(
-                        fontSize: Dimensions.fontSizeLarge)),
-              ],
-            ),
-            const SizedBox(height: Dimensions.paddingSizeSmall),
-            Text(
-              'upload_order_proof_description'.tr,
-              style: robotoRegular.copyWith(
-                  color: Theme.of(context).hintColor,
-                  fontSize: Dimensions.fontSizeSmall),
-            ),
-            const SizedBox(height: Dimensions.paddingSizeDefault),
-
-            // Show already uploaded photos
-            if (hasUploadedPhotos) ...[
-              Text('uploaded_photos'.tr, style: robotoMedium),
-              const SizedBox(height: Dimensions.paddingSizeSmall),
-              GridView.builder(
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  childAspectRatio: 1.5,
-                  crossAxisCount: ResponsiveHelper.isTab(context) ? 5 : 3,
-                  mainAxisSpacing: 10,
-                  crossAxisSpacing: 5,
-                ),
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: order.orderProofFullUrl!.length,
-                itemBuilder: (BuildContext context, index) {
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: InkWell(
-                      onTap: () =>
-                          openDialog(context, order.orderProofFullUrl![index]),
-                      child: Center(
-                        child: ClipRRect(
-                          borderRadius:
-                              BorderRadius.circular(Dimensions.radiusSmall),
-                          child: CustomImageWidget(
-                            image: order.orderProofFullUrl![index],
-                            width: 100,
-                            height: 100,
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: Dimensions.paddingSizeDefault),
-            ],
-
-            // Show selected photos (not yet uploaded)
-            if (hasSelectedPhotos) ...[
-              Text('selected_photos'.tr,
-                  style: robotoMedium.copyWith(
-                      color: Theme.of(context).primaryColor)),
-              const SizedBox(height: Dimensions.paddingSizeSmall),
-              SizedBox(
-                height: 100,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: orderController.pickedOrderProofImages.length,
-                  itemBuilder: (context, index) {
-                    return Container(
-                      margin: const EdgeInsets.only(right: 8),
-                      child: Stack(
-                        children: [
-                          ClipRRect(
-                            borderRadius:
-                                BorderRadius.circular(Dimensions.radiusSmall),
-                            child: Image.file(
-                              File(orderController
-                                  .pickedOrderProofImages[index].path),
-                              width: 100,
-                              height: 100,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                          Positioned(
-                            top: 0,
-                            right: 0,
-                            child: InkWell(
-                              onTap: () {
-                                orderController.pickOrderProofImages(
-                                    isRemove: true, isCamera: false);
-                                orderController.pickedOrderProofImages
-                                    .removeAt(index);
-                                orderController.update();
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.all(4),
-                                decoration: const BoxDecoration(
-                                  color: Colors.red,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(Icons.close,
-                                    color: Colors.white, size: 16),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: Dimensions.paddingSizeDefault),
-            ],
-
-            // Upload buttons
-            Row(
-              children: [
-                Expanded(
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: () {
-                        assert(() {
-                          debugPrint('PICKUP PHOTO BUTTON TAP');
-                          return true;
-                        }());
-                        Get.bottomSheet(
-                          CameraButtonSheetWidget(
-                            isOrderProof: true,
-                            onCameraTap: () {
-                              orderController.pickOrderProofImages(
-                                  isRemove: false, isCamera: true);
-                            },
-                            onGalleryTap: () {
-                              orderController.pickOrderProofImages(
-                                  isRemove: false, isCamera: false);
-                            },
-                          ),
-                          backgroundColor: Colors.transparent,
-                        );
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: Dimensions.paddingSizeDefault),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context)
-                              .primaryColor
-                              .withValues(alpha: 0.1),
-                          borderRadius:
-                              BorderRadius.circular(Dimensions.radiusDefault),
-                          border: Border.all(
-                              color: Theme.of(context).primaryColor, width: 1),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.add_photo_alternate,
-                                color: Theme.of(context).primaryColor),
-                            const SizedBox(width: Dimensions.paddingSizeSmall),
-                            Text('select_photos'.tr,
-                                style: robotoMedium.copyWith(
-                                    color: Theme.of(context).primaryColor)),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                if (hasSelectedPhotos) ...[
-                  const SizedBox(width: Dimensions.paddingSizeDefault),
-                  Expanded(
-                    child: CustomButtonWidget(
-                      buttonText: 'upload'.tr,
-                      onPressed: () async {
-                        final success =
-                            await orderController.uploadOrderProof(order);
-                        if (success) {
-                          // Refresh order details
-                          await orderController.getOrderDetails(
-                              order.id, false);
-                          // Refresh the order model
-                          await orderController.getOrderWithId(order.id);
-                          setState(() {});
-                        }
-                      },
-                      radius: Dimensions.radiusDefault,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-            if (hasSelectedPhotos)
-              Padding(
-                padding:
-                    const EdgeInsets.only(top: Dimensions.paddingSizeSmall),
-                child: Text(
-                  '${orderController.pickedOrderProofImages.length}/5 photos selected',
-                  style: robotoRegular.copyWith(
-                      fontSize: Dimensions.fontSizeSmall,
-                      color: Theme.of(context).hintColor),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-          ],
-        ),
-      );
-    });
-  }
 
   String _getSliderButtonText({
     bool? parcel,
@@ -637,8 +331,6 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
 
   @override
   Widget build(BuildContext context) {
-    bool? cancelPermission =
-        Get.find<SplashController>().configModel!.canceledByDeliveryman;
     bool selfDelivery =
         Get.find<ProfileController>().profileModel!.type != 'zone_wise';
 
@@ -719,11 +411,6 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                 offlinePay =
                     controllerOrderModel.paymentMethod == 'offline_payment';
 
-                bool restConfModel = Get.find<SplashController>()
-                        .configModel!
-                        .orderConfirmationModel !=
-                    'deliveryman';
-
                 // Check if order is not assigned yet (delivery_man_id is null)
                 isUnassignedOrder = controllerOrderModel.deliveryManId == null;
 
@@ -740,7 +427,6 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                     controllerOrderModel.orderProofFullUrl != null &&
                     controllerOrderModel.orderProofFullUrl!.isNotEmpty;
                 showSlider =
-                    (cod && accepted && !restConfModel && !selfDelivery) ||
                         handover ||
                         pickedUp ||
                         (parcel && accepted) ||
@@ -771,6 +457,64 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                               invoiceIssued:
                                   controllerOrderModel.captainInvoiceAmount !=
                                       null,
+                            ),
+                          // إرشادات الاستلام والتسليم
+                          if (parcel != true &&
+                              const ['accepted', 'confirmed', 'processing', 'handover']
+                                  .contains((controllerOrderModel.orderStatus ?? '').toLowerCase()))
+                            Container(
+                              margin: const EdgeInsets.only(bottom: Dimensions.paddingSizeDefault),
+                              padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF0F7FF),
+                                border: Border.all(color: const Color(0xFF90CAF9), width: 1),
+                                borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(children: [
+                                    const Icon(Icons.info_outline_rounded, color: Color(0xFF1565C0), size: 20),
+                                    const SizedBox(width: 6),
+                                    Text('خطوات استلام وتسليم الطلب',
+                                        style: robotoBold.copyWith(
+                                            color: const Color(0xFF1565C0),
+                                            fontSize: Dimensions.fontSizeDefault)),
+                                  ]),
+                                  const SizedBox(height: Dimensions.paddingSizeSmall),
+                                  ...[
+                                    (Icons.store_outlined, '١', 'اذهب للمطعم واطلب قائمة العميل — إذا لم يتوفر منتج أبلغ العميل فوراً'),
+                                    (Icons.receipt_long_outlined, '٢', 'بعد إتمام الدفع اضغط "اصدار فاتورة" وأدخل المبلغ'),
+                                    (Icons.camera_alt_outlined, '٣', 'صوّر الفاتورة وارفعها كدليل على الاستلام'),
+                                    (Icons.directions_bike_outlined, '٤', 'توجّه إلى العميل وصوّر الطلب قبل التسليم'),
+                                    (Icons.pin_outlined, '٥', 'اطلب من العميل رمز الاستلام الموجود في تطبيق المستخدم'),
+                                  ].map((step) => Padding(
+                                    padding: const EdgeInsets.only(bottom: 8),
+                                    child: Row(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Container(
+                                          width: 24, height: 24,
+                                          alignment: Alignment.center,
+                                          decoration: const BoxDecoration(
+                                              color: Color(0xFF1565C0), shape: BoxShape.circle),
+                                          child: Text(step.$2,
+                                              style: robotoMedium.copyWith(color: Colors.white, fontSize: 11)),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Icon(step.$1, color: const Color(0xFF1976D2), size: 18),
+                                        const SizedBox(width: 6),
+                                        Expanded(
+                                          child: Text(step.$3,
+                                              style: robotoRegular.copyWith(
+                                                  color: const Color(0xFF1A237E),
+                                                  fontSize: Dimensions.fontSizeSmall)),
+                                        ),
+                                      ],
+                                    ),
+                                  )),
+                                ],
+                              ),
                             ),
                           // شله كابتن: إيرادات التوصيل (أرباح الكابتن) بارزة كالتصميم المرجعي
                           if (parcel != true)
@@ -1231,8 +975,6 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                           ])
                                     : const SizedBox(),
                               ]),
-                          // Order Proof Upload Section (Modules 6/7/8/9 when status is confirmed)
-                          _buildOrderProofUploadSection(controllerOrderModel),
                           (_isStatus(controllerOrderModel.orderStatus,
                                       AppConstants.delivered) &&
                                   controllerOrderModel.orderProofFullUrl !=
@@ -1419,22 +1161,8 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                   ]),
                             )
                           : const SizedBox(),
-                      (cancelPermission == true &&
-                              (accepted == true || processing == true) &&
-                              !showSlider)
-                          ? Padding(
-                              padding: const EdgeInsets.only(
-                                  bottom: Dimensions.paddingSizeSmall),
-                              child: CustomButtonWidget(
-                                buttonText: 'cancel'.tr,
-                                backgroundColor: Colors.red,
-                                onPressed: orderController.isLoading
-                                    ? null
-                                    : () =>
-                                        _showCancelDialog(controllerOrderModel),
-                              ),
-                            )
-                          : const SizedBox(),
+                      // الإلغاء ممنوع بعد قبول الطلب
+                      const SizedBox(),
                       (_isStatus(controllerOrderModel.orderStatus,
                                   AppConstants.pickedUp) ||
                               _isStatus(controllerOrderModel.orderStatus,
@@ -1673,11 +1401,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                         ),
                                       ),
                                     ])
-                                  : ((accepted! &&
-                                              !parcel &&
-                                              (!cod ||
-                                                  restConfModel ||
-                                                  selfDelivery)) ||
+                                  : ((accepted! && !parcel) ||
                                           (processing! ||
                                               (confirmed! &&
                                                   !([
@@ -1711,224 +1435,112 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                           child: Column(
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
-                                              CustomButtonWidget(
-                                                buttonText: controllerOrderModel
-                                                            .captainInvoiceAmount !=
-                                                        null
-                                                    ? 'تعديل فاتورة'
-                                                    : 'اصدار فاتورة',
-                                                icon: Icons.receipt_long,
-                                                onPressed: () {
+                                              // لما المبلغ + صورة الفاتورة موجودان → «تابع الطلب»
+                                              // وإلا → «اصدار فاتورة»
+                                              (() {
+                                                final invoiceDone = (controllerOrderModel.captainInvoiceAmount ?? 0) > 0;
+                                                final hasImage = (controllerOrderModel.captainInvoiceImage ?? '').isNotEmpty;
+
+                                                void openInvoiceSheet() {
                                                   Get.bottomSheet(
                                                     InvoiceSheetWidget(
-                                                      orderId:
-                                                          controllerOrderModel
-                                                              .id!,
-                                                      initialAmount:
-                                                          controllerOrderModel
-                                                              .captainInvoiceAmount,
-                                                      hasExistingImage:
-                                                          (controllerOrderModel
-                                                                      .captainInvoiceImage ??
-                                                                  '')
-                                                              .isNotEmpty,
+                                                      orderId: controllerOrderModel.id!,
+                                                      initialAmount: controllerOrderModel.captainInvoiceAmount,
+                                                      hasExistingImage: hasImage,
                                                     ),
                                                     isScrollControlled: true,
-                                                  );
-                                                },
-                                              ),
-                                              // كابتن شله: التسلسل — زر «استلمت من المتجر»
-                                              // يظهر فقط بعد إصدار الفاتورة
-                                              if (controllerOrderModel
-                                                      .captainInvoiceAmount !=
-                                                  null) ...[
-                                                const SizedBox(
-                                                    height: Dimensions
-                                                        .paddingSizeSmall),
-                                                Text(
-                                                  'تم إصدار فاتورة بقيمة ${controllerOrderModel.captainInvoiceAmount!.toStringAsFixed(2)} ريال',
-                                                  style: robotoMedium.copyWith(
-                                                      fontSize: Dimensions
-                                                          .fontSizeSmall,
-                                                      color: Theme.of(context)
-                                                          .primaryColor),
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                                const SizedBox(
-                                                    height: Dimensions
-                                                        .paddingSizeSmall),
-                                                CustomButtonWidget(
-                                                    buttonText:
-                                                        'استلمت طلب العميل من المتجر',
-                                                    onPressed: () {
-                                                      Get.dialog(
-                                                        ConfirmationDialogWidget(
-                                                          icon: Images.warning,
-                                                          title:
-                                                              'are_you_sure_to_confirm'
-                                                                  .tr,
-                                                          description:
-                                                              'تأكد من استلام جميع المنتجات قبل خروجك من المتجر',
-                                                          onYesPressed:
-                                                              () async {
-                                                            await orderController
-                                                                .updateOrderStatus(
-                                                              controllerOrderModel,
-                                                              AppConstants
-                                                                  .pickedUp,
-                                                            );
-                                                            await orderController
-                                                                .getOrderWithId(
-                                                                    controllerOrderModel
-                                                                        .id);
-                                                          },
+                                                  ).then((invoiceSaved) async {
+                                                    await orderController.getOrderWithId(controllerOrderModel.id, closeOnError: false);
+                                                    await orderController.getOrderDetails(controllerOrderModel.id, false);
+                                                    if (invoiceSaved == true) {
+                                                      // حفظ الفاتورة → انتقل لحالة picked_up تلقائياً ثم أظهر موقع العميل
+                                                      final order = orderController.orderModel;
+                                                      if (order != null &&
+                                                          (order.orderStatus?.toLowerCase() == 'accepted')) {
+                                                        await orderController.updateOrderStatusSilent(
+                                                          order.id!, AppConstants.pickedUp);
+                                                        // استخدم order المحلّي لعرض الخريطة — البيانات (العنوان/الإحداثيات) ثابتة
+                                                        if (Get.context != null) {
+                                                          Get.to(() => OrderLocationScreen(
+                                                            orderModel: order,
+                                                            orderController: orderController,
+                                                            index: 0,
+                                                            onTap: () {},
+                                                            isDeliveryPhase: true,
+                                                          ));
+                                                        }
+                                                      }
+                                                    }
+                                                  });
+                                                }
+
+                                                if (invoiceDone) {
+                                                  // بعد الفاتورة: [أكمل الطلب] + [تعديل الفاتورة]
+                                                  return Row(children: [
+                                                    Expanded(
+                                                      child: OutlinedButton.icon(
+                                                        onPressed: openInvoiceSheet,
+                                                        icon: const Icon(Icons.edit_note, size: 18),
+                                                        label: Text('تعديل الفاتورة',
+                                                            style: robotoMedium.copyWith(
+                                                                fontSize: Dimensions.fontSizeSmall)),
+                                                        style: OutlinedButton.styleFrom(
+                                                          foregroundColor: Theme.of(context).primaryColor,
+                                                          side: BorderSide(
+                                                              color: Theme.of(context).primaryColor),
+                                                          minimumSize: const Size(0, 50),
+                                                          shape: RoundedRectangleBorder(
+                                                            borderRadius: BorderRadius.circular(
+                                                                Dimensions.radiusDefault),
+                                                          ),
                                                         ),
-                                                        barrierDismissible:
-                                                            false,
-                                                      );
-                                                    },
-                                                  ),
-                                              ] else ...[
-                                                const SizedBox(
-                                                    height: Dimensions
-                                                        .paddingSizeSmall),
-                                                Text(
-                                                  'أصدر الفاتورة أولاً لتظهر خطوة «استلمت من المتجر»',
-                                                  style: robotoRegular.copyWith(
-                                                      fontSize: Dimensions
-                                                          .fontSizeExtraSmall,
-                                                      color: Theme.of(context)
-                                                          .hintColor),
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                              ],
+                                                      ),
+                                                    ),
+                                                    const SizedBox(width: Dimensions.paddingSizeSmall),
+                                                    Expanded(
+                                                      child: CustomButtonWidget(
+                                                        buttonText: 'أكمل الطلب',
+                                                        icon: Icons.check_circle_outline,
+                                                        height: 50,
+                                                        onPressed: () {
+                                                          Get.dialog(
+                                                            ConfirmationDialogWidget(
+                                                              icon: Images.warning,
+                                                              title: 'are_you_sure_to_confirm'.tr,
+                                                              description:
+                                                                  'تأكد من استلام جميع المنتجات قبل خروجك من المتجر',
+                                                              onYesPressed: () async {
+                                                                Get.back();
+                                                                await orderController
+                                                                    .updateOrderStatusSilent(
+                                                                  controllerOrderModel.id!,
+                                                                  AppConstants.pickedUp,
+                                                                );
+                                                                await orderController
+                                                                    .getOrderWithId(controllerOrderModel.id);
+                                                              },
+                                                            ),
+                                                            barrierDismissible: false,
+                                                          );
+                                                        },
+                                                      ),
+                                                    ),
+                                                  ]);
+                                                }
+
+                                                // قبل الفاتورة: [اصدار فاتورة] فقط — لا زر إلغاء (الإلغاء عبر الدعم الفني حصراً)
+                                                return CustomButtonWidget(
+                                                  buttonText: 'اصدار فاتورة',
+                                                  icon: Icons.receipt_long,
+                                                  onPressed: openInvoiceSheet,
+                                                  height: 50,
+                                                );
+                                              })(),
                                             ],
                                           ),
                                         )
                                       : showSlider
-                                          ? ((cod &&
-                                                      accepted &&
-                                                      !restConfModel &&
-                                                      cancelPermission! &&
-                                                      !selfDelivery) ||
-                                                  (parcel &&
-                                                      accepted &&
-                                                      cancelPermission!))
-                                              ? Row(children: [
-                                                  Expanded(
-                                                      child: TextButton(
-                                                    onPressed: () {
-                                                      orderController
-                                                          .setOrderCancelReason(
-                                                              '');
-                                                      Get.dialog(
-                                                          CancellationDialogueWidget(
-                                                              orderId: widget
-                                                                  .orderId));
-                                                    },
-                                                    style: TextButton.styleFrom(
-                                                      minimumSize:
-                                                          const Size(1170, 40),
-                                                      padding: EdgeInsets.zero,
-                                                      shape:
-                                                          RoundedRectangleBorder(
-                                                        borderRadius: BorderRadius
-                                                            .circular(Dimensions
-                                                                .radiusSmall),
-                                                        side: BorderSide(
-                                                            width: 1,
-                                                            color: Theme.of(
-                                                                    context)
-                                                                .textTheme
-                                                                .bodyLarge!
-                                                                .color!),
-                                                      ),
-                                                    ),
-                                                    child: Text('cancel'.tr,
-                                                        textAlign:
-                                                            TextAlign.center,
-                                                        style: robotoRegular
-                                                            .copyWith(
-                                                          color:
-                                                              Theme.of(context)
-                                                                  .textTheme
-                                                                  .bodyLarge!
-                                                                  .color,
-                                                          fontSize: Dimensions
-                                                              .fontSizeLarge,
-                                                        )),
-                                                  )),
-                                                  const SizedBox(
-                                                      width: Dimensions
-                                                          .paddingSizeSmall),
-                                                  Expanded(
-                                                      child: CustomButtonWidget(
-                                                    buttonText: 'confirm'.tr,
-                                                    height: 40,
-                                                    onPressed: () {
-                                                      Get.dialog(
-                                                          ConfirmationDialogWidget(
-                                                            icon:
-                                                                Images.warning,
-                                                            title:
-                                                                'are_you_sure_to_confirm'
-                                                                    .tr,
-                                                            description: parcel!
-                                                                ? 'you_want_to_confirm_this_delivery'
-                                                                    .tr
-                                                                : 'you_want_to_confirm_this_order'
-                                                                    .tr,
-                                                            onYesPressed: () {
-                                                              if (((Get.find<SplashController>()
-                                                                              .configModel
-                                                                              ?.orderDeliveryVerification ??
-                                                                          false) ||
-                                                                      cod!) &&
-                                                                  !parcel!) {
-                                                                orderController
-                                                                    .updateOrderStatus(
-                                                                  controllerOrderModel,
-                                                                  parcel
-                                                                      ? AppConstants
-                                                                          .handover
-                                                                      : AppConstants
-                                                                          .confirmed,
-                                                                  back: widget
-                                                                          .fromLocationScreen
-                                                                      ? false
-                                                                      : true,
-                                                                  gotoDashboard:
-                                                                      widget.fromLocationScreen
-                                                                          ? true
-                                                                          : false,
-                                                                );
-                                                              } else if (parcel! &&
-                                                                  cod! &&
-                                                                  controllerOrderModel
-                                                                          .chargePayer !=
-                                                                      'sender') {
-                                                                orderController.updateOrderStatus(
-                                                                    controllerOrderModel,
-                                                                    AppConstants
-                                                                        .handover);
-                                                              } else if (parcel &&
-                                                                  controllerOrderModel
-                                                                          .chargePayer ==
-                                                                      'sender' &&
-                                                                  cod!) {
-                                                                orderController.updateOrderStatus(
-                                                                    controllerOrderModel,
-                                                                    AppConstants
-                                                                        .handover);
-                                                              }
-                                                            },
-                                                          ),
-                                                          barrierDismissible:
-                                                              false);
-                                                    },
-                                                  )),
-                                                ])
-                                              : CustomButtonWidget(
+                                          ? CustomButtonWidget(
                                                   onPressed: () async {
                                                     if ((cod! &&
                                                             accepted! &&

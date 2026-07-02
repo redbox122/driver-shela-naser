@@ -207,18 +207,7 @@ class SignInScreen extends StatelessWidget {
       authController
           .login(numberWithCountryCode, password)
           .then((result) async {
-        if (result.isOtpRequired) {
-          debugPrint(
-              '[DRIVER_LOGIN_OTP_NAVIGATE] phone=${result.otpPhone} otp_sent=${result.otpSent}');
-          Get.toNamed(
-            RouteHelper.getDriverLoginOtpRoute(),
-            arguments: <String, dynamic>{
-              'phone': result.otpPhone,
-              'otp_sent': result.otpSent,
-              'retry_after_seconds': result.retryAfterSeconds,
-            },
-          );
-        } else if (result.isSuccess) {
+        if (result.isSuccess) {
           if (authController.isActiveRememberMe) {
             authController.saveUserNumberAndPassword(
                 phone, password, countryCode);

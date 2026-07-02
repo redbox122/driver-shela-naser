@@ -7,12 +7,12 @@ import 'package:shellafood_delivery/util/dimensions.dart';
 import 'package:shellafood_delivery/util/styles.dart';
 import 'package:shellafood_delivery/common/widgets/custom_button_widget.dart';
 
-/// كابتن شله — نافذة «اصدار فاتورة»: الكابتن يُدخل قيمة فاتورة المتجر ويُرفق صورتها.
-/// تُحفظ على الطلب وتظهر بالداش بورد فقط (لا يراها العميل).
+/// كابتن شله — نافذة «اصدار فاتورة»
+/// لما يُدخل الكابتن المبلغ ويختار الصورة تُرسل الفاتورة تلقائياً.
 class InvoiceSheetWidget extends StatefulWidget {
   final int orderId;
   final double? initialAmount;
-  final bool hasExistingImage; // صورة فاتورة محفوظة مسبقاً (وضع التعديل)
+  final bool hasExistingImage;
   const InvoiceSheetWidget(
       {super.key,
       required this.orderId,
@@ -25,23 +25,27 @@ class InvoiceSheetWidget extends StatefulWidget {
 
 class _InvoiceSheetWidgetState extends State<InvoiceSheetWidget> {
   final TextEditingController _amountCtrl = TextEditingController();
-  // بعد إصدار/تعديل الفاتورة يظهر زر «تابع الطلب» داخل النافذة
   bool _issued = false;
 
   @override
   void initState() {
     super.initState();
-    // تأجيل المسح لما بعد أول إطار لتفادي «setState/markNeedsBuild during build»
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Get.find<OrderController>().clearInvoiceImage();
     });
     if (widget.initialAmount != null && widget.initialAmount! > 0) {
       _amountCtrl.text = widget.initialAmount!.toStringAsFixed(2);
     }
+    _amountCtrl.addListener(_onAmountChanged);
+  }
+
+  void _onAmountChanged() {
+    if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
+    _amountCtrl.removeListener(_onAmountChanged);
     _amountCtrl.dispose();
     super.dispose();
   }
@@ -49,8 +53,8 @@ class _InvoiceSheetWidgetState extends State<InvoiceSheetWidget> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom),
+      padding:
+          EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: Container(
         decoration: BoxDecoration(
           color: Theme.of(context).cardColor,
@@ -95,7 +99,6 @@ class _InvoiceSheetWidgetState extends State<InvoiceSheetWidget> {
                     const TextInputType.numberWithOptions(decimal: true),
                 autofocus: true,
                 inputFormatters: [
-                  // يسمح بالأرقام والفاصلة العشرية فقط (فئة أحرف بسيطة وموثوقة)
                   FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
                 ],
                 style: robotoMedium,
@@ -115,7 +118,7 @@ class _InvoiceSheetWidgetState extends State<InvoiceSheetWidget> {
               GetBuilder<OrderController>(builder: (orderController) {
                 final picked = orderController.pickedInvoiceImage;
                 return InkWell(
-                  onTap: () => _pickPhoto(orderController),
+                  onTap: _issued ? null : () => _pickPhoto(orderController),
                   child: Container(
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(
@@ -161,10 +164,15 @@ class _InvoiceSheetWidgetState extends State<InvoiceSheetWidget> {
                               ),
                               const SizedBox(
                                   height: Dimensions.paddingSizeExtraSmall),
-                              Text('اضغط لتغيير الصورة',
+                              Text(
+                                  _issued
+                                      ? 'تم رفع الصورة بنجاح ✓'
+                                      : 'اضغط لتغيير الصورة',
                                   style: robotoRegular.copyWith(
                                       fontSize: Dimensions.fontSizeSmall,
-                                      color: Theme.of(context).primaryColor)),
+                                      color: _issued
+                                          ? Theme.of(context).primaryColor
+                                          : Theme.of(context).primaryColor)),
                             ],
                           ),
                   ),
@@ -179,39 +187,40 @@ class _InvoiceSheetWidgetState extends State<InvoiceSheetWidget> {
                     child: CircularProgressIndicator(),
                   ));
                 }
-                // بعد الحفظ: رسالة نجاح + زر «تابع الطلب» (داخل النافذة)
                 if (_issued) {
-                  return Column(children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.check_circle,
-                            color: Theme.of(context).primaryColor, size: 20),
-                        const SizedBox(width: 6),
-                        Text('تم حفظ الفاتورة بنجاح',
-                            style: robotoMedium.copyWith(
-                                color: Theme.of(context).primaryColor)),
-                      ],
-                    ),
-                    const SizedBox(height: Dimensions.paddingSizeSmall),
-                    CustomButtonWidget(
-                      buttonText: 'تابع الطلب',
-                      icon: Icons.arrow_forward,
-                      onPressed: () => Get.back(),
-                    ),
-                  ]);
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.check_circle,
+                          color: Theme.of(context).primaryColor, size: 22),
+                      const SizedBox(width: 8),
+                      Text('تم حفظ الفاتورة بنجاح',
+                          style: robotoMedium.copyWith(
+                              color: Theme.of(context).primaryColor,
+                              fontSize: Dimensions.fontSizeDefault)),
+                    ],
+                  );
                 }
+                final canSubmit = (double.tryParse(_amountCtrl.text.trim()) ?? 0) > 0 &&
+                    (orderController.pickedInvoiceImage != null || widget.hasExistingImage);
                 return CustomButtonWidget(
-                  buttonText: 'اصدار فاتورة',
-                  onPressed: () async {
-                    final amount =
-                        double.tryParse(_amountCtrl.text.trim()) ?? 0;
-                    final ok = await orderController.submitInvoice(
-                        widget.orderId, amount,
-                        allowNoImage: widget.hasExistingImage);
-                    // بدل إغلاق النافذة: نُظهر «تابع الطلب» داخلها
-                    if (ok && mounted) setState(() => _issued = true);
-                  },
+                  buttonText: 'حفظ الفاتورة',
+                  icon: Icons.save_outlined,
+                  onPressed: canSubmit
+                      ? () async {
+                          final amount = double.tryParse(_amountCtrl.text.trim()) ?? 0;
+                          final ok = await orderController.submitInvoice(
+                              widget.orderId, amount,
+                              allowNoImage: widget.hasExistingImage);
+                          if (!mounted) return;
+                          if (ok) {
+                            setState(() => _issued = true);
+                            // إغلاق تلقائي بعد ١.٥ ثانية — result: true يُخبر شاشة الطلب بالانتقال لموقع العميل
+                            Future.delayed(const Duration(milliseconds: 1500),
+                                () { if (mounted) Get.back(result: true); });
+                          }
+                        }
+                      : null,
                 );
               }),
               const SizedBox(height: Dimensions.paddingSizeSmall),
@@ -223,7 +232,7 @@ class _InvoiceSheetWidgetState extends State<InvoiceSheetWidget> {
   }
 
   void _pickPhoto(OrderController orderController) {
-    Get.bottomSheet(
+    Get.bottomSheet<void>(
       SafeArea(
         child: Container(
           color: Theme.of(context).cardColor,
@@ -233,12 +242,18 @@ class _InvoiceSheetWidgetState extends State<InvoiceSheetWidget> {
               ListTile(
                 leading: const Icon(Icons.camera_alt_outlined),
                 title: Text('الكاميرا', style: robotoMedium),
-                onTap: () => orderController.pickInvoiceImage(isCamera: true),
+                onTap: () {
+                  Get.back();
+                  orderController.pickInvoiceImage(isCamera: true);
+                },
               ),
               ListTile(
                 leading: const Icon(Icons.photo_library_outlined),
                 title: Text('المعرض', style: robotoMedium),
-                onTap: () => orderController.pickInvoiceImage(isCamera: false),
+                onTap: () {
+                  Get.back();
+                  orderController.pickInvoiceImage(isCamera: false);
+                },
               ),
             ],
           ),

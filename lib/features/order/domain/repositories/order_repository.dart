@@ -206,8 +206,13 @@ class OrderRepository implements OrderRepositoryInterface {
 
     if (response.statusCode == 200) {
       orderDetailsModel = [];
-      response.body.forEach((orderDetails) =>
-          orderDetailsModel!.add(OrderDetailsModel.fromJson(orderDetails)));
+      for (final orderDetails in response.body) {
+        try {
+          orderDetailsModel!.add(OrderDetailsModel.fromJson(orderDetails));
+        } catch (e) {
+          debugPrint('[ORDER-DETAILS] fromJson error for item ${orderDetails['id']}: $e');
+        }
+      }
     }
     return orderDetailsModel;
   }

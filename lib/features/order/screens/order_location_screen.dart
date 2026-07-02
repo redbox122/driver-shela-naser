@@ -11,9 +11,14 @@ import 'package:shellafood_delivery/features/order/domain/models/order_model.dar
 import 'package:shellafood_delivery/features/address/controllers/address_controller.dart';
 import 'package:shellafood_delivery/features/address/domain/models/zone_model.dart';
 import 'package:shellafood_delivery/features/profile/controllers/profile_controller.dart';
+import 'package:shellafood_delivery/features/order/controllers/order_controller.dart';
+import 'package:shellafood_delivery/features/order/widgets/delivery_proof_sheet_widget.dart';
+import 'package:shellafood_delivery/helper/navigation_helper.dart';
 import 'package:shellafood_delivery/util/dimensions.dart';
 import 'package:shellafood_delivery/util/images.dart';
+import 'package:shellafood_delivery/util/styles.dart';
 import 'package:shellafood_delivery/common/widgets/custom_app_bar_widget.dart';
+import 'package:shellafood_delivery/common/widgets/custom_button_widget.dart';
 import 'package:shellafood_delivery/features/order/widgets/location_card_widget.dart';
 
 class OrderLocationScreen extends StatefulWidget {
@@ -21,12 +26,14 @@ class OrderLocationScreen extends StatefulWidget {
   final OrderController orderController;
   final int index;
   final Function onTap;
+  final bool isDeliveryPhase;
   const OrderLocationScreen({
     super.key,
     required this.orderModel,
     required this.orderController,
     required this.index,
     required this.onTap,
+    this.isDeliveryPhase = false,
   });
 
   @override
@@ -48,7 +55,9 @@ class _OrderLocationScreenState extends State<OrderLocationScreen> {
   Widget build(BuildContext context) {
     bool parcel = widget.orderModel.orderType == 'parcel';
     return Scaffold(
-      appBar: CustomAppBarWidget(title: 'order_location'.tr),
+      appBar: CustomAppBarWidget(
+        title: widget.isDeliveryPhase ? 'موقع العميل' : 'order_location'.tr,
+      ),
       body: Stack(
         children: [
           GoogleMap(
@@ -76,12 +85,14 @@ class _OrderLocationScreenState extends State<OrderLocationScreen> {
             bottom: Dimensions.paddingSizeSmall,
             left: Dimensions.paddingSizeSmall,
             right: Dimensions.paddingSizeSmall,
-            child: LocationCardWidget(
-              orderModel: widget.orderModel,
-              orderController: widget.orderController,
-              onTap: widget.onTap,
-              index: widget.index,
-            ),
+            child: widget.isDeliveryPhase
+                ? _DeliveryPhaseCard(orderModel: widget.orderModel)
+                : LocationCardWidget(
+                    orderModel: widget.orderModel,
+                    orderController: widget.orderController,
+                    onTap: widget.onTap,
+                    index: widget.index,
+                  ),
           ),
         ],
       ),
@@ -124,7 +135,6 @@ class _OrderLocationScreenState extends State<OrderLocationScreen> {
         double deliveryManLng =
             Get.find<ProfileController>().recordLocationBody?.longitude ?? 0;
 
-        // Determine bounds based on locations
         if (parcel) {
           bounds = LatLngBounds(
             southwest: LatLng(
@@ -158,13 +168,9 @@ class _OrderLocationScreenState extends State<OrderLocationScreen> {
           debugPrint('center bound $centerBounds');
         }
 
-        // Zoom to fit bounds
         _controller!.moveCamera(CameraUpdate.newLatLngBounds(bounds, 50));
-
-        // Clear previous markers
         _markers.clear();
 
-        // Add destination marker (delivery address for normal, sender for parcel)
         if (orderModel.deliveryAddress != null) {
           _markers.add(
             Marker(
@@ -179,7 +185,6 @@ class _OrderLocationScreenState extends State<OrderLocationScreen> {
           );
         }
 
-        // Add receiver marker for parcel order
         if (parcel && orderModel.receiverDetails != null) {
           _markers.add(
             Marker(
@@ -194,7 +199,6 @@ class _OrderLocationScreenState extends State<OrderLocationScreen> {
           );
         }
 
-        // Add store marker for normal order
         if (!parcel &&
             orderModel.storeLat != null &&
             orderModel.storeLng != null) {
@@ -211,7 +215,6 @@ class _OrderLocationScreenState extends State<OrderLocationScreen> {
           );
         }
 
-        // Add delivery boy marker
         if (Get.find<ProfileController>().recordLocationBody != null) {
           _markers.add(
             Marker(
@@ -335,7 +338,6 @@ class _OrderLocationScreenState extends State<OrderLocationScreen> {
         );
         break;
       } else {
-        // Zooming out by 0.1 zoom level per iteration
         final double zoomLevel = await controller.getZoomLevel() - 0.1;
         controller.moveCamera(
           CameraUpdate.newCameraPosition(
@@ -361,5 +363,140 @@ class _OrderLocationScreenState extends State<OrderLocationScreen> {
         northEastLongitudeCheck &&
         southWestLatitudeCheck &&
         southWestLongitudeCheck;
+  }
+}
+
+/// كارت يُعرض في شاشة الخريطة بعد استلام الطلب من المتجر
+class _DeliveryPhaseCard extends StatelessWidget {
+  final OrderModel orderModel;
+  const _DeliveryPhaseCard({required this.orderModel});
+
+
+  @override
+  Widget build(BuildContext context) {
+    final customerName = orderModel.deliveryAddress?.contactPersonName ?? '';
+    final customerAddress = orderModel.deliveryAddress?.address ?? '';
+    final lat = orderModel.deliveryAddress?.latitude ?? '0';
+    final lng = orderModel.deliveryAddress?.longitude ?? '0';
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.12),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // بانر النجاح
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(
+              vertical: Dimensions.paddingSizeSmall,
+              horizontal: Dimensions.paddingSizeDefault,
+            ),
+            decoration: BoxDecoration(
+              color: Theme.of(context).primaryColor.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.check_circle,
+                    color: Theme.of(context).primaryColor, size: 22),
+                const SizedBox(width: Dimensions.paddingSizeSmall),
+                Text(
+                  'تم استلام الطلب من المتجر',
+                  style: robotoBold.copyWith(
+                    color: Theme.of(context).primaryColor,
+                    fontSize: Dimensions.fontSizeDefault,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: Dimensions.paddingSizeSmall),
+          // اسم العميل
+          if (customerName.isNotEmpty) ...[
+            Row(children: [
+              Icon(Icons.person_outline,
+                  size: 16, color: Theme.of(context).hintColor),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  customerName,
+                  style: robotoMedium.copyWith(
+                      fontSize: Dimensions.fontSizeDefault),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ]),
+            const SizedBox(height: Dimensions.paddingSizeExtraSmall),
+          ],
+          // عنوان العميل
+          if (customerAddress.isNotEmpty) ...[
+            Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Icon(Icons.location_on_outlined,
+                  size: 16, color: Theme.of(context).hintColor),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  customerAddress,
+                  style: robotoRegular.copyWith(
+                    fontSize: Dimensions.fontSizeSmall,
+                    color: Theme.of(context).hintColor,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ]),
+            const SizedBox(height: Dimensions.paddingSizeSmall),
+          ],
+          // زر التنقل
+          CustomButtonWidget(
+            buttonText: 'التنقل إلى العميل',
+            icon: Icons.navigation_outlined,
+            height: 48,
+            onPressed: () => NavigationHelper.navigateToLocation(
+              latitude: lat,
+              longitude: lng,
+              label: customerName,
+            ),
+          ),
+          const SizedBox(height: Dimensions.paddingSizeSmall),
+          // زر الوصول → يفتح شيت التصوير + OTP مباشرة
+          OutlinedButton.icon(
+            onPressed: () {
+              Get.find<OrderController>()
+                  .pickPrescriptionImage(isRemove: true, isCamera: false);
+              Get.bottomSheet(
+                DeliveryProofSheetWidget(orderModel: orderModel),
+                isScrollControlled: true,
+              );
+            },
+            icon: const Icon(Icons.check_circle_outline),
+            label: const Text('تم الوصول للعميل',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Theme.of(context).primaryColor,
+              side: BorderSide(color: Theme.of(context).primaryColor, width: 1.5),
+              minimumSize: const Size(double.infinity, 48),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

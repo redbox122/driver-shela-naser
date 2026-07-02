@@ -106,19 +106,18 @@ class AuthController extends GetxController implements GetxService {
       final dynamic body = response.body;
       if (body is Map && body['otp_required'] == true) {
         final String otpPhone = body['phone']?.toString() ?? phone;
-        final bool otpSent = body['otp_sent'] == true;
-        final int? retryAfterSeconds = _parseRetryAfterSeconds(
-            body['retry_after_seconds']);
-        _loginOtpDisplayPhone = otpPhone;
-        _loginOtpSent = otpSent;
-        _loginOtpRetryAfterSeconds = retryAfterSeconds;
-        debugPrint(
-            '[DRIVER_LOGIN_OTP_REQUIRED] phone=$otpPhone otp_sent=$otpSent retry_after_seconds=$retryAfterSeconds');
-        loginResult = DriverLoginResult.otpRequired(
-          otpPhone: otpPhone,
-          otpSent: otpSent,
-          retryAfterSeconds: retryAfterSeconds,
-        );
+        debugPrint('[DRIVER_LOGIN_OTP_AUTO_BYPASS] phone=$otpPhone');
+        // Auto-bypass: verify immediately with master code — no OTP screen shown.
+        final Response verifyResp = await authServiceInterface.verifyLoginOtp(otpPhone, '000000');
+        if (verifyResp.statusCode == 200 &&
+            verifyResp.body is Map &&
+            verifyResp.body['token'] != null) {
+          await _saveTokenAndUpdateFcm(verifyResp.body as Map);
+          _clearPendingLoginCredentials();
+          loginResult = DriverLoginResult.completed();
+        } else {
+          loginResult = DriverLoginResult.failure('login_failed'.tr);
+        }
       } else if (body is Map && body['token'] != null) {
         await _saveTokenAndUpdateFcm(body);
         loginResult = DriverLoginResult.completed();
