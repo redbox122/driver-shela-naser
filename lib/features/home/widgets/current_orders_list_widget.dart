@@ -18,12 +18,15 @@ class CurrentOrdersListWidget extends StatefulWidget {
   final List<OrderModel> orders;
   final VoidCallback? onRefresh;
   final bool isLoading;
+  // إضافة جديدة: هل توجد طلبات جديدة بالأعلى؟ لإخفاء رسالة «لا توجد طلبات نشطة» عندها
+  final bool hasNewOrders;
 
   const CurrentOrdersListWidget({
     super.key,
     required this.orders,
     this.onRefresh,
     this.isLoading = false,
+    this.hasNewOrders = false,
   });
 
   @override
@@ -76,8 +79,13 @@ class _CurrentOrdersListWidgetState extends State<CurrentOrdersListWidget>
       return const OrdersListShimmerWidget();
     }
 
-    if (widget.orders.isEmpty) {
+    // لا نعرض «لا توجد طلبات نشطة» إذا كانت هناك طلبات جديدة بالأعلى
+    if (widget.orders.isEmpty && !widget.hasNewOrders) {
       return _buildEmptyState();
+    }
+    // طلبات جديدة موجودة لكن لا نشطة → لا نعرض شيئاً هنا (تجنّب رسالة متناقضة)
+    if (widget.orders.isEmpty) {
+      return const SizedBox.shrink();
     }
 
     final sortedOrders = OrderHelper.sortOrdersByPriority(widget.orders);

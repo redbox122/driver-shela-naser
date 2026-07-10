@@ -21,6 +21,11 @@ import 'package:shellafood_delivery/features/chat/domain/repositories/chat_repos
 import 'package:shellafood_delivery/features/chat/domain/repositories/chat_repository_interface.dart';
 import 'package:shellafood_delivery/features/chat/domain/services/chat_service.dart';
 import 'package:shellafood_delivery/features/chat/domain/services/chat_service_interface.dart';
+// نظام الاتصال الداخلي (Agora) — استيرادات جديدة
+import 'package:shellafood_delivery/features/call/data/repositories/call_repository.dart';
+import 'package:shellafood_delivery/features/call/domain/usecases/initiate_call.dart';
+import 'package:shellafood_delivery/features/call/domain/usecases/end_call.dart';
+import 'package:shellafood_delivery/features/call/presentation/controllers/call_controller.dart';
 import 'package:shellafood_delivery/features/disbursement/controllers/disbursement_controller.dart';
 import 'package:shellafood_delivery/features/disbursement/domain/repositories/disbursement_repository.dart';
 import 'package:shellafood_delivery/features/disbursement/domain/repositories/disbursement_repository_interface.dart';
@@ -202,6 +207,14 @@ Future<Map<String, Map<String, String>>> init() async {
   Get.lazyPut(() => AddressController(addressServiceInterface: Get.find()));
   Get.lazyPut(() => AuthController(authServiceInterface: Get.find()));
   Get.lazyPut(() => OrderController(orderServiceInterface: Get.find()));
+
+  // نظام الاتصال الداخلي (Agora) — تسجيل جديد (لا يمسّ ما سبق)
+  CallRepository callRepository = CallRepository(apiClient: Get.find());
+  Get.lazyPut(() => callRepository);
+  Get.lazyPut(() => CallController(
+        initiateCall: InitiateCall(callRepository),
+        endCall: EndCall(),
+      ));
 
   /// Retrieving localized data
   Map<String, Map<String, String>> languages = {};

@@ -106,7 +106,7 @@ class _InvoiceSheetWidgetState extends State<InvoiceSheetWidget> {
                   hintText: 'قيمة الفاتورة',
                   suffixText: 'ريال',
                   filled: true,
-                  fillColor: Theme.of(context).disabledColor.withOpacity(0.08),
+                  fillColor: Theme.of(context).disabledColor.withValues(alpha:0.08),
                   border: OutlineInputBorder(
                     borderRadius:
                         BorderRadius.circular(Dimensions.radiusSmall),
@@ -127,7 +127,7 @@ class _InvoiceSheetWidgetState extends State<InvoiceSheetWidget> {
                       borderRadius:
                           BorderRadius.circular(Dimensions.radiusDefault),
                       border: Border.all(
-                          color: Theme.of(context).primaryColor.withOpacity(0.4),
+                          color: Theme.of(context).primaryColor.withValues(alpha:0.4),
                           width: 1),
                     ),
                     child: picked == null

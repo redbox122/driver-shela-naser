@@ -180,8 +180,9 @@ class OrderItemWidget extends StatelessWidget {
     List<Widget> variationChips = _buildVariationChips(context);
     List<Widget> addOnChips = _buildAddOnChips(context);
     bool hasVariations = variationChips.isNotEmpty;
-    bool hasAddOns = addOnChips.isNotEmpty &&
-        Get.find<SplashController>().getModule(order.moduleType).addOn == true;
+    // إظهار الإضافات دائماً إذا كانت موجودة في الطلب — لا نخفيها بحسب إعداد الموديول،
+    // ليرى الكابتن ما طلبه العميل فعلاً (مثل «زيادة كاتشب»).
+    bool hasAddOns = addOnChips.isNotEmpty;
 
     return Container(
       margin: const EdgeInsets.only(bottom: Dimensions.paddingSizeSmall),

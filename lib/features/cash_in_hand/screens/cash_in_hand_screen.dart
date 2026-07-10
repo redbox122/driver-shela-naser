@@ -5,6 +5,8 @@ import 'package:shellafood_delivery/features/profile/controllers/profile_control
 import 'package:shellafood_delivery/features/splash/controllers/splash_controller.dart';
 import 'package:shellafood_delivery/features/cash_in_hand/controllers/cash_in_hand_controller.dart';
 import 'package:shellafood_delivery/features/cash_in_hand/domain/models/wallet_payment_model.dart';
+// بطاقة ملخّص الأرباح — استيراد جديد (إضافة)
+import 'package:shellafood_delivery/features/cash_in_hand/widgets/earnings_summary_card_widget.dart';
 import 'package:shellafood_delivery/helper/price_converter_helper.dart';
 import 'package:shellafood_delivery/helper/route_helper.dart';
 import 'package:shellafood_delivery/util/dimensions.dart';
@@ -50,6 +52,9 @@ class _CashInHandScreenState extends State<CashInHandScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // إخفاء قسم «النقد في اليد» — النموذج رقمي بالكامل والتحويل عبر ماي فاتورة.
+    // الكود الأصلي محفوظ بالكامل ويُعاد تفعيله بجعل العلَم true.
+    bool showCashInHandSection = false;
     if (Get.find<ProfileController>().profileModel == null) {
       Get.find<ProfileController>().getProfile();
     }
@@ -99,7 +104,13 @@ class _CashInHandScreenState extends State<CashInHandScreen> {
                         child: SingleChildScrollView(
                           physics: const BouncingScrollPhysics(),
                           child: Column(children: [
-                            Container(
+                            // بطاقة ملخّص الأرباح — إضافة جديدة أعلى الشاشة (لا حذف لأي محتوى موجود)
+                            const EarningsSummaryCardWidget(),
+                            // قسم «النقد في اليد» — مخفيّ في النموذج الرقمي (بلا حذف، شرط إظهار فقط)
+                            // ignore: dead_code
+                            if (showCashInHandSection)
+                              // ignore: dead_code
+                              Container(
                               width: context.width,
                               height: 129,
                               decoration: BoxDecoration(
@@ -403,7 +414,11 @@ class _CashInHandScreenState extends State<CashInHandScreen> {
                             const SizedBox(
                                 height: Dimensions.paddingSizeDefault),
                             Row(children: [
-                              Expanded(
+                              // إحصائية «النقد في اليد» — مخفيّة (نموذج رقمي)، بلا حذف
+                              // ignore: dead_code
+                              if (showCashInHandSection)
+                                // ignore: dead_code
+                                Expanded(
                                 child: Container(
                                   padding: const EdgeInsets.all(
                                       Dimensions.paddingSizeDefault),
@@ -440,7 +455,11 @@ class _CashInHandScreenState extends State<CashInHandScreen> {
                                       ]),
                                 ),
                               ),
-                              const SizedBox(
+                              // الفاصل بين النقد في اليد والرصيد — مخفيّ مع الإحصائية (بلا حذف)
+                              // ignore: dead_code
+                              if (showCashInHandSection)
+                                // ignore: dead_code
+                                const SizedBox(
                                   width: Dimensions.paddingSizeDefault),
                               Expanded(
                                 child: Container(

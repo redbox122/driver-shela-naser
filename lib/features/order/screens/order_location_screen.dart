@@ -11,8 +11,9 @@ import 'package:shellafood_delivery/features/order/domain/models/order_model.dar
 import 'package:shellafood_delivery/features/address/controllers/address_controller.dart';
 import 'package:shellafood_delivery/features/address/domain/models/zone_model.dart';
 import 'package:shellafood_delivery/features/profile/controllers/profile_controller.dart';
-import 'package:shellafood_delivery/features/order/controllers/order_controller.dart';
 import 'package:shellafood_delivery/features/order/widgets/delivery_proof_sheet_widget.dart';
+// نظام الاتصال الداخلي (Agora) — استيراد جديد
+import 'package:shellafood_delivery/features/call/presentation/widgets/call_button.dart';
 import 'package:shellafood_delivery/helper/navigation_helper.dart';
 import 'package:shellafood_delivery/util/dimensions.dart';
 import 'package:shellafood_delivery/util/images.dart';
@@ -438,6 +439,15 @@ class _DeliveryPhaseCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
+              // زر الاتصال الداخلي (Agora) — إضافة احترافية بجانب اسم العميل
+              if (orderModel.customer?.id != null)
+                CallButton(
+                  orderId: orderModel.id,
+                  customerId: orderModel.customer?.id,
+                  customerName: customerName,
+                  customerImage: orderModel.customer?.imageFullUrl,
+                  size: 42,
+                ),
             ]),
             const SizedBox(height: Dimensions.paddingSizeExtraSmall),
           ],

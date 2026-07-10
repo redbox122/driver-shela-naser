@@ -25,6 +25,8 @@ import 'package:shellafood_delivery/features/order/widgets/collect_money_deliver
 import 'package:shellafood_delivery/features/order/widgets/order_item_widget.dart';
 import 'package:shellafood_delivery/features/order/widgets/verify_delivery_sheet_widget.dart';
 import 'package:shellafood_delivery/features/order/widgets/info_card_widget.dart';
+// نظام الاتصال الداخلي (Agora) — استيراد جديد
+import 'package:shellafood_delivery/features/call/presentation/widgets/call_button.dart';
 import 'package:shellafood_delivery/features/order/widgets/invoice_sheet_widget.dart';
 import 'package:shellafood_delivery/features/order/widgets/captain_stepper_widget.dart';
 import 'package:shellafood_delivery/features/order/screens/order_location_screen.dart';
@@ -797,6 +799,24 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                             )),
                             order: order!,
                           ),
+                          // زر المكالمة الداخلية (Agora) — إضافة احترافية بجانب بطاقة العميل
+                          if (!parcel &&
+                              controllerOrderModel.customer?.id != null) ...[
+                            const SizedBox(
+                                height: Dimensions.paddingSizeSmall),
+                            Align(
+                              alignment: AlignmentDirectional.centerStart,
+                              child: CallButton(
+                                orderId: controllerOrderModel.id,
+                                customerId: controllerOrderModel.customer?.id,
+                                customerName: controllerOrderModel
+                                    .deliveryAddress?.contactPersonName,
+                                customerImage: controllerOrderModel
+                                    .customer?.imageFullUrl,
+                                label: 'اتصال داخلي بالعميل',
+                              ),
+                            ),
+                          ],
                           const SizedBox(height: Dimensions.paddingSizeLarge),
                           _buildOtpSection(controllerOrderModel),
                           parcel
@@ -891,18 +911,56 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                               ]),
                                         ),
                                 )
-                              : ListView.builder(
-                                  shrinkWrap: true,
-                                  physics: const NeverScrollableScrollPhysics(),
-                                  itemCount:
-                                      orderController.orderDetailsModel!.length,
-                                  itemBuilder: (context, index) {
-                                    return OrderItemWidget(
-                                        order: controllerOrderModel,
-                                        orderDetails: orderController
-                                            .orderDetailsModel![index],
-                                        showPrice: false);
-                                  },
+                              : Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Clear "customer's order" header so the
+                                    // captain can read exactly what to buy/deliver
+                                    // (item + chosen options) before issuing the
+                                    // invoice.
+                                    Container(
+                                      width: double.infinity,
+                                      margin: const EdgeInsets.only(bottom: 10),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 12, vertical: 10),
+                                      decoration: BoxDecoration(
+                                        color: Theme.of(context)
+                                            .primaryColor
+                                            .withValues(alpha: 0.10),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: Row(children: [
+                                        Icon(Icons.receipt_long,
+                                            size: 20,
+                                            color:
+                                                Theme.of(context).primaryColor),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            'طلبات العميل (${orderController.orderDetailsModel!.length})',
+                                            style: robotoBold.copyWith(
+                                                fontSize: 15,
+                                                color: Theme.of(context)
+                                                    .primaryColor),
+                                          ),
+                                        ),
+                                      ]),
+                                    ),
+                                    ListView.builder(
+                                      shrinkWrap: true,
+                                      physics:
+                                          const NeverScrollableScrollPhysics(),
+                                      itemCount: orderController
+                                          .orderDetailsModel!.length,
+                                      itemBuilder: (context, index) {
+                                        return OrderItemWidget(
+                                            order: controllerOrderModel,
+                                            orderDetails: orderController
+                                                .orderDetailsModel![index],
+                                            showPrice: false);
+                                      },
+                                    ),
+                                  ],
                                 ),
                           Column(
                               crossAxisAlignment: CrossAxisAlignment.start,

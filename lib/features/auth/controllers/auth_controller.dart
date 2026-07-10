@@ -202,6 +202,8 @@ class AuthController extends GetxController implements GetxService {
     _pendingLoginPassword = null;
   }
 
+  // مُحتفَظ به لاستخدام مستقبلي (تحليل ترويسة Retry-After) — لا يُحذف
+  // ignore: unused_element
   int? _parseRetryAfterSeconds(dynamic value) {
     if (value == null) {
       return null;

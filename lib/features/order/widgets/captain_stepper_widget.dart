@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:shellafood_delivery/util/dimensions.dart';
 import 'package:shellafood_delivery/util/styles.dart';
 
@@ -36,9 +35,9 @@ class CaptainStepperWidget extends StatelessWidget {
           vertical: Dimensions.paddingSizeDefault,
           horizontal: Dimensions.paddingSizeSmall),
       decoration: BoxDecoration(
-        color: primary.withOpacity(0.05),
+        color: primary.withValues(alpha:0.05),
         borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-        border: Border.all(color: primary.withOpacity(0.15)),
+        border: Border.all(color: primary.withValues(alpha:0.15)),
       ),
       child: Row(
         children: List.generate(_labels.length * 2 - 1, (i) {
@@ -49,7 +48,7 @@ class CaptainStepperWidget extends StatelessWidget {
             return Expanded(
               child: Container(
                 height: 2,
-                color: done ? primary : Theme.of(context).disabledColor.withOpacity(0.3),
+                color: done ? primary : Theme.of(context).disabledColor.withValues(alpha:0.3),
               ),
             );
           }
@@ -58,7 +57,7 @@ class CaptainStepperWidget extends StatelessWidget {
           final active = step == current;
           final Color circleColor = (done || active)
               ? primary
-              : Theme.of(context).disabledColor.withOpacity(0.25);
+              : Theme.of(context).disabledColor.withValues(alpha:0.25);
           return Column(
             mainAxisSize: MainAxisSize.min,
             children: [

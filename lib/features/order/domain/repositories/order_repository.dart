@@ -208,7 +208,7 @@ class OrderRepository implements OrderRepositoryInterface {
       orderDetailsModel = [];
       for (final orderDetails in response.body) {
         try {
-          orderDetailsModel!.add(OrderDetailsModel.fromJson(orderDetails));
+          orderDetailsModel.add(OrderDetailsModel.fromJson(orderDetails));
         } catch (e) {
           debugPrint('[ORDER-DETAILS] fromJson error for item ${orderDetails['id']}: $e');
         }

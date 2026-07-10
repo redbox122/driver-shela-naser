@@ -5,6 +5,8 @@ import 'package:shellafood_delivery/features/splash/controllers/splash_controlle
 import 'package:shellafood_delivery/common/controllers/theme_controller.dart';
 import 'package:shellafood_delivery/features/notification/domain/models/notification_body_model.dart';
 import 'package:shellafood_delivery/helper/notification_helper.dart';
+// نظام الاتصال الداخلي (Agora) — مستقبِل المكالمات الواردة، استيراد جديد
+import 'package:shellafood_delivery/features/call/presentation/call_notification_handler.dart';
 import 'package:shellafood_delivery/helper/route_helper.dart';
 import 'package:shellafood_delivery/theme/dark_theme.dart';
 import 'package:shellafood_delivery/theme/light_theme.dart';
@@ -50,6 +52,9 @@ Future<void> main() async {
 
       // Register background handler BEFORE any other Firebase operations
       FirebaseMessaging.onBackgroundMessage(myBackgroundMessageHandler);
+
+      // نظام الاتصال الداخلي (Agora) — تفعيل مستقبِل المكالمات الواردة (إضافة جديدة)
+      CallNotificationHandler.init();
 
       // Check for notification that opened app
       final RemoteMessage? remoteMessage =

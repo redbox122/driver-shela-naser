@@ -89,8 +89,8 @@ class QuickActionService {
           children: [
             ListTile(
               leading: const Icon(Icons.account_balance_wallet),
-              title: Text('cash_in_hand'.tr),
-              subtitle: Text('view_cash_in_hand_details'.tr),
+              title: Text('withdraw_earnings'.tr),
+              subtitle: Text('withdraw_earnings_hint'.tr),
               onTap: () {
                 _safePopDialog();
                 navigateToEarningsHistory();

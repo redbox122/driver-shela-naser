@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 class OrderDetailsModel {
   int? id;
   int? itemId;
@@ -47,15 +49,26 @@ class OrderDetailsModel {
     itemDetails = json['item_details'] != null ? ItemDetails.fromJson(json['item_details']) : null;
     variation = [];
     foodVariation = [];
-    if (json['variation'] != null && json['variation'].isNotEmpty) {
-      if(json['variation'][0]['values'] != null) {
-        json['variation'].forEach((v) {
+    // variation may arrive as a List, or (for double-encoded rows) a JSON String
+    // like "[{...}]". Decode the string first so the captain still sees the
+    // customer's chosen options under each item.
+    dynamic variationRaw = json['variation'];
+    if (variationRaw is String) {
+      try {
+        variationRaw = jsonDecode(variationRaw);
+      } catch (_) {
+        variationRaw = null;
+      }
+    }
+    if (variationRaw is List && variationRaw.isNotEmpty) {
+      if (variationRaw[0] is Map && variationRaw[0]['values'] != null) {
+        for (final v in variationRaw) {
           foodVariation!.add(FoodVariation.fromJson(v));
-        });
-      }else {
-        json['variation'].forEach((v) {
+        }
+      } else {
+        for (final v in variationRaw) {
           variation!.add(Variations.fromJson(v));
-        });
+        }
       }
     }
     if (json['add_ons'] != null) {

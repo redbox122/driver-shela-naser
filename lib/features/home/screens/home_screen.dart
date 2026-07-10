@@ -314,6 +314,10 @@ class _HomeScreenState extends State<HomeScreen> {
                           return CurrentOrdersListWidget(
                             orders: orderController.currentOrdersSorted ?? [],
                             onRefresh: () => _loadData(),
+                            // إخفاء «لا توجد طلبات نشطة» عند وجود طلبات جديدة بالأعلى
+                            hasNewOrders:
+                                (orderController.latestOrderList ?? [])
+                                    .isNotEmpty,
                           );
                         }),
 
@@ -355,7 +359,8 @@ class _HomeScreenState extends State<HomeScreen> {
                               QuickActionService.navigateToEarningsHistory();
                             },
                             onCashInHandTap: () {
-                              Get.toNamed(RouteHelper.getCashInHandRoute());
+                              // «سحب الأرباح» → طرق السحب (ماي فاتورة)
+                              Get.toNamed(RouteHelper.getWithdrawMethodRoute());
                             },
                             onEarningsTap: () {
                               QuickActionService.showEarningsOptions();

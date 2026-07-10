@@ -16,6 +16,9 @@
 	<string>6.0</string>
 	<key>CFBundleName</key>
 	<string>shellafood_delivery</string>
+	<!-- نظام الاتصال الداخلي (Agora RTC) — إذن المايك، إضافة جديدة -->
+	<key>NSMicrophoneUsageDescription</key>
+	<string>يستخدم التطبيق المايكروفون لإجراء مكالمة صوتية مع العميل داخل التطبيق.</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>

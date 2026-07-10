@@ -185,7 +185,7 @@ class FinancialOverviewWidget extends StatelessWidget {
                                             ),
                                           ),
                                           child: Icon(
-                                            Icons.money_outlined,
+                                            Icons.account_balance_outlined,
                                             size: Dimensions.iconSizeDefault,
                                             color: Colors
                                                 .white, // White icon for visibility
@@ -194,7 +194,7 @@ class FinancialOverviewWidget extends StatelessWidget {
                                         const SizedBox(
                                             width: Dimensions.paddingSizeSmall),
                                         Text(
-                                          'cash_in_hand'.tr,
+                                          'withdraw_earnings'.tr,
                                           style: robotoMedium.copyWith(
                                             fontSize: Dimensions.fontSizeSmall,
                                             color: Colors.white.withValues(
@@ -231,13 +231,22 @@ class FinancialOverviewWidget extends StatelessWidget {
                                     ),
                                     const SizedBox(
                                         height: Dimensions.paddingSizeSmall),
-                                    _CurrencyAmountText(
-                                      amount: cashInHand,
-                                      label: 'cash_in_hand',
-                                      style: robotoBold.copyWith(
-                                        fontSize: Dimensions.fontSizeOverLarge,
-                                        color: Colors.white,
-                                      ),
+                                    // بدل مبلغ «النقد في اليد»: إجراء «اسحب الآن»
+                                    // (النموذج رقمي — التحويل عبر ماي فاتورة)
+                                    Row(
+                                      children: [
+                                        Text(
+                                          'withdraw_now'.tr,
+                                          style: robotoBold.copyWith(
+                                            fontSize:
+                                                Dimensions.fontSizeLarge,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 4),
+                                        const Icon(Icons.chevron_left,
+                                            size: 18, color: Colors.white),
+                                      ],
                                     ),
                                   ],
                                 ),
