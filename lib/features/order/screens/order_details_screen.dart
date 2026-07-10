@@ -27,6 +27,9 @@ import 'package:shellafood_delivery/features/order/widgets/verify_delivery_sheet
 import 'package:shellafood_delivery/features/order/widgets/info_card_widget.dart';
 // نظام الاتصال الداخلي (Agora) — استيراد جديد
 import 'package:shellafood_delivery/features/call/presentation/widgets/call_button.dart';
+// تفاصيل الطلب + السعر المقترح — استيرادات جديدة
+import 'package:shellafood_delivery/features/order/presentation/widgets/order_items_details_card.dart';
+import 'package:shellafood_delivery/features/order/presentation/widgets/suggested_price_card.dart';
 import 'package:shellafood_delivery/features/order/widgets/invoice_sheet_widget.dart';
 import 'package:shellafood_delivery/features/order/widgets/captain_stepper_widget.dart';
 import 'package:shellafood_delivery/features/order/screens/order_location_screen.dart';
@@ -815,6 +818,24 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen>
                                     .customer?.imageFullUrl,
                                 label: 'اتصال داخلي بالعميل',
                               ),
+                            ),
+                          ],
+                          // ═══ جديد: تفاصيل الطلب + السعر المقترح (تحت بطاقة الاتصال بالعميل) ═══
+                          if (!parcel &&
+                              orderController.orderDetailsModel != null &&
+                              orderController
+                                  .orderDetailsModel!.isNotEmpty) ...[
+                            const SizedBox(
+                                height: Dimensions.paddingSizeSmall),
+                            OrderItemsDetailsCard(
+                              order: controllerOrderModel,
+                              items: orderController.orderDetailsModel!,
+                            ),
+                            SuggestedPriceCard(
+                              orderPrice:
+                                  (controllerOrderModel.orderAmount ?? 0) -
+                                      (controllerOrderModel.deliveryCharge ??
+                                          0),
                             ),
                           ],
                           const SizedBox(height: Dimensions.paddingSizeLarge),
